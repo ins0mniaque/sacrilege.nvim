@@ -1,72 +1,45 @@
-local api = vim.api
-local fn  = vim.fn
+local define = require('sacrilege.define')
+local input  = require('sacrilege.input')
 
+-- TODO: Add viml commands
 local M = { }
 
 local enabled = false
 local keymap  = { }
-
--- TODO: Rename methods and move to module
-M.util = { }
-
-local util = M.util
-
-function M.util.normal(command)
-    return "<C-\\><C-N><C-\\><C-N>"..(command or '')
-end
-
-function M.util.default(command)
-    return "<C-\\><C-G>"..(command or '')
-end
-
-function M.util.single(command)
-    return "<C-O>"..(command or '')
-end
-
-function M.util.cmd(command)
-    return "<Cmd>"..command.."<CR>"
-end
-
-function M.util.lua(module, func)
-    return func and util.cmd("lua require('"..module.."')."..func) or util.cmd(module)
-end
-
--- TODO: Rename
-local defaults = {
+local config  = {
     actions = {
-        newtab         = util.cmd("tabnew"),
-        quit           = util.cmd("quitall"), -- TODO: Quit menu
-        save           = util.cmd("update"),
+        newtab         = define.cmd("tabnew"),
+        quit           = define.cmd("quitall"), -- TODO: Quit menu
+        save           = define.cmd("update"),
         paste          = "<C-O>P",
         cut            = "<C-O>x",
         copy           = "<C-O>y",
-        fileexplorer   = util.cmd("NvimTreeToggle"),
-        commandpalette = util.cmd("Telescope"),
-        open           = util.lua('telescope.builtin', 'find_files()'),
-        close          = util.cmd("q"),
-        find           = util.normal("/"),
-        findprevious   = util.normal("gN"),
-        findnext       = util.normal("gn"),
+        fileexplorer   = define.cmd("NvimTreeToggle"),
+        commandpalette = define.cmd("Telescope"),
+        open           = define.lua('telescope.builtin', 'find_files()'),
+        close          = define.cmd("q"),
+        find           = define.input('n', "/"),
+        findprevious   = define.input('n', "gN"),
+        findnext       = define.input('n', "gn"),
         undo           = "<C-O>u",
         redo           = "<C-O><C-r>",
-        selectall      = util.normal("gggH<C-O>G"),
-        blockselect    = { key     = util.normal("g<C-H>"),
+        selectall      = define.input('n', "gggH<C-O>G"),
+        blockselect    = { key     = define.input('n', "g<C-H>"),
                            -- TODO: Fix arrow block selection; needs stay in S-BLOCK for subsequent presses
-                           -- left    = util.normal("g<C-H><S-Left>"),
-                           -- right   = util.normal("g<C-H><S-Right>"),
-                           -- up      = util.normal("g<C-H><S-Up>"),
-                           -- down    = util.normal("g<C-H><S-Down>"),
+                           -- left    = define.input('n', "g<C-H><S-Left>"),
+                           -- right   = define.input('n', "g<C-H><S-Right>"),
+                           -- up      = define.input('n', "g<C-H><S-Up>"),
+                           -- down    = define.input('n', "g<C-H><S-Down>"),
                            mouse   = "<4-LeftMouse>",
                            drag    = "<LeftDrag>",
                            release = "" },
-        -- TODO: Add viml commands
-        vimkeyhelp     = util.cmd("WhichKey"),
-        warnvimuser    = util.cmd("echomsg \"<Ctrl-L>:lua require('sacrilege').disable() to regain sanity\"")
+        vimkeyhelp     = define.cmd("WhichKey"),
+        warnvimuser    = define.cmd("echomsg \"<Ctrl-L>:lua require('sacrilege').disable() to regain sanity\"")
     },
 
     -- TODO: Presets
     -- TODO: Special keys not mapped in every mode
-    --       e.g. api.nvim_set_keymap('v', '<BS>', 'd', { noremap = true, silent = true })
+    --       e.g. vim.api.nvim_set_keymap('v', '<BS>', 'd', { noremap = true, silent = true })
     mapping = {
         ["<C-t>"]         = "New Tab",
         ["<M-LeftMouse>"] = "Block Select",
@@ -109,12 +82,12 @@ local function configure(mapping)
         if type(command) == "string" then
             keymap[key] = command
         elseif command then
-            api.nvim_echo({{"Sacrilege: Invalid command type for key "..key, "WarningMsg"}}, true, {})
+            vim.api.nvim_echo({{"Sacrilege: Invalid command type for key "..key, "WarningMsg"}}, true, {})
         end
     end
 
     for key, action in pairs(mapping) do
-        local command = defaults.actions[normalize(action)] or action
+        local command = config.actions[normalize(action)] or action
 
         if type(command) ~= "table" then
             command = { key = command }
@@ -137,27 +110,6 @@ local function configure(mapping)
     return keymap
 end
 
--- TODO: Error handling
-local function map(key, command)
-    local options = { noremap = true, silent = true }
-
-    api.nvim_set_keymap("n", key, command, options)
-    api.nvim_set_keymap("i", key, command, options)
-    api.nvim_set_keymap("x", key, command, options)
-    api.nvim_set_keymap("s", key, command, options)
-    api.nvim_set_keymap("c", key, command, options)
-    api.nvim_set_keymap("o", key, "<C-C>"..command, options)
-end
-
-local function unmap(key)
-    api.nvim_del_keymap("n", key)
-    api.nvim_del_keymap("i", key)
-    api.nvim_del_keymap("x", key)
-    api.nvim_del_keymap("s", key)
-    api.nvim_del_keymap("c", key)
-    api.nvim_del_keymap("o", key)
-end
-
 local function augroup(name, autocmd)
     vim.cmd('augroup '..name..'\nautocmd!\n'..autocmd..'\naugroup end')
 end
@@ -167,11 +119,11 @@ function M.enabled()
 end
 
 function M.enable()
-    keymap  = configure(defaults.mapping)
+    keymap  = configure(config.mapping)
     enabled = true
 
     for key, command in pairs(keymap) do
-        map(key, command)
+        input.map(key, command)
     end
 
     augroup('SacrilegeMode', "autocmd BufEnter,CmdlineLeave * lua require('sacrilege').callback.buffer_changed()")
@@ -183,7 +135,7 @@ function M.disable()
     augroup('NeophyteMode',  '')
 
     for key, _ in pairs(keymap) do
-        unmap(key)
+        input.unmap(key)
     end
 
     keymap  = { }
@@ -191,9 +143,9 @@ function M.disable()
 end
 
 function M.trigger(action)
-    local command = defaults.actions[normalize(action)] or action
+    local command = config.actions[normalize(action)] or action
     if command then
-        api.nvim_input(command)
+        input.send(command)
     end
 end
 
@@ -213,10 +165,10 @@ function M.callback.cursor_hold()
 end
 
 -- Desecrate Vim using the provided configuration options
-function M.setup(config)
+function M.setup(override)
     -- TODO: Check supported versions
-    -- if fn.has('nvim-0.5') ~= 1 then
-    --     api.nvim_err_writeln('sacrilege is only available for Neovim versions 0.5 and above')
+    -- if vim.fn.has('nvim-0.5') ~= 1 then
+    --     vim.api.nvim_err_writeln('sacrilege is only available for Neovim versions 0.5 and above')
     --     return
     -- end
 
@@ -225,28 +177,27 @@ function M.setup(config)
 
     -- TODO: Setup default actions into config
 
-    -- TODO: Don't reuse defaults
     -- Merge configuration
-    if config then
-        if config.actions then
-            for action, command in pairs(config.actions) do
-                defaults.actions[normalize(action)] = command
+    if override then
+        if override.actions then
+            for action, command in pairs(override.actions) do
+                config.actions[normalize(action)] = command
             end
         end
 
-        if config.mapping then
-            for key, action in pairs(config.mapping) do
-                defaults.mapping[key] = action
+        if override.mapping then
+            for key, action in pairs(override.mapping) do
+                config.mapping[key] = action
             end
         end
 
-        if config.options then
-            vim.tbl_deep_extend('force', defaults.options, config.options)
+        if override.options then
+            vim.tbl_deep_extend('force', config.options, override.options)
         end
     end
 
     -- Desecrate Vim
-    if defaults.options.automatic then
+    if config.options.automatic then
         M.enable()
     end
 end
