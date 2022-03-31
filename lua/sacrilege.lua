@@ -28,7 +28,7 @@ function M.util.cmd(command)
 end
 
 function M.util.lua(module, func)
-    return func and util.cmd("require('"..module.."')."..func) or util.cmd(module)
+    return func and util.cmd("lua require('"..module.."')."..func) or util.cmd(module)
 end
 
 -- TODO: Rename
@@ -60,7 +60,8 @@ local defaults = {
                            drag    = "<LeftDrag>",
                            release = "" },
         -- TODO: Add viml commands
-        warnvimuser    = util.cmd("echomsg \":lua require('sacrilege').disable() to regain sanity\"")..util.normal()
+        vimkeyhelp     = util.cmd("WhichKey"),
+        warnvimuser    = util.cmd("echomsg \"<Ctrl-L>:lua require('sacrilege').disable() to regain sanity\"")
     },
 
     -- TODO: Presets
@@ -157,57 +158,8 @@ local function unmap(key)
     api.nvim_del_keymap("o", key)
 end
 
--- TODO: Rewrite in lua
-local function enable_autocmd()
-    -- TODO: Detect WhichKey plugin
-    vim.cmd([[
-  function! s:IsEditableBuffer()
-    if &buftype ==# 'terminal'
-      return 1
-    elseif &buftype ==# 'nofile' || !&modifiable || &readonly
-      return 0
-    else
-      return 1
-    endif
-  endfunction
-
-  function! s:AutoInsertMode()
-    if s:IsEditableBuffer() == 1
-      exe "set insertmode"
-    else
-      exe "set noinsertmode"
-    endif
-  endfunction
-
-  function! s:AutoHelpMode()
-    if s:IsEditableBuffer() == 1
-      exe ":WhichKey"
-    endif
-  endfunction
-
-  augroup AutoInsertMode
-    autocmd!
-    autocmd BufEnter,CmdlineLeave * call s:AutoInsertMode()
-  augroup end
-
-  augroup AutoHelpMode
-    autocmd!
-    autocmd CursorHold * call s:AutoHelpMode()
-  augroup end
-]])
-end
-
--- TODO: Rewrite in lua
-local function disable_autocmd()
-    vim.cmd([[
-    augroup AutoInsertMode
-    autocmd!
-    augroup end
-
-    augroup AutoHelpMode
-    autocmd!
-    augroup end
-]])
+local function augroup(name, autocmd)
+    vim.cmd('augroup '..name..'\nautocmd!\n'..autocmd..'\naugroup end')
 end
 
 function M.enabled()
@@ -222,11 +174,13 @@ function M.enable()
         map(key, command)
     end
 
-    enable_autocmd()
+    augroup('SacrilegeMode', "autocmd BufEnter,CmdlineLeave * lua require('sacrilege').callback.buffer_changed()")
+    augroup('NeophyteMode',  "autocmd CursorHold * lua require('sacrilege').callback.cursor_hold()")
 end
 
 function M.disable()
-    disable_autocmd()
+    augroup('SacrilegeMode', '')
+    augroup('NeophyteMode',  '')
 
     for key, _ in pairs(keymap) do
         unmap(key)
@@ -237,9 +191,24 @@ function M.disable()
 end
 
 function M.trigger(action)
-    local command = actions[normalize(action)] or action
+    local command = defaults.actions[normalize(action)] or action
     if command then
-        vim.cmd(command)
+        api.nvim_input(command)
+    end
+end
+
+M.callback = { }
+
+function M.callback.buffer_changed()
+    vim.opt.insertmode = vim.bo.modifiable and
+                         not vim.bo.readonly and
+                         vim.bo.buftype ~= 'nofile' or
+                         vim.bo.buftype == 'terminal'
+end
+
+function M.callback.cursor_hold()
+    if vim.bo.modifiable and not vim.bo.readonly and vim.bo.buftype ~= 'nofile' then
+        M.trigger('vimkeyhelp')
     end
 end
 
