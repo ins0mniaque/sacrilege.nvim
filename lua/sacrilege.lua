@@ -1,167 +1,63 @@
-local define = require('sacrilege.define')
-local input  = require('sacrilege.input')
+local commands = require('sacrilege.commands')
+local presets  = require('sacrilege.presets')
 
--- TODO: Add viml commands
 local M = { }
 
-local enabled = false
-local keymap  = { }
-local config  = {
-    actions = {
-        newtab         = define.cmd("tabnew"),
-        quit           = define.cmd("quitall"), -- TODO: Quit menu
-        save           = define.cmd("update"),
-        paste          = "<C-O>P",
-        cut            = "<C-O>x",
-        copy           = "<C-O>y",
-        fileexplorer   = define.cmd("NvimTreeToggle"),
-        commandpalette = define.cmd("Telescope"),
-        open           = define.lua('telescope.builtin', 'find_files()'),
-        close          = define.cmd("q"),
-        find           = define.input('n', "/"),
-        findprevious   = define.input('n', "gN"),
-        findnext       = define.input('n', "gn"),
-        undo           = "<C-O>u",
-        redo           = "<C-O><C-r>",
-        selectall      = define.input('n', "gggH<C-O>G"),
-        blockselect    = { key     = define.input('n', "g<C-H>"),
-                           -- TODO: Fix arrow block selection; needs stay in S-BLOCK for subsequent presses
-                           -- left    = define.input('n', "g<C-H><S-Left>"),
-                           -- right   = define.input('n', "g<C-H><S-Right>"),
-                           -- up      = define.input('n', "g<C-H><S-Up>"),
-                           -- down    = define.input('n', "g<C-H><S-Down>"),
-                           mouse   = "<4-LeftMouse>",
-                           drag    = "<LeftDrag>",
-                           release = "" },
-        vimkeyhelp     = define.cmd("WhichKey"),
-        warnvimuser    = define.cmd("echomsg \"<Ctrl-L>:lua require('sacrilege').disable() to regain sanity\"")
-    },
-
-    -- TODO: Presets
-    -- TODO: Special keys not mapped in every mode
-    --       e.g. vim.api.nvim_set_keymap('v', '<BS>', 'd', { noremap = true, silent = true })
-    mapping = {
-        ["<C-t>"]         = "New Tab",
-        ["<M-LeftMouse>"] = "Block Select",
-        ["<M-S-Arrow>"]   = "Block Select",
-        ["<C-q>"]         = "Quit",
-        ["<C-s>"]         = "Save",
-        ["<C-v>"]         = "Paste",
-        ["<C-x>"]         = "Cut",
-        ["<C-c>"]         = "Copy",
-        ["<C-b>"]         = "File Explorer",
-        ["<C-p>"]         = "Command Palette",
-        ["<C-o>"]         = "Open",
-        ["<C-F4>"]        = "Close",
-        ["<C-W>"]         = "Close",
-        ["<C-f>"]         = "Find",
-        ["<S-F3>"]        = "Find Previous",
-        ["<F3>"]          = "Find Next",
-        ["<C-z>"]         = "Undo",
-        ["<C-S-z>"]       = "Redo",
-        ["<C-y>"]         = "Redo",
-        ["<C-a>"]         = "Select All",
-        -- TODO: Find better key combination
-        -- ["<Esc><Leader>"] = "Warn Vim User"
-    },
-
-    options = {
-        automatic = true
-    }
-}
-
-local function normalize(action)
-    return action:gsub('[%s%p]', ''):lower()
-end
-
-local function configure(mapping)
-    local keymap = { }
-
-    local function assign(key, command)
-        -- TODO: Validate keycode
-        if type(command) == "string" then
-            keymap[key] = command
-        elseif command then
-            vim.api.nvim_echo({{"Sacrilege: Invalid command type for key "..key, "WarningMsg"}}, true, {})
-        end
-    end
-
-    for key, action in pairs(mapping) do
-        local command = config.actions[normalize(action)] or action
-
-        if type(command) ~= "table" then
-            command = { key = command }
-        end
-
-        if key:match("Arrow>") then
-            assign(key:gsub("Arrow>", "Left>"),  command.left  or command.key)
-            assign(key:gsub("Arrow>", "Right>"), command.right or command.key)
-            assign(key:gsub("Arrow>", "Up>"),    command.up    or command.key)
-            assign(key:gsub("Arrow>", "Down>"),  command.down  or command.key)
-        elseif key:match("Mouse>") then
-            assign(key,                          command.mouse or command.key)
-            assign(key:gsub("Mouse", "Drag"),    command.drag)
-            assign(key:gsub("Mouse", "Release"), command.release)
-        else
-            assign(key, command.key)
-        end
-    end
-
-    return keymap
-end
+local config = { mapping = { } }
 
 local function augroup(name, autocmd)
     vim.cmd('augroup '..name..'\nautocmd!\n'..autocmd..'\naugroup end')
 end
 
+local function map(command, keys)
+    local mapping = config.mapping[command]
+    if not mapping then
+        mapping = { }
+        config.mapping[command] = mapping
+    end
+
+    if type(keys) == 'table' then
+        for _, key in ipairs(keys) do
+            table.insert(mapping, key)
+        end
+    else
+        table.insert(mapping, keys)
+    end
+end
+
 function M.enabled()
-    return enabled
+    return config.enabled
 end
 
 function M.enable()
-    keymap  = configure(config.mapping)
-    enabled = true
+    augroup('SacrilegeMode', "autocmd BufEnter,CmdlineLeave * lua require('sacrilege').__on_buffer_enter()")
 
-    for key, command in pairs(keymap) do
-        input.map(key, command)
+    for command, keys in pairs(config.mapping) do
+        for _, key in ipairs(keys) do
+            commands.map(key, command)
+        end
     end
 
-    augroup('SacrilegeMode', "autocmd BufEnter,CmdlineLeave * lua require('sacrilege').callback.buffer_changed()")
-    augroup('NeophyteMode',  "autocmd CursorHold * lua require('sacrilege').callback.cursor_hold()")
+    config.enabled = true
 end
 
 function M.disable()
     augroup('SacrilegeMode', '')
-    augroup('NeophyteMode',  '')
 
-    for key, _ in pairs(keymap) do
-        input.unmap(key)
+    for _, keys in ipairs(config.mapping) do
+        for _, key in ipairs(keys) do
+            commands.unmap(key)
+        end
     end
 
-    keymap  = { }
-    enabled = false
+    config.enabled = false
 end
 
-function M.trigger(action)
-    local command = config.actions[normalize(action)] or action
-    if command then
-        input.send(command)
-    end
-end
-
-M.callback = { }
-
-function M.callback.buffer_changed()
+function M.__on_buffer_enter()
     vim.opt.insertmode = vim.bo.modifiable and
                          not vim.bo.readonly and
                          vim.bo.buftype ~= 'nofile' or
                          vim.bo.buftype == 'terminal'
-end
-
-function M.callback.cursor_hold()
-    if vim.bo.modifiable and not vim.bo.readonly and vim.bo.buftype ~= 'nofile' then
-        M.trigger('vimkeyhelp')
-    end
 end
 
 -- Desecrate Vim using the provided configuration options
@@ -172,32 +68,39 @@ function M.setup(override)
     --     return
     -- end
 
+    config   = { mapping = { } }
+    override = override or { }
+
     -- TODO: Detect plugins
-    -- local hasPlugin = package.loaded['plugin/id']
+    -- local hasPlugin = package.loaded['user/repository']
 
-    -- TODO: Setup default actions into config
+    -- TODO: Integrate with plugins
 
-    -- Merge configuration
-    if override then
-        if override.actions then
-            for action, command in pairs(override.actions) do
-                config.actions[normalize(action)] = command
-            end
+    if override.commands then
+        for name, command in pairs(override.commands) do
+            commands.set(name, command)
         end
+    end
 
-        if override.mapping then
-            for key, action in pairs(override.mapping) do
-                config.mapping[key] = action
+    if override.preset ~= '' and override.preset ~= 'none' then
+        local preset = presets[override.preset or 'default']
+        if preset then
+            for command, keys in pairs(preset) do
+                map(command, keys)
             end
+        else
+            vim.api.nvim_err_writeln('Preset \''..override.preset..'\' not found')
         end
+    end
 
-        if override.options then
-            vim.tbl_deep_extend('force', config.options, override.options)
+    if override.mapping then
+        for command, keys in pairs(override.mapping) do
+            map(command, keys)
         end
     end
 
     -- Desecrate Vim
-    if config.options.automatic then
+    if override.enabled ~= false then
         M.enable()
     end
 end
