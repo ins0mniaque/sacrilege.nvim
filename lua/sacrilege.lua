@@ -54,6 +54,10 @@ function M.disable()
 end
 
 function M.__on_buffer_enter()
+    vim.defer_fn(M.trigger, 0)
+end
+
+function M.trigger()
     vim.opt.insertmode = vim.bo.modifiable and
                          not vim.bo.readonly and
                          vim.bo.buftype ~= 'nofile' or
