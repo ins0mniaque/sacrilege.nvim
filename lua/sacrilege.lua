@@ -30,7 +30,7 @@ function M.enabled()
 end
 
 function M.enable()
-    augroup('SacrilegeMode', "autocmd BufEnter,CmdlineLeave * lua require('sacrilege').__on_buffer_enter()")
+    augroup('SacrilegeMode', "autocmd BufEnter,BufLeave,CmdlineLeave * lua vim.defer_fn(require('sacrilege').trigger, 0)")
 
     for command, keys in pairs(config.mapping) do
         for _, key in ipairs(keys) do
@@ -51,10 +51,6 @@ function M.disable()
     end
 
     config.enabled = false
-end
-
-function M.__on_buffer_enter()
-    vim.defer_fn(M.trigger, 0)
 end
 
 function M.trigger()
