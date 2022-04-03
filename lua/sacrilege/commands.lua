@@ -1,76 +1,59 @@
 local keymode = require('sacrilege.keymode')
 
+-- TODO: Add Dashboard command (Dashboard/Alpha, etc...)
+-- TODO: Add Menu command
+-- TODO: Add build commands (configurable)
+
 local M = { }
 
 local commands = { }
 local mapping  = { }
 
 local function initialize()
-    local cmdmenu  = nil
-    local cmdindex = 0
+    -- File
+    M.set('New Tab', '<Cmd>tabnew<CR>')
+    M.set('Open',    '<Cmd>lua require(\'telescope.builtin\').find_files()<CR>')
+    M.set('Save',    '<Cmd>update<CR>')
+    M.set('Close',   '<Cmd>q<CR>')       -- TODO: Close command
+    M.set('Quit',    '<Cmd>quitall<CR>') -- TODO: Quit menu
 
-    local function menu(name)
-        cmdmenu  = name
-        cmdindex = 0
-    end
+    -- Edit
+    M.set('Undo',          '<C-O>u')
+    M.set('Redo',          '<C-O><C-r>')
+    M.set('Cut',           '<C-O>x')
+    M.set('Copy',          '<C-O>y<C-O>gv')
+    M.set('Paste',         '<C-O>P')
+    M.set('Delete',        '<C-O>d')
+    M.set('Find',          '<C-\\><C-N>/')
+    M.set('Find Previous', '<C-\\><C-N>gN')
+    M.set('Find Next',     '<C-\\><C-N>gn')
 
-    local function separator()
-        cmdindex = cmdindex + 1
-    end
+    -- Selection
+    M.set('Select All',   '<C-\\><C-N>gggH<C-O>G')
+    M.set('Block Select', { key     = '<C-\\><C-N>g<C-H>',
+                            left    = '<C-\\><C-N>g<C-H><S-Left>',
+                            right   = '<C-\\><C-N>g<C-H><S-Right>',
+                            up      = '<C-\\><C-N>g<C-H><S-Up>',
+                            down    = '<C-\\><C-N>g<C-H><S-Down>',
+                            mouse   = '<4-LeftMouse>',
+                            drag    = '<LeftDrag>',
+                            release = '' })
 
-    local function cmd(name, keymap)
-        M.set(name, { menu = cmdmenu, index = cmdindex, keymap = keymap })
-        cmdindex = cmdindex + 1
-    end
+    -- View
+    M.set('Command Palette', '<Cmd>Telescope<CR>')
+    M.set('File Explorer',   '<Cmd>NvimTreeToggle<CR>')
 
-    menu('File')
-        cmd('New Tab', '<Cmd>tabnew<CR>')
-        cmd('Open',    '<Cmd>lua require(\'telescope.builtin\').find_files()<CR>')
-        cmd('Save',    '<Cmd>update<CR>')
-        cmd('Close',   '<Cmd>q<CR>')       -- TODO: Close command
-        cmd('Quit',    '<Cmd>quitall<CR>') -- TODO: Quit menu
+    -- Help
+    M.set('Show Manual Page', '<Cmd>Man<CR>')
+    M.set('Shortcuts',        '<Cmd>WhichKey<CR>')
+    M.set('Vim Help',         '<Cmd>help<CR>')
+    M.set('Vim Reference',    '<Cmd>help quickref<CR>')
+    M.set('Vim Tutorial',     '<Cmd>Tutor<CR>')
+    M.set('About',            '<Cmd>help copying<CR>')
 
-    menu('Edit')
-        cmd('Undo', '<C-O>u')
-        cmd('Redo', '<C-O><C-r>')
-        separator()
-        cmd('Cut',    '<C-O>x')
-        cmd('Copy',   '<C-O>y<C-O>gv')
-        cmd('Paste',  '<C-O>P')
-        cmd('Delete', '<C-O>d')
-        separator()
-        cmd('Find',          '<C-\\><C-N>/')
-        cmd('Find Previous', '<C-\\><C-N>gN')
-        cmd('Find Next',     '<C-\\><C-N>gn')
-
-    menu('Selection')
-        cmd('Select All',   '<Cmd>tabnew<CR>')
-        cmd('Block Select', { key     = '<C-\\><C-N>g<C-H>',
-                              left    = '<C-\\><C-N>g<C-H><S-Left>',
-                              right   = '<C-\\><C-N>g<C-H><S-Right>',
-                              up      = '<C-\\><C-N>g<C-H><S-Up>',
-                              down    = '<C-\\><C-N>g<C-H><S-Down>',
-                              mouse   = '<4-LeftMouse>',
-                              drag    = '<LeftDrag>',
-                              release = '' })
-
-    menu('View')
-        cmd('Command Palette', '<Cmd>Telescope<CR>')
-        cmd('File Explorer',   '<Cmd>NvimTreeToggle<CR>')
-
-    menu('Help')
-        cmd('Show Manual Page', '<Cmd>Man<CR>')
-        cmd('Shortcuts',        '<Cmd>WhichKey<CR>')
-        cmd('Vim Help',         '<Cmd>help<CR>')
-        separator()
-        cmd('Vim Reference', '<Cmd>help quickref<CR>')
-        cmd('Vim Tutorial',  '<Cmd>Tutor<CR>')
-        separator()
-        cmd('About', '<Cmd>help copying<CR>')
-
-    menu(nil)
-        cmd('Backspace',     { vs = 'd' })
-        cmd('Warn Vim User', '<Cmd>echomsg "<Ctrl-L>:lua require(\'sacrilege\').disable() to regain sanity"<CR>')
+    -- Other
+    M.set('Backspace',     { vs = 'd' })
+    M.set('Warn Vim User', '<Cmd>echomsg "<Ctrl-L>:lua require(\'sacrilege\').disable() to regain sanity"<CR>')
 end
 
 local function normalize(name)
@@ -78,13 +61,8 @@ local function normalize(name)
 end
 
 local function expand(command)
-    if type(command) == 'string' then
-        command = { keymap = command }
-    end
-
-    if not command.keymap and command[1] then
-        command.keymap = command[1]
-        command[1]     = nil
+    if type(command) ~= 'table' or not command.keymap then
+        command = { keymap = command[1] or command }
     end
 
     if not command.keymap.key then
@@ -111,7 +89,7 @@ function M.set(name, override)
     override = expand(override)
 
     if command then
-        vim.tbl_deep_extend('force', command, override)
+        command = vim.tbl_deep_extend('force', command, override)
     else
         command          = override
         commands[cmdkey] = command
@@ -189,10 +167,6 @@ function M.run(name)
         end
     end
 end
-
--- function M.confirm() end
--- function M.close() end
--- function M.quit() end
 
 initialize()
 
