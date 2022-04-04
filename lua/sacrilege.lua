@@ -82,26 +82,25 @@ function M.setup(override)
         end
     end
 
-    override.preset = override.preset or 'default'
-    if type(override.preset) == 'string' then
+    if type(override.preset) ~= 'table' then
         override.preset = { mapping = override.preset, menu = override.preset }
     end
 
-    local preset = {
-        mapping = presets.mapping(override.preset.mapping or 'default', override.preset.os),
-        menu    = presets.menu(override.preset.menu or 'default', override.preset.os)
-    }
+    local os     = override.preset.os or presets.os()
+    local preset = presets.load(override.preset.mapping)
 
-    if preset.mapping then
-        for command, keys in pairs(preset.mapping) do
+    if preset then
+        for command, keys in pairs(preset.mapping(os)) do
             map(command, keys)
         end
     else
         vim.api.nvim_err_writeln('Preset mapping \''..override.preset.mapping..'\' not found')
     end
 
-    if preset.menu then
-        for menu, items in pairs(preset.menu) do
+    preset = presets.load(override.preset.menu)
+
+    if preset then
+        for menu, items in pairs(preset.menu(os)) do
             -- TODO: Add to menu
         end
     else
