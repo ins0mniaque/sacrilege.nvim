@@ -89,6 +89,7 @@ function window:new(config)
 
     setmetatable(instance, window)
 
+    -- TODO: I think BufHidden can fix dispose problem
     instance:autocmd('BufDelete,WinClosed', dispose)
 
     return instance
@@ -156,12 +157,12 @@ function window.event(id, callback, args)
         vim.api.nvim_input(args.key)
         vim.fn.getchar()
 
-        args.id = vim.v.mouse_winid
-        args.x  = vim.v.mouse_lnum
-        args.y  = vim.v.mouse_col
+        args.id  = vim.v.mouse_winid
+        args.row = vim.v.mouse_lnum - 1
+        args.col = vim.v.mouse_col  - 1
     else
-        args.id        = self.id
-        args.x, args.y = vim.api.nvim_win_get_cursor(self.id)
+        args.id            = self.id
+        args.row, args.col = vim.api.nvim_win_get_cursor(self.id)
     end
 
     self.callback[callback](self, args)
