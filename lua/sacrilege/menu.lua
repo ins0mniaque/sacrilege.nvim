@@ -1,8 +1,10 @@
 local window = require('sacrilege.ui.window')
+local button = require('sacrilege.ui.button')
 
 local M = { }
 
 local menu = nil
+local buttons = { }
 
 local function escaped(window)
     window:close()
@@ -11,6 +13,17 @@ end
 local function clicked(window, args)
     if window.id ~= args.id then
         escaped(window)
+        do return end
+    end
+
+    for _, button in ipairs(buttons) do
+        if args.row >= button.row and args.row < button.row + button.height and
+           args.col >= button.col and args.col < button.col + button.width then
+            print('focus')
+            button:focus()
+        else
+            button:unfocus()
+        end
     end
 end
 
@@ -29,9 +42,22 @@ function M.open()
         height = 1,
         buffer = {
             modifiable = false,
-            lines = {' File  Edit  Selection  View  Help '}
+            -- TODO: Move buffer creation outside window
+            lines = {'                                                                                 '}
         }
     })
+
+    buttons = {
+        button:new({ buffer = menu.buffer, row = 0, col = 1, width = 6, height = 1, label = '&File'}),
+        button:new({ buffer = menu.buffer, row = 0, col = 7, width = 6, height = 1, label = '&Edit'}),
+        button:new({ buffer = menu.buffer, row = 0, col = 13, width = 11, height = 1, label = '&Selection'}),
+        button:new({ buffer = menu.buffer, row = 0, col = 24, width = 6, height = 1, label = '&View'}),
+        button:new({ buffer = menu.buffer, row = 0, col = 30, width = 6, height = 1, label = '&Help'})
+    }
+
+    for _, button in ipairs(buttons) do
+        button:render()
+    end
 
     menu:map('n', '<Esc>',       escaped)
     menu:map('n', '<Leader>',    escaped)
@@ -39,9 +65,6 @@ function M.open()
 
     menu:autocmd('BufLeave',   escaped)
     menu:autocmd('VimResized', resized)
-
-    -- vim.fn.matchaddpos('PmenuSel', {{ 1, 6 }})
-    vim.fn.matchaddpos('Title', {{ 1, 2 }})
 end
 
 function M.close()
