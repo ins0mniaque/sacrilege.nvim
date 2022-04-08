@@ -1,5 +1,8 @@
 local M = { }
 
+-- TODO: Allow mapping only certain modes:
+--       { n = '<C-F4>', i = { '', '' } }
+
 local mapping = {
     ['New Tab']          = '<C-t>',
     ['Open']             = '<C-o>',
@@ -21,7 +24,8 @@ local mapping = {
     ['Command Palette']  = '<C-p>',
     ['File Explorer']    = '<C-b>',
     ['Show Manual Page'] = '<F1>',
-    ['Warn Vim User']    = '<Leader><Leader>'
+    -- TODO: Find appropriate shortcut
+    -- ['Warn Vim User']    = '<Esc><Leader>'
 }
 
 local menu = {
