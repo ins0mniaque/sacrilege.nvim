@@ -3,7 +3,7 @@ local presets  = require('sacrilege.presets')
 
 local M = { }
 
-local config = { mapping = { } }
+local config = { mapping = { }, revert = { } }
 
 local function augroup(name, autocmd)
     vim.cmd('augroup '..name..'\nautocmd!\n'..autocmd..'\naugroup end')
@@ -25,12 +25,29 @@ local function map(command, keys)
     end
 end
 
+local function get_lsp_insertmode()
+    return false -- TODO: Get current value
+end
+
+local function set_lsp_insertmode(insertmode)
+    vim.lsp.handlers['textDocument/publishDiagnostics'] = vim.lsp.with(vim.lsp.diagnostic.on_publish_diagnostics, { update_in_insert = insertmode })
+end
+
 function M.enabled()
     return config.enabled
 end
 
 function M.enable()
+    if config.enabled then
+        do return end
+    end
+
+    config.revert.insertmode     = vim.opt.insertmode
+    config.revert.lsp_insertmode = get_lsp_insertmode()
+
     augroup('SacrilegeMode', "autocmd BufEnter,BufLeave,CmdlineLeave * lua vim.defer_fn(require('sacrilege').trigger, 0)")
+
+    set_lsp_insertmode(true)
 
     for command, keys in pairs(config.mapping) do
         for _, key in ipairs(keys) do
@@ -42,7 +59,14 @@ function M.enable()
 end
 
 function M.disable()
+    if not config.enabled then
+        do return end
+    end
+
     augroup('SacrilegeMode', '')
+
+    vim.opt.insertmode = config.revert.insertmode
+    set_lsp_insertmode(config.revert.lsp_insertmode)
 
     for _, keys in ipairs(config.mapping) do
         for _, key in ipairs(keys) do
@@ -68,7 +92,7 @@ function M.setup(override)
     --     return
     -- end
 
-    config   = { mapping = { } }
+    config   = { mapping = { }, revert = { } }
     override = override or { }
 
     -- TODO: Detect plugins
