@@ -1,90 +1,55 @@
-local commands = require('sacrilege.commands')
-local presets  = require('sacrilege.presets')
+-- local menu       = require('sacrilege.ui.menu')
+-- local popup      = require('sacrilege.ui.popup')
+-- local toolbar    = require('sacrilege.ui.toolbar')
+local insertmode = require('sacrilege.insertmode')
+local menus      = require('sacrilege.menus')
 
 local M = { }
 
-local config = { mapping = { }, revert = { } }
+local defaults = {
+    preset = nil,
+    insertmode = nil,
+    mousemodel = nil,
+    menubar = '',
+    popup = { '$(BufType)', '$(FileType)', 'PopUp' },
+    context = { '$(BufType)', '$(FileType)', bind = true },
+    toolbar = false,
+    bind =  { },
+    menus = { }
+}
 
-local function augroup(name, autocmd)
-    vim.cmd('augroup '..name..'\nautocmd!\n'..autocmd..'\naugroup end')
-end
+-- TODO: Move
+function M.os()
+    local uname = vim.loop.os_uname()
 
-local function map(command, keys)
-    local mapping = config.mapping[command]
-    if not mapping then
-        mapping = { }
-        config.mapping[command] = mapping
+    if     uname.sysname:find('Windows') then return 'Windows'
+    elseif uname.sysname == 'Darwin'     then return 'macOS'
+    else                                      return uname.sysname
     end
-
-    if type(keys) == 'table' then
-        for _, key in ipairs(keys) do
-            table.insert(mapping, key)
-        end
-    else
-        table.insert(mapping, keys)
-    end
 end
 
-local function get_lsp_insertmode()
-    return false -- TODO: Get current value
+-- TODO: config passed to nvim_win_open
+function M.menu(name, mode, config)
+    -- TODO: Open menu, on_comfirm => goto mode and :emenu
+    print('Menu: '..vim.inspect(name)..' for mode '..vim.inspect(mode))
+    require('sacrilege.ui.menu').open()
 end
 
-local function set_lsp_insertmode(insertmode)
-    vim.lsp.handlers['textDocument/publishDiagnostics'] = vim.lsp.with(vim.lsp.diagnostic.on_publish_diagnostics, { update_in_insert = insertmode })
+function M.toolbar(name, mode, config)
+    -- TODO: Open toolbar menu as split, on_confirm => goto mode and :emenu
+    print('ToolBar: '..vim.inspect(name)..' for mode '..vim.inspect(mode))
 end
 
-function M.enabled()
-    return config.enabled
+function M.popup(name, mode, config)
+    -- TODO: Open menu, on_comfirm => goto mode and :emenu
+    print('PopUp: '..vim.inspect(name)..' for mode '..vim.inspect(mode))
 end
 
-function M.enable()
-    if config.enabled then
-        do return end
-    end
-
-    config.revert.insertmode     = vim.opt.insertmode
-    config.revert.lsp_insertmode = get_lsp_insertmode()
-
-    augroup('SacrilegeMode', "autocmd BufEnter,BufLeave,CmdlineLeave * lua vim.defer_fn(require('sacrilege').trigger, 0)")
-
-    set_lsp_insertmode(true)
-
-    for command, keys in pairs(config.mapping) do
-        for _, key in ipairs(keys) do
-            commands.map(key, command)
-        end
-    end
-
-    config.enabled = true
+function M.palette(name, mode, config)
+    -- TODO: vim.ui.select menus, config has all or hierarchical, defaults to all
+    print('Palette: '..vim.inspect(name)..' for mode '..vim.inspect(mode))
 end
 
-function M.disable()
-    if not config.enabled then
-        do return end
-    end
-
-    augroup('SacrilegeMode', '')
-
-    vim.opt.insertmode = config.revert.insertmode
-    set_lsp_insertmode(config.revert.lsp_insertmode)
-
-    for _, keys in ipairs(config.mapping) do
-        for _, key in ipairs(keys) do
-            commands.unmap(key)
-        end
-    end
-
-    config.enabled = false
-end
-
-function M.trigger()
-    vim.opt.insertmode = vim.bo.modifiable and
-                         not vim.bo.readonly and
-                         vim.bo.buftype ~= 'nofile' or
-                         vim.bo.buftype == 'terminal'
-end
-
--- Desecrate Vim using the provided configuration options
 function M.setup(override)
     -- TODO: Check supported versions
     -- if vim.fn.has('nvim-0.5') ~= 1 then
@@ -92,60 +57,47 @@ function M.setup(override)
     --     return
     -- end
 
-    config   = { mapping = { }, revert = { } }
-    override = override or { }
+    local config = defaults;
+
+    -- TODO: Allow presets outside 'sacrilege.presets.'
+    if override and override.preset then
+        local exists, preset = pcall(require, 'sacrilege.presets.'..override.preset:lower())
+        if exists then
+            config = vim.tbl_deep_extend('force', config, preset.setup(config.os or M.os()))
+        else
+            vim.api.nvim_err_writeln('Preset \''..config.preset..'\' not found')
+        end
+    end
+
+    config = vim.tbl_deep_extend('force', config, override or { })
 
     -- TODO: Detect plugins
     -- local hasPlugin = package.loaded['user/repository']
 
     -- TODO: Integrate with plugins
 
-    if override.commands then
-        for name, command in pairs(override.commands) do
-            commands.set(name, command)
+    -- TODO: config.remap option
+    -- TODO: option to bind context menus
+
+    if config.menus then
+        for _, menu in pairs(config.menus) do
+            if type(menu) == 'string' then
+                vim.cmd(menu)
+            else
+                menus.set(menu)
+            end
         end
     end
 
-    if type(override.preset) ~= 'table' then
-        override.preset = { mapping = override.preset, menu = override.preset }
-    end
-
-    local os     = override.preset.os or presets.os()
-    local preset = presets.load(override.preset.mapping)
-
-    if preset then
-        for command, keys in pairs(preset.mapping(os)) do
-            map(command, keys)
-        end
-    else
-        vim.api.nvim_err_writeln('Preset mapping \''..override.preset.mapping..'\' not found')
-    end
-
-    preset = presets.load(override.preset.menu)
-
-    if preset then
-        for menu, items in pairs(preset.menu(os)) do
-            -- TODO: Add to menu
-        end
-    else
-        vim.api.nvim_err_writeln('Preset menu \''..override.preset.menu..'\' not found')
-    end
-
-    if override.mapping then
-        for command, keys in pairs(override.mapping) do
-            map(command, keys)
-        end
-    end
-
-    if override.menu then
-        for menu, items in pairs(override.menu) do
-            -- TODO: Add to menu
+    if config.bind then
+        for _, menu in pairs(config.bind) do
+            menus.bind(menu)
         end
     end
 
     -- Desecrate Vim
-    if override.enabled ~= false then
-        M.enable()
+    if override.insertmode ~= false then
+        insertmode.enable()
     end
 end
 

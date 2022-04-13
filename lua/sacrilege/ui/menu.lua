@@ -36,7 +36,11 @@ function M.open()
         do return end
     end
 
+    local lastBuffer     = vim.api.nvim_get_current_buf()
+    local lastBufferType = vim.api.nvim_buf_is_valid(lastBuffer) and vim.api.nvim_buf_get_option(lastBuffer, 'ft') or ''
+
     menu = window:new({
+        enter = true, -- TODO: Not working and prevent shortcuts from working
         row = 0, col = 0,
         width = vim.go.columns,
         height = 1,
@@ -51,8 +55,9 @@ function M.open()
         button:new({ buffer = menu.buffer, row = 0, col = 1, width = 6, height = 1, label = '&File'}),
         button:new({ buffer = menu.buffer, row = 0, col = 7, width = 6, height = 1, label = '&Edit'}),
         button:new({ buffer = menu.buffer, row = 0, col = 13, width = 11, height = 1, label = '&Selection'}),
-        button:new({ buffer = menu.buffer, row = 0, col = 24, width = 6, height = 1, label = '&View'}),
-        button:new({ buffer = menu.buffer, row = 0, col = 30, width = 6, height = 1, label = '&Help'})
+        button:new({ buffer = menu.buffer, row = 0, col = 24, width = lastBufferType:len() + 2, height = 1, label = lastBufferType}),
+        button:new({ buffer = menu.buffer, row = 0, col = lastBufferType:len() + 2 + 24, width = 6, height = 1, label = '&View'}),
+        button:new({ buffer = menu.buffer, row = 0, col = lastBufferType:len() + 2 + 30, width = 6, height = 1, label = '&Help'})
     }
 
     for _, button in ipairs(buttons) do
@@ -73,15 +78,6 @@ function M.close()
     end
 
     menu = nil
-end
-
--- TODO: Only when insertmode is on using autocmd OptionSet
-function M.setup(config)
-    if not config or config.enabled ~= false then
-        vim.api.nvim_set_keymap('i', '<Esc>', '<Cmd>lua require(\'sacrilege.menu\').open()<CR>', { silent = true, noremap = true })
-    else
-        vim.api.nvim_del_keymap('i', '<Esc>')
-    end
 end
 
 return M

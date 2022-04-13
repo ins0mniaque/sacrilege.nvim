@@ -1,6 +1,6 @@
 local M = { }
 
--- TODO: Implement conditional mapping
+-- TODO: Rename...
 
 -- Vim map modes
 --
@@ -56,46 +56,8 @@ local keymodes = {
     ['t']         = 't'   -- Terminal mode: keys go to the job
 }
 
-local function normalize(mode)
-    return mode == '_' and '' or mode
-end
-
-local function unnormalize(mode)
-    return mode == '' and '_' or mode
-end
-
-local function expand(mode)
-    mode = normalize(mode)
-
-    if     mode == ''  then return 'nxso'
-    elseif mode == 'v' then return 'xs'
-    elseif mode == '!' then return 'ic'
-    elseif mode == 'l' then return 'icl'
-    else                    return mode
-    end
-end
-
 function M.get()
     return keymodes[vim.api.nvim_get_mode().mode];
-end
-
-function M.match(mode, other)
-    mode  = unnormalize(mode)
-    other = unnormalize(other)
-
-    return mode == other or expand(mode):find('['..expand(other)..']')
-end
-
-function M.map(modes, key, input, options)
-    for i = 1, #modes do
-        vim.api.nvim_set_keymap(normalize(modes:sub(i,i)), key, input, options)
-    end
-end
-
-function M.unmap(modes, key)
-    for i = 1, #modes do
-        vim.api.nvim_del_keymap(normalize(modes:sub(i,i)), key)
-    end
 end
 
 return M

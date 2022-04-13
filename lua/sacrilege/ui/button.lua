@@ -27,7 +27,7 @@ function button:render()
 
     vim.api.nvim_buf_clear_namespace(self.buffer, self.ns_id, 0, -1)
     vim.api.nvim_buf_set_text(self.buffer, self.row, self.col, self.row + self.height - 1, self.col + self.width - 1, { string.rep(' ', self.padding)..self.label })
-    if self.accessor > 0 then
+    if self.accessor then
         vim.api.nvim_buf_add_highlight(self.buffer, self.ns_id, 'Title', self.row, self.col + self.accessor + self.padding - 1, self.col + self.accessor + self.padding)
     end
     if self.focused then

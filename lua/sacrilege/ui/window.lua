@@ -5,6 +5,33 @@ window.__index = window
 -- TODO: Make local
 windows = { }
 
+local function serialize(value)
+    local valueType = type(value)
+    if valueType == 'table' then
+        local table = '{ '
+
+        local separator = ''
+        for k, v in pairs(value) do
+            table = table .. separator .. k .. ' = ' .. serialize(v)
+            separator = ', '
+        end
+
+        return table .. ' }'
+    elseif valueType == 'number' then
+        return tostring(val)
+    elseif valueType == 'string' then
+        return string.format('%q', val)
+    elseif valueType == 'boolean' then
+        return value and 'true' or 'false'
+    elseif valueType == 'nil' then
+        return 'nil'
+    end
+
+    -- TODO: Error: cannot serialize valueType
+    return 'nil'
+end
+
+-- TODO: Use serialize to pass arguments
 local function cmd(self, callback, args)
     local index = #self.callback + 1
     self.callback[index] = callback
@@ -35,6 +62,8 @@ local function find(self)
 end
 
 local function dispose(self)
+    print('Disposing of '..tostring(self.id))
+
     vim.cmd('autocmd! * <buffer='..self.buffer..'>')
 
     if vim.api.nvim_win_is_valid(self.id) then
@@ -52,7 +81,7 @@ local function create_buffer(config)
 
     local buffer = vim.api.nvim_create_buf(false, true)
 
-    if config.lines then 
+    if config.lines then
         vim.api.nvim_buf_set_lines(buffer, 0, -1, false, config.lines)
         config.lines = nil
     end
@@ -83,14 +112,14 @@ end
 function window:new(config)
     local instance, enter = parse(config)
 
-    instance.id = vim.api.nvim_open_win(instance.buffer, enter, instance.config)
+    -- TODO: Enter config not working
+    instance.id = vim.api.nvim_open_win(instance.buffer, true, instance.config)
 
     windows[instance.id] = instance
 
     setmetatable(instance, window)
 
-    -- TODO: I think BufHidden can fix dispose problem
-    instance:autocmd('BufDelete,WinClosed', dispose)
+    instance:autocmd('BufHidden,BufLeave', dispose)
 
     return instance
 end
