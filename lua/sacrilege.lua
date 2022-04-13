@@ -50,6 +50,7 @@ function M.palette(name, mode, config)
     print('Palette: '..vim.inspect(name)..' for mode '..vim.inspect(mode))
 end
 
+-- TODO: Fix error when override is nil
 function M.setup(override)
     -- TODO: Check supported versions
     -- if vim.fn.has('nvim-0.5') ~= 1 then
@@ -96,7 +97,7 @@ function M.setup(override)
     end
 
     -- Desecrate Vim
-    if override.insertmode ~= false then
+    if config.insertmode ~= false then
         insertmode.enable()
     end
 end
