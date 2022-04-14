@@ -1,6 +1,6 @@
-local M = { }
+local api = require('sacrilege.menu.api')
 
--- TODO: Rename...
+local M = { }
 
 -- Vim map modes
 --
@@ -19,7 +19,7 @@ local M = { }
 local ctrlS = string.char(19)
 local ctrlV = string.char(22)
 
-local keymodes = {
+local modes = {
     ['n']         = 'n',  -- Normal
     ['no']        = 'o',  -- Operator-pending
     ['nov']       = 'o',  -- Operator-pending (forced charwise |o_v|)
@@ -56,8 +56,14 @@ local keymodes = {
     ['t']         = 't'   -- Terminal mode: keys go to the job
 }
 
-function M.get()
-    return keymodes[vim.api.nvim_get_mode().mode];
+function M.execute(name, mode)
+    mode = mode or modes[vim.api.nvim_get_mode().mode] or 'n'
+
+    local menu = api.menu_get(name, mode)
+
+    if menu and menu[1] and menu[1].mappings and menu[1].mappings[mode] then
+        vim.input(menu[1].mappings[mode].rhs)
+    end
 end
 
 return M

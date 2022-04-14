@@ -1,8 +1,7 @@
--- local menu       = require('sacrilege.ui.menu')
--- local popup      = require('sacrilege.ui.popup')
--- local toolbar    = require('sacrilege.ui.toolbar')
-local insertmode = require('sacrilege.insertmode')
-local menus      = require('sacrilege.menus')
+-- TODO: Lazy-load modules
+local menu    = require('sacrilege.ui.menu')
+-- local popup   = require('sacrilege.ui.popup'),
+-- local toolbar = require('sacrilege.ui.toolbar')
 
 local M = { }
 
@@ -32,7 +31,7 @@ end
 function M.menu(name, mode, config)
     -- TODO: Open menu, on_comfirm => goto mode and :emenu
     print('Menu: '..vim.inspect(name)..' for mode '..vim.inspect(mode))
-    require('sacrilege.ui.menu').open()
+    menu.open()
 end
 
 function M.toolbar(name, mode, config)
@@ -84,24 +83,28 @@ function M.setup(override)
     -- TODO: option to bind context menus
 
     if config.menus then
+        local manager = require('sacrilege.menu.manager')
+
         for _, menu in pairs(config.menus) do
             if type(menu) == 'string' then
                 vim.cmd(menu)
             else
-                menus.set(menu)
+                manager.set(menu)
             end
         end
     end
 
     if config.bind then
+        local binder = require('sacrilege.menu.binder')
+
         for _, menu in pairs(config.bind) do
-            menus.bind(menu)
+            binder.bind(menu)
         end
     end
 
     -- Desecrate Vim
     if config.insertmode ~= false then
-        insertmode.enable()
+        require('sacrilege.insertmode').enable()
     end
 end
 
