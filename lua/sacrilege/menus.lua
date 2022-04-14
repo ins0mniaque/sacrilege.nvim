@@ -100,8 +100,10 @@ local function menu_set(menu, parentName, parentPriority)
         name = name..'<Tab>'..menu.actext
     end
 
-    if menu.hidden == 1 then
+    if menu.hidden == 1 and name:sub(1, 1) ~= ']' then
         name = ']'..name
+    elseif menu.hidden == 0 and name:sub(1, 1) == ']' then
+        name = name:sub(2)
     end
 
     name = escape(name)
@@ -149,25 +151,6 @@ local function menu_set(menu, parentName, parentPriority)
     if menu.tooltip and menu.tooltip:match('^%s*(.-)%s*$') ~= '' then
         vim.cmd('tmenu '..name..' '..menu.tooltip)
     end
-end
-
-function M.menu_get(name, mode)
-    return vim.fn.menu_get(name, mode)
-end
-
-function M.menu_set(menu)
-    menu_set(menu)
-end
-
--- NOTE: Uses vim.fn.menu_get format
--- TODO: Add map/filter helper methods to recurse submenus
-local function rename(menus)
-    
-end
-
--- NOTE: Uses vim.fn.menu_get format
-local function remap(menus, keys)
-    
 end
 
 -- NOTE: Converts to vim.fn.menu_get format
@@ -271,9 +254,10 @@ local function parse(menu, lastPriority)
     return realmenu
 end
 
--- TODO: Add support for hidden menus
 function M.get(name, mode)
-    return vim.fn.menu_get(name, mode)
+    local exists, menu = pcall(vim.fn.menu_get, escape(name), mode)
+
+    return exists and menu or nil
 end
 
 function M.set(menus)
@@ -288,6 +272,10 @@ function M.set(menus)
     else
         menu_set(menus)
     end
+end
+
+function M.del(name, mode)
+    vim.cmd((mode or 'a')..'unmenu '..escape(name))
 end
 
 local function bind(menu, parentName, parentKey)
@@ -324,12 +312,42 @@ function M.bind(name, mode)
 end
 
 -- TODO: Add enable/disable
-function M.hide(menu)
-    
+function M.hide(name, mode)
+    local menus = M.get(name, mode)
+    if not menus then
+        do return end
+    end
+
+    M.del(name)
+
+    for _, menu in ipairs(menus) do
+        menu.hidden = 1
+        menu_set(menu)
+    end
 end
 
-function M.show(menu)
-    
+function M.show(name, mode)
+    local menus = M.get(']'..name, mode)
+    if not menus then
+        do return end
+    end
+
+    M.del(']'..name)
+
+    for _, menu in ipairs(menus) do
+        menu.hidden = 0
+        menu_set(menu)
+    end
+end
+
+function M.context()
+
+end
+
+function M.setup()
+    -- :autocmd BufNewFile,BufRead *.html setlocal nowrap
+    -- :autocmd FileType javascript nnoremap <buffer> <localleader>c I//<esc>
+    -- BufWinEnter for BufType
 end
 
 return M
