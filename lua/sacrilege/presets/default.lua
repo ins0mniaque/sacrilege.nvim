@@ -1,3 +1,5 @@
+local mouse = require('sacrilege.mouse')
+
 local M = { }
 
 -- TODO: atom { macos = { }, linux = { }, windows = { } } : https://github.com/nwinkler/atom-keyboard-shortcuts
@@ -70,6 +72,7 @@ function M.setup(os)
                 { 'Command &Prompt...',              a   = '<C-\\><C-N>:',
                                                      tip = '' },
                 '-',
+                -- TODO: Default to <Cmd>Lexplore<CR>
                 { '&File Explorer',     key = '⌃B',  a   = '<Cmd>NvimTreeToggle<CR>',
                                                      tip = '' }
             },
@@ -178,26 +181,45 @@ end
 -- TODO: jbyuki/instant.nvim menu
 
 function M.leftmouse()
-    local mouse  = vim.fn.getmousepos()
-    local gutter = vim.fn.getwininfo(mouse.winid)[1].textoff
+    local location = mouse.locate()
 
-    if mouse.wincol <= gutter then
-        -- TODO: Trigger breakpoint command
-        print('Breakpoint at line '..tostring(mouse.line)..'!')
-    else
-        vim.fn.feedkeys(vim.api.nvim_replace_termcodes('<LeftMouse>', true, true, true), 'ni')
-    end 
+    if     location.tabline      then print('LeftMouse: Tab line')
+    elseif location.statusline   then print('LeftMouse: Status line')
+    elseif location.cmdline      then print('LeftMouse: Command line')
+    elseif location.border       then print('LeftMouse: Border')
+    elseif location.foldcolumn   then print('LeftMouse: Fold column')
+    elseif location.signcolumn   then print('LeftMouse: Sign column')
+    elseif location.numbercolumn then print('LeftMouse: Number column')
+    elseif location.closedfold   then print('LeftMouse: Closed fold')
+    elseif location.virtualtext  then print('LeftMouse: Virtual text')
+    elseif location.eolchar      then print('LeftMouse: End of line character')
+    elseif location.eol          then print('LeftMouse: End of line')
+    elseif location.eof          then print('LeftMouse: End of file')
+    else                              print('LeftMouse: Content')
+    end
+
+    mouse.input('<LeftMouse>')
 end
 
 function M.rightmouse()
-    local mouse  = vim.fn.getmousepos()
-    local gutter = vim.fn.getwininfo(mouse.winid)[1].textoff
+    local location = mouse.locate()
 
-    if mouse.wincol <= gutter then
-        require('sacrilege').popup('Gutter')
-    else
-        require('sacrilege').popup()
+    if     location.tabline      then print('RightMouse: Tab line')
+    elseif location.statusline   then print('RightMouse: Status line')
+    elseif location.cmdline      then print('RightMouse: Command line')
+    elseif location.border       then print('RightMouse: Border')
+    elseif location.foldcolumn   then print('RightMouse: Fold column')
+    elseif location.signcolumn   then print('RightMouse: Sign column')
+    elseif location.numbercolumn then print('RightMouse: Number column')
+    elseif location.closedfold   then print('RightMouse: Closed fold')
+    elseif location.virtualtext  then print('RightMouse: Virtual text')
+    elseif location.eolchar      then print('RightMouse: End of line character')
+    elseif location.eol          then print('RightMouse: End of line')
+    elseif location.eof          then print('RightMouse: End of file')
+    else                              print('RightMouse: Content')
     end
+
+    mouse.input('<RightMouse>')
 end
 
 return M
