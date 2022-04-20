@@ -56,9 +56,8 @@ function M.locate()
     if location.wincol <= wininfo.textoff then
         location.margin = true
 
-        local screenattr = vim.fn.screenattr(location.screenrow, location.screencol)
-
         if vim.api.nvim_win_get_option(location.winid, 'number') then
+            local screenattr = vim.fn.screenattr(location.screenrow, location.screencol)
             local numberattr = vim.fn.screenattr(location.screenrow, location.screencol + wininfo.textoff - location.wincol)
 
             if screenattr == numberattr then
@@ -66,14 +65,20 @@ function M.locate()
             end
         end
 
-        if vim.api.nvim_win_get_option(location.winid, 'foldcolumn') ~= '0' then
+        if not location.numbercolumn and vim.api.nvim_win_get_option(location.winid, 'foldcolumn') ~= '0' then
             -- TODO: vim.fn.foldlevel for specific bufnr
-            if location.bufnr == vim.fn.bufnr() and vim.fn.foldlevel(location.line) ~= 0 then
-                local foldattr = vim.fn.screenattr(location.screenrow, location.screencol - location.wincol + 1)
+            local foldlevel = location.bufnr == vim.fn.bufnr() and vim.fn.foldlevel(location.line) or 0
+            if location.wincol <= foldlevel then
+                location.foldcolumn = true
 
-                -- TODO: Fix foldcolumn detection by calculating foldcolumn actual size
-                if screenattr == foldattr then
-                    location.foldcolumn = true
+                -- TODO: Replace vim.opt.fillchars with nvim_win_get_option(location.winid) and nvim_get_option
+                local screenchar = vim.fn.nr2char(vim.fn.screenchar(location.screenrow, location.screencol))
+                local fillchars  = vim.opt.fillchars:get()
+
+                if     screenchar == (fillchars['foldopen']  or '-') then location.foldtoggle    = true
+                elseif screenchar == (fillchars['foldclose'] or '+') then location.foldtoggle    = true
+                elseif screenchar == (fillchars['foldsep']   or '│') then location.foldseparator = true
+                elseif screenchar == (fillchars['foldsep']   or '|') then location.foldseparator = true
                 end
             end
         end
@@ -104,13 +109,14 @@ function M.locate()
         location.eol = true
 
         if location.screencol == eol.endcol and vim.api.nvim_win_get_option(location.winid, 'list') then
-            local eolchar = vim.opt.listchars:get()['eol']
-            if eolchar and eolchar ~= '' then
+            -- TODO: Replace vim.opt.listchars with nvim_win_get_option(location.winid) and nvim_get_option
+            local eolchar = vim.opt.listchars:get()['eol'] or ''
+            if eolchar ~= '' then
                 location.eolchar = true
             end
         end
 
-        -- NOTE: vim.fn.screenchar returns blended characters on floating windows
+        -- NOTE: vim.fn.screenchar returns blended characters instead of spaces on floating windows
         if not location.eolchar and not location.floatingwindow then
             local hastext = vim.fn.screenchar(location.screenrow, location.screencol)     ~= 32 or
                             location.screencol > eol.endcol + 1                                 and
