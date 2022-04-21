@@ -13,12 +13,12 @@ function M.setup(os)
             'source $VIMRUNTIME/menu.vim',
 
             { 'Keyboard', hidden = true,
-                { '&Menu',  key = '⎇F10', a = '<Cmd>lua require(\'sacrilege\').menu()<CR>' },
-                { '&Popup', key = '⇧F10', a = '<Cmd>lua require(\'sacrilege\').popup()<CR>' },
+                { '&Menu',  key = '⎇F10', a = '<Cmd>lua require(\'sacrilege.ui\').popup(\'\')<CR>' },
+                { '&Popup', key = '⇧F10', a = '<Cmd>lua require(\'sacrilege.ui\').popup()<CR>' },
             },
 
             { 'Mouse', hidden = true,
-                { '&Popup', key = 'RightMouse', a = '<Cmd>lua require(\'sacrilege\').popup()<CR>' },
+                { '&Popup', key = 'RightMouse', a = '<Cmd>lua require(\'sacrilege.ui\').popup()<CR>' },
             }
         }
     }

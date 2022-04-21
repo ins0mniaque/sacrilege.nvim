@@ -1,8 +1,3 @@
--- TODO: Lazy-load modules
-local menu    = require('sacrilege.ui.menu')
--- local popup   = require('sacrilege.ui.popup'),
--- local toolbar = require('sacrilege.ui.toolbar')
-
 local M = { }
 
 local defaults = {
@@ -25,28 +20,6 @@ function M.os()
     elseif uname.sysname == 'Darwin'     then return 'macOS'
     else                                      return uname.sysname
     end
-end
-
--- TODO: config passed to nvim_win_open
-function M.menu(name, mode, config)
-    -- TODO: Open menu, on_comfirm => goto mode and :emenu
-    print('Menu: '..vim.inspect(name)..' for mode '..vim.inspect(mode))
-    menu.open()
-end
-
-function M.toolbar(name, mode, config)
-    -- TODO: Open toolbar menu as split, on_confirm => goto mode and :emenu
-    print('ToolBar: '..vim.inspect(name)..' for mode '..vim.inspect(mode))
-end
-
-function M.popup(name, mode, config)
-    -- TODO: Open menu, on_comfirm => goto mode and :emenu
-    print('PopUp: '..vim.inspect(name)..' for mode '..vim.inspect(mode))
-end
-
-function M.palette(name, mode, config)
-    -- TODO: vim.ui.select menus, config has all or hierarchical, defaults to all
-    print('Palette: '..vim.inspect(name)..' for mode '..vim.inspect(mode))
 end
 
 function M.setup(override)
@@ -100,6 +73,11 @@ function M.setup(override)
         for _, menu in pairs(config.bind) do
             binder.bind(menu)
         end
+    end
+
+    -- TODO: Config
+    if config.context then
+        require('sacrilege.menu.context').setup()
     end
 
     -- Desecrate Vim

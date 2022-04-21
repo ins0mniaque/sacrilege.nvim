@@ -50,6 +50,8 @@ function M.setup(os)
                 '-',
                 { '&Find',          key = '⌃F',  a   = '<C-\\><C-N>/',
                                                  tip = '' },
+                { 'Replace',        key = '⌃R',  a   = '<C-\\><C-N>:%s///gc<Left><Left><Left><Left>',
+                                                 tip = '' },
                 { 'Find Pre&vious', key = 'F3',  a   = '<C-\\><C-N>gN',
                                                  tip = '' },
                 { 'Find &Next',     key = '⇧F3', a   = '<C-\\><C-N>gn',
@@ -74,6 +76,8 @@ function M.setup(os)
                 '-',
                 -- TODO: Default to <Cmd>Lexplore<CR>
                 { '&File Explorer',     key = '⌃B',  a   = '<Cmd>NvimTreeToggle<CR>',
+                                                     tip = '' },
+                { '&Options',           key = '⌃,',  a   = '<Cmd>options<CR>',
                                                      tip = '' }
             },
 
@@ -102,19 +106,15 @@ function M.setup(os)
                 { base = 'View.Command Palette' }
             },
 
-            { 'Gutter', hidden = true,
-                { '&Gutter', key = '', a = '<Nop>', tip = '' },
-            },
-
             -- { 'ToolBar',
             --
             -- },
 
             { 'Keyboard', hidden = true,
-                { '&Menu',                   key = 'Esc',   ni = '<Cmd>lua require(\'sacrilege\').menu()<CR>'    },
-                { '&Menu',                   key = '⎇F10',  a  = '<Cmd>lua require(\'sacrilege\').menu()<CR>'    },
-                { '&Toolbar',                key = '',      a  = '<Cmd>lua require(\'sacrilege\').toolbar()<CR>' },
-                { '&Popup',                  key = '⇧F10',  a  = '<Cmd>lua require(\'sacrilege\').popup()<CR>'   },
+                { '&Menu',                   key = 'Esc',   ni = '<Cmd>lua require(\'sacrilege.tui\').menu.toggle()<CR>'    },
+                { '&Menu',                   key = '⎇F10',  a  = '<Cmd>lua require(\'sacrilege.tui\').menu.toggle()<CR>'    },
+                { '&Toolbar',                key = '',      a  = '<Cmd>lua require(\'sacrilege.tui\').toolbar.toggle()<CR>' },
+                { '&Popup',                  key = '⇧F10',  a  = '<Cmd>lua require(\'sacrilege.ui\').popup()<CR>'           },
                 '-',
                 { '&Left Block Selection',   key = '⎇⇧←',   a  = '<C-\\><C-N>g<C-H><S-Left>'  },
                 { '&Right Block Selection',  key = '⎇⇧→',   a  = '<C-\\><C-N>g<C-H><S-Right>' },
