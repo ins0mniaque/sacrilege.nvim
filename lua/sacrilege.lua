@@ -56,22 +56,22 @@ function M.setup(override)
     -- TODO: option to bind context menus
 
     if config.menus then
-        local manager = require('sacrilege.menu.manager')
+        local menu = require('sacrilege.menu')
 
-        for _, menu in pairs(config.menus) do
-            if type(menu) == 'string' then
-                vim.cmd(menu)
+        for _, menus in pairs(config.menus) do
+            if type(menus) == 'string' then
+                vim.cmd(menus)
             else
-                manager.set(menu)
+                menu.set(menus)
             end
         end
     end
 
     if config.bind then
-        local binder = require('sacrilege.menu.binder')
+        local menu = require('sacrilege.menu')
 
-        for _, menu in pairs(config.bind) do
-            binder.bind(menu)
+        for _, name in pairs(config.bind) do
+            menu.bind(name)
         end
     end
 

@@ -1,3 +1,4 @@
+-- TODO: Lazy-load modules
 local api = require('sacrilege.menu.api')
 
 local M = { }
@@ -15,6 +16,7 @@ local function parse(menu, lastPriority)
         return menu
     end
 
+    -- TODO: Better error than indexing failed ([1]) when menu doesn't exists
     local apimenu = menu.base and api.menu_get(menu.base)[1] or { }
 
     apimenu.priority = menu.priority
@@ -113,51 +115,8 @@ local function parse(menu, lastPriority)
     return apimenu
 end
 
-function M.get(name, mode)
-    return api.menu_get(name, mode)
-end
-
-function M.set(menus)
-    if menus[1] and type(menus[1]) == 'table' then
-        for _, menu in ipairs(menus) do
-            api.menu_set(parse(menu))
-        end
-    else
-        api.menu_set(parse(menus))
-    end
-end
-
-function M.del(name, mode)
-    api.menu_del(name, mode)
-end
-
--- TODO: Add enable/disable
-function M.hide(name, mode)
-    local menus = api.menu_get(name, mode)
-    if not menus then
-        do return end
-    end
-
-    api.menu_del(name, mode)
-
-    for _, menu in ipairs(menus) do
-        menu.hidden = 1
-        api.menu_set(menu)
-    end
-end
-
-function M.show(name, mode)
-    local menus = api.menu_get(']'..name, mode)
-    if not menus then
-        do return end
-    end
-
-    api.menu_del(']'..name, mode)
-
-    for _, menu in ipairs(menus) do
-        menu.hidden = 0
-        api.menu_set(menu)
-    end
+function M.parse(menu)
+    return parse(menu)
 end
 
 return M

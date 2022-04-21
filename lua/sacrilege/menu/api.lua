@@ -1,8 +1,7 @@
 local M = { }
 
 local function escape(name)
-    -- TODO: Fix this escape any '.' not followed by letter
-    return name:gsub('%.%.%.%.', '\\.\\.\\..'):gsub('%.%.%.', '\\.\\.\\.'):gsub(' ', '\\ ')
+    return name:gsub('%.', '\\.'):gsub('\\(%.[%w*])', '%1'):gsub(' ', '\\ ')
 end
 
 local function menu_set(menu, parentName, parentPriority)
@@ -91,6 +90,18 @@ end
 
 function M.menu_del(name, mode)
     local exists, _ = pcall(vim.cmd, (mode or 'a')..'unmenu '..escape(name))
+
+    return exists
+end
+
+function M.menu_enable(name, mode)
+    local exists, _ = pcall(vim.cmd, (mode or 'a')..'menu enable '..escape(name))
+
+    return exists
+end
+
+function M.menu_disable(name, mode)
+    local exists, _ = pcall(vim.cmd, (mode or 'a')..'menu disable '..escape(name))
 
     return exists
 end
