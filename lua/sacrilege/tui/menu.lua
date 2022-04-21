@@ -1,5 +1,5 @@
-local window = require('sacrilege.ui.window')
-local button = require('sacrilege.ui.button')
+local window = require('sacrilege.tui.window')
+local button = require('sacrilege.tui.button')
 
 local M = { }
 
