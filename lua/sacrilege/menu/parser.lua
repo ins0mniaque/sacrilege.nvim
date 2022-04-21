@@ -1,23 +1,32 @@
--- TODO: Lazy-load modules
-local api = require('sacrilege.menu.api')
+local api = nil
 
 local M = { }
 
--- NOTE: Parsed format:
+-- Parsed format
+--
 -- { 10 (optional, auto-generated), '&Edit', key = '', tip = '', hidden = true,
 --   { 20, '&Undo', key = '', a = '', tip = '', silent = true, noremap = true, enabled = false, sid = 1 },
 --   { 25, '&Undo', key = '', a = { '', silent = false }, tip = '', silent = true, noremap = true, enabled = false, sid = 1 },
 --   '-',
 --   { 30, '-' },
 
--- TODO: Optimize this...
 local function parse(menu, lastPriority)
     if not menu[1] and not menu.base then
         return menu
     end
 
-    -- TODO: Better error than indexing failed ([1]) when menu doesn't exists
-    local apimenu = menu.base and api.menu_get(menu.base)[1] or { }
+    local apimenu = { }
+
+    if menu.base then
+        api     = api or require('sacrilege.menu.api')
+        apimenu = api.menu_get(menu.base)
+
+        if apimenu and apimenu[1] then
+            apimenu = apimenu[1]
+        else
+            error('Menu '..tostring(menu.base)..' does not exist')
+        end
+    end
 
     apimenu.priority = menu.priority
     apimenu.actext   = menu.key or apimenu.actext
@@ -57,7 +66,7 @@ local function parse(menu, lastPriority)
                 local mapping = {
                     enabled = menu.enabled == false and 0 or 1,
                     noremap = menu.noremap == false and 0 or 1,
-                    silent  = menu.silent == false and 0 or 1,
+                    silent  = menu.silent  == false and 0 or 1,
                     sid     = menu.sid,
                     rhs     = value
                 }
