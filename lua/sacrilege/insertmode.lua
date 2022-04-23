@@ -18,9 +18,10 @@ function M.enable()
     vim.lsp.handlers['textDocument/publishDiagnostics'] =
         vim.lsp.with(vim.lsp.diagnostic.on_publish_diagnostics, { update_in_insert = true })
 
+    -- TODO: autocmd ModeChanged "advanced" mode, forward normal/cmd/macro modes to something else
     augroup('SacrilegeInsertMode', "autocmd BufEnter,BufLeave,CmdlineLeave * lua vim.defer_fn(require('sacrilege.insertmode').trigger, 0)")
 
-    M.trigger()
+    vim.defer_fn(require('sacrilege.insertmode').trigger, 0)
 
     enabled = true
 end
