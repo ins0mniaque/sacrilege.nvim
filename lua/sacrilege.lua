@@ -28,7 +28,7 @@ function M.setup(override)
         delayed = override
         do return end
     else
-        vim.cmd('augroup! SacrilegeSetup')
+        vim.cmd('augroup SacrilegeSetup\nautocmd!\naugroup end')
 
         override = override or delayed
         delayed  = nil
