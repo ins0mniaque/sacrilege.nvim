@@ -1,6 +1,6 @@
 local M = { }
 
-function M.setup(os)
+function M.load(os)
     return {
         insertmode = vim.opt.insertmode,
         mousemodel = vim.opt.mousemodel,

@@ -5,22 +5,14 @@ local defaults = {
     insertmode = nil,
     mousemodel = nil,
     menubar = '',
-    popup = { '$(BufType)', '$(FileType)', 'PopUp' },
-    context = { '$(BufType)', '$(FileType)', bind = true },
-    toolbar = false,
-    bind =  { },
-    menus = { }
+    popup = 'PopUp',
+    toolbar = 'ToolBar',
+    bind  = { },
+    menus = { },
+    plugins = { 'autodetect' }
 }
 
--- TODO: Move
-function M.os()
-    local uname = vim.loop.os_uname()
-
-    if     uname.sysname:find('Windows') then return 'Windows'
-    elseif uname.sysname == 'Darwin'     then return 'macOS'
-    else                                      return uname.sysname
-    end
-end
+local delayed = nil
 
 function M.setup(override)
     -- TODO: Check supported versions
@@ -29,31 +21,40 @@ function M.setup(override)
     --     return
     -- end
 
+    -- NOTE: Delay until VimEnter to detect plugin managers
+    if vim.v.vim_did_enter ~= 1 then
+        vim.cmd('augroup SacrilegeSetup\nautocmd!\nautocmd VimEnter * lua require(\'sacrilege\').setup()\naugroup end')
+
+        delayed = override
+        do return end
+    else
+        vim.cmd('augroup! SacrilegeSetup')
+
+        override = override or delayed
+        delayed  = nil
+    end
+
     local config = defaults;
 
     if override and type(override) == 'string' then
         override = { preset = override }
     end
 
-    -- TODO: Allow presets outside 'sacrilege.presets.'
     if override and override.preset then
-        local exists, preset = pcall(require, 'sacrilege.presets.'..override.preset:lower())
-        if exists then
-            config = vim.tbl_deep_extend('force', config, preset.setup(config.os or M.os()))
+        local preset = require('sacrilege.presets').load(override.preset)
+
+        if preset then
+            config = vim.tbl_deep_extend('force', config, preset)
         else
-            vim.api.nvim_err_writeln('Preset \''..config.preset..'\' not found')
+            vim.api.nvim_err_writeln('Preset \''..override.preset..'\' not found')
         end
     end
 
     config = vim.tbl_deep_extend('force', config, override or { })
 
-    -- TODO: Detect plugins
-    -- local hasPlugin = package.loaded['user/repository']
-
-    -- TODO: Integrate with plugins
-
-    -- TODO: config.remap option
-    -- TODO: option to bind context menus
+    -- if config.plugins then
+    --     require('sacrilege.plugins').setup(config.plugins)
+    -- end
 
     if config.menus then
         local menu = require('sacrilege.menu')
@@ -67,17 +68,14 @@ function M.setup(override)
         end
     end
 
+    -- TODO: config.remap option
+
     if config.bind then
         local menu = require('sacrilege.menu')
 
         for _, name in pairs(config.bind) do
             menu.bind(name)
         end
-    end
-
-    -- TODO: Config
-    if config.context then
-        require('sacrilege.menu.context').setup()
     end
 
     -- Desecrate Vim

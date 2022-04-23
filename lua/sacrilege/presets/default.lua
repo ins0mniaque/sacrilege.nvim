@@ -2,21 +2,18 @@ local mouse = require('sacrilege.mouse')
 
 local M = { }
 
--- TODO: atom { macos = { }, linux = { }, windows = { } } : https://github.com/nwinkler/atom-keyboard-shortcuts
+-- TODO: atom { macos = { }, linux = { }, windows = { } }: https://github.com/nwinkler/atom-keyboard-shortcuts
 -- TODO: vscode
--- TODO: nano : https://www.nano-editor.org/dist/latest/cheatsheet.html
--- TODO: MenuPopup autocmd to add spelling suggestions to Popup (context)
--- TODO: Allow binding context
--- TODO: Allow popup to be a merge of contexts (flatten = false)
+-- TODO: nano: https://www.nano-editor.org/dist/latest/cheatsheet.html
+-- TODO: neovim: <Leader> and <LocalLeader> based, uses defaults for all plugins
 
-function M.setup(os)
+function M.load(os)
     return {
         insertmode = vim.opt.insertmode,
         mousemodel = vim.opt.mousemodel,
         menubar = '',
-        popup = { 'PopUp' },
-        context = { 'Context' },
-        toolbar = false,
+        popup = 'PopUp',
+        toolbar = 'ToolBar',
         bind =  { '', ']Keyboard', ']Mouse' },
         menus = {
             { '&File',
