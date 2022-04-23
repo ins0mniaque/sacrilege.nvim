@@ -1,10 +1,9 @@
-local api = require('sacrilege.menu.api')
-
-local M = { }
+local M = { keymap = { }, popup = { } }
 
 -- Vim map modes
 --
 -- ''   Normal, Visual, Select, Operator-pending
+-- a    Normal, Visual, Select, Operator-pending, Insert, Command-line  (Menu only)
 -- n    Normal
 -- v    Visual and Select
 -- s    Select
@@ -41,29 +40,47 @@ local modes = {
     ['i']         = 'i',  -- Insert
     ['ic']        = 'i',  -- Insert mode completion |compl-generic|
     ['ix']        = 'i',  -- Insert mode |i_CTRL-X| completion
-    ['R']         = nil,  -- Replace |R|
-    ['Rc']        = nil,  -- Replace mode completion |compl-generic|
-    ['Rx']        = nil,  -- Replace mode |i_CTRL-X| completion
-    ['Rv']        = nil,  -- Virtual Replace |gR|
-    ['Rvc']       = nil,  -- Virtual Replace mode completion |compl-generic|
-    ['Rvx']       = nil,  -- Virtual Replace mode |i_CTRL-X| completion
+    ['R']         = 'R',  -- Replace |R|
+    ['Rc']        = 'R',  -- Replace mode completion |compl-generic|
+    ['Rx']        = 'R',  -- Replace mode |i_CTRL-X| completion
+    ['Rv']        = 'R',  -- Virtual Replace |gR|
+    ['Rvc']       = 'R',  -- Virtual Replace mode completion |compl-generic|
+    ['Rvx']       = 'R',  -- Virtual Replace mode |i_CTRL-X| completion
     ['c']         = 'c',  -- Command-line editing
     ['cv']        = 'c',  -- Vim Ex mode |gQ|
-    ['r']         = nil,  -- Hit-enter prompt
-    ['rm']        = nil,  -- The -- more -- prompt
-    ['r?']        = nil,  -- A |: confirm| query of some sort
-    ['!']         = nil,  -- Shell or external command is executing
+    ['r']         = 'r',  -- Hit-enter prompt
+    ['rm']        = 'r',  -- The -- more -- prompt
+    ['r?']        = 'r',  -- A |: confirm| query of some sort
+    ['!']         = '!',  -- Shell or external command is executing
     ['t']         = 't'   -- Terminal mode: keys go to the job
 }
 
-function M.execute(name, mode)
-    mode = mode or modes[vim.api.nvim_get_mode().mode] or 'n'
+function M.get()
+    return modes[vim.api.nvim_get_mode().mode]
+end
 
-    local menu = api.menu_get(name, mode)
+function M.keymap.get()
+    local mode = modes[vim.api.nvim_get_mode().mode]
 
-    if menu and menu[1] and menu[1].mappings and menu[1].mappings[mode] then
-        vim.input(menu[1].mappings[mode].rhs)
+    if mode == 'r' or mode == 'R' or mode == '!' then
+        return nil
     end
+
+    return mode
+end
+
+function M.popup.get()
+    local mode = modes[vim.api.nvim_get_mode().mode]
+
+    if mode == 'r' or mode == 'R' or mode == '!' or mode == 't' then
+        return nil
+    end
+
+    if mode == 'x' or node == 's' then
+        return 'v'
+    end
+
+    return mode
 end
 
 return M

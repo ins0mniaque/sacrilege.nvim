@@ -1,8 +1,7 @@
 -- TODO: Lazy-load modules
-local api      = require('sacrilege.menu.api')
-local binder   = require('sacrilege.menu.binder')
-local executor = require('sacrilege.menu.executor')
-local parser   = require('sacrilege.menu.parser')
+local api    = require('sacrilege.menu.api')
+local binder = require('sacrilege.menu.binder')
+local parser = require('sacrilege.menu.parser')
 
 local M = { }
 
@@ -11,7 +10,13 @@ function M.bind(name, mode)
 end
 
 function M.execute(name, mode)
-    executor.execute(name, mode)
+    mode = mode or require('sacrilege.mode').keymap.get() or 'n'
+
+    local menu = api.menu_get(name, mode)
+
+    if menu and menu[1] and menu[1].mappings and menu[1].mappings[mode] then
+        vim.input(menu[1].mappings[mode].rhs)
+    end
 end
 
 function M.get(name, mode)

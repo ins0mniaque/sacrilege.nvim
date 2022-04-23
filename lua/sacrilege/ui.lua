@@ -1,3 +1,5 @@
+local mode = nil
+
 local M = { }
 
 -- TODO: metatable, setting nil resets to default
@@ -11,46 +13,28 @@ local function toprompt(opts)
            nil
 end
 
-local function totitle(opts)
-    return opts.title  or
-           opts.prompt and
-           opts.prompt:gsub('%s*$', '')
-                      :gsub(':$',   '') or
-           nil
-end
-
 function M.browse(opts, on_choice)
     vim.validate {
         opts      = { opts,      'table',    true  },
         on_choice = { on_choice, 'function', false }
     }
 
-    if vim.fn.has('browse') == 1 then
-        local ok, file = pcall(vim.fn.browse,
-                               opts.save     or 0,
-                               totitle(opts) or '',
-                               opts.initdir  or '',
-                               opts.default  or '')
+    local cwd = nil
+    if opts.initdir then
+        cwd = vim.fn.getcwd()
+        vim.api.nvim_set_current_dir(opts.initdir)
+    end
 
-        on_choice(ok and file or nil)
-    else
-        local cwd = nil
-        if opts.initdir then
-            cwd = vim.fn.getcwd()
-            vim.api.nvim_set_current_dir(opts.initdir)
-        end
+    local options = {
+        prompt     = toprompt(opts) or 'File: ',
+        completion = 'file',
+        default    = opts.default
+    }
 
-        local options = {
-            prompt     = toprompt(opts) or 'File: ',
-            completion = 'file',
-            default    = opts.default
-        }
+    M.input(options, on_choice)
 
-        M.input(options, on_choice)
-
-        if opts.initdir then
-            vim.api.nvim_set_current_dir(cwd)
-        end
+    if opts.initdir then
+        vim.api.nvim_set_current_dir(cwd)
     end
 end
 
@@ -60,30 +44,22 @@ function M.browsedir(opts, on_choice)
         on_choice = { on_choice, 'function', false }
     }
 
-    if vim.fn.has('browse') == 1 then
-        local ok, directory = pcall(vim.fn.browsedir,
-                                    totitle(opts) or '',
-                                    opts.initdir  or '')
+    local cwd = nil
+    if opts.initdir then
+        cwd = vim.fn.getcwd()
+        vim.api.nvim_set_current_dir(opts.initdir)
+    end
 
-        on_choice(ok and directory or nil)
-    else
-        local cwd = nil
-        if opts.initdir then
-            cwd = vim.fn.getcwd()
-            vim.api.nvim_set_current_dir(opts.initdir)
-        end
+    local options = {
+        prompt     = toprompt(opts) or 'Directory: ',
+        completion = 'dir',
+        default    = opts.default
+    }
 
-        local options = {
-            prompt     = toprompt(opts) or 'Directory: ',
-            completion = 'dir',
-            default    = opts.default
-        }
+    M.input(options, on_choice)
 
-        M.input(options, on_choice)
-
-        if opts.initdir then
-            vim.api.nvim_set_current_dir(cwd)
-        end
+    if opts.initdir then
+        vim.api.nvim_set_current_dir(cwd)
     end
 end
 
@@ -186,6 +162,10 @@ function M.popup(name, opts)
 
     local wildemenu = vim.api.nvim_replace_termcodes('<C-\\><C-N>:emenu '..name..'<Tab>', true, true, true)
     local wildcharm = vim.opt.wildcharm
+
+    mode = mode or require('sacrilege.mode')
+
+    vim.cmd('doautocmd MenuPopup '..mode.popup.get())
 
     vim.opt.wildcharm=vim.fn.char2nr('^I')
     vim.fn.feedkeys(wildemenu, 't')

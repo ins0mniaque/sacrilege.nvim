@@ -52,9 +52,9 @@ function M.setup(override)
 
     config = vim.tbl_deep_extend('force', config, override or { })
 
-    -- if config.plugins then
-    --     require('sacrilege.plugins').setup(config.plugins)
-    -- end
+    if config.plugins then
+        require('sacrilege.plugins').setup(config.plugins)
+    end
 
     if config.menus then
         local menu = require('sacrilege.menu')
