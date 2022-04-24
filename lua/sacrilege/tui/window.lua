@@ -35,7 +35,7 @@ end
 local function cmd(self, callback, args)
     local index = #self.callback + 1
     self.callback[index] = callback
-    return string.format('lua require(%q).event(%d, %d, { %s })', 'sacrilege.ui.window', self.id, index, args or '')
+    return string.format('lua require(%q).event(%d, %d, { %s })', 'sacrilege.tui.window', self.id, index, args or '')
 end
 
 local function keycmd(self, key, callback)
