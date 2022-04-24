@@ -19,6 +19,8 @@ local plugins = {
     'vim-ultest'
 }
 
+local active = { }
+
 local function has_command(name)
     return vim.fn.exists(':'..name) == 2
 end
@@ -78,20 +80,37 @@ function M.has(plugin)
     return false
 end
 
--- TODO: Setup menu lazy loading
--- augroup SetupLazyloadMenus
---     au!
---     au CursorHold,CursorHoldI * call <SID>SetupLazyloadMenus() | au! SetupLazyloadMenus
--- augroup END
+function M.load()
+    for _, plugin in ipairs(active) do
+        if plugin.load then
+            plugin.load()
+        end
+    end
+end
 
--- TODO: Setup buffer handling
---     vim.cmd([[
--- augroup SacrilegeFileType
--- autocmd!
--- autocmd BufNewFile,BufRead,FileType * lua require('sacrilege.menu.context').context(vim.fn.expand('<abuf>'))
--- autocmd BufEnter * lua require('sacrilege.menu.context').show(vim.fn.expand('<abuf>'))
--- augroup end
--- ]])
+function M.lazyload()
+    vim.cmd('augroup SacrilegeLazyLoad\nautocmd!\naugroup end')
+
+    for _, plugin in ipairs(active) do
+        if plugin.load then
+            plugin.load()
+        end
+    end
+end
+
+function M.attach(bufnr)
+    local filetype = vim.api.nvim_buf_get_option(bufnr, 'ft')
+
+    for _, plugin in ipairs(active) do
+        if plugin.attach then
+            if plugin.attach(bufnr, filetype) then
+                return true
+            end
+        end
+    end
+
+    return false
+end
 
 function M.setup(override)
     local config = vim.tbl_deep_extend('force', defaults, override or { })
@@ -103,6 +122,9 @@ function M.setup(override)
         end
     end
 
+    active = { }
+    loaded = false
+
     for _, plugin in ipairs(plugins) do
         local plugin_config = config[plugin]
         if not plugin_config and config.autodetect and M.has(plugin) then
@@ -110,9 +132,22 @@ function M.setup(override)
         end
 
         if plugin_config then
-            require('sacrilege.plugins.'..plugin).setup(plugin_config)
+            plugin = require('sacrilege.plugins.'..plugin)
+            if plugin.setup then
+                plugin.setup(plugin_config)
+            end
+
+            table.insert(active, plugin)
         end
     end
+
+    M.load()
+
+    vim.cmd('augroup SacrilegeAttachBuffer\nautocmd!\nautocmd BufNewFile,BufRead,FileType * lua require(\'sacrilege.plugins\').attach(tonumber(vim.fn.expand(\'<abuf>\')))\naugroup end')
+
+    -- TODO: Lazy-loading is not triggering
+    -- vim.cmd('augroup SacrilegeLazyLoad\nautocmd!\nautocmd CursorHold,CursorHoldI * lua require(\'sacrilege.plugins\').lazyload()\naugroup end')
+    M.lazyload()
 end
 
 return M

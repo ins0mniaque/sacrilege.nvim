@@ -1,15 +1,15 @@
 local M = { }
 
 local defaults = {
-    preset = nil,
+    preset     = nil,
     insertmode = nil,
     mousemodel = nil,
-    menubar = '',
-    popup = 'PopUp',
-    toolbar = 'ToolBar',
-    bind  = { },
-    menus = { },
-    plugins = { 'autodetect' }
+    menubar    = '',
+    popup      = 'PopUp',
+    toolbar    = 'ToolBar',
+    bind       = { },
+    menus      = { },
+    plugins    = { autodetect = true }
 }
 
 local delayed = nil
