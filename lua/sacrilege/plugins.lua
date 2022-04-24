@@ -123,7 +123,6 @@ function M.setup(override)
     end
 
     active = { }
-    loaded = false
 
     for _, plugin in ipairs(plugins) do
         local plugin_config = config[plugin]

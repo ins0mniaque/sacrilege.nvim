@@ -108,7 +108,7 @@ function M.load(os)
             -- },
 
             { 'Keyboard', hidden = true,
-                { '&Menu',                   key = 'Esc',   ni = '<Cmd>lua require(\'sacrilege.tui\').menu.toggle()<CR>'    },
+                { '&Escape',                 key = 'Esc',   ni = '<Cmd>lua require(\'sacrilege.presets.default\').escape()<CR>' },
                 { '&Menu',                   key = '⎇F10',  a  = '<Cmd>lua require(\'sacrilege.tui\').menu.toggle()<CR>'    },
                 { '&Toolbar',                key = '',      a  = '<Cmd>lua require(\'sacrilege.tui\').toolbar.toggle()<CR>' },
                 { '&Popup',                  key = '⇧F10',  a  = '<Cmd>lua require(\'sacrilege.ui\').popup()<CR>'           },
@@ -176,6 +176,24 @@ end
 
 -- TODO: Text manipulation menu (Comment/Lowercase/Uppercase...)
 -- TODO: jbyuki/instant.nvim menu
+
+function M.escape()
+    local did_close = false
+
+    for _, win in ipairs(vim.api.nvim_list_wins()) do
+        if vim.api.nvim_win_is_valid(win) then
+            local config = vim.api.nvim_win_get_config(win)
+            if config.relative ~= "" then
+                vim.api.nvim_win_close(win, true)
+                did_close = true
+            end
+        end
+    end
+
+    if not did_close then
+        require('sacrilege.tui').menu.show()
+    end
+end
 
 function M.leftmouse()
     local location = mouse.locate()

@@ -1,15 +1,17 @@
+local menu = require('sacrilege.tui.menu')
+
 local M = { menu = { }, toolbar = { } }
 
 function M.menu.show(name, opts)
-
+    menu.open()
 end
 
 function M.menu.hide(name, opts)
-
+    menu.close()
 end
 
 function M.menu.toggle(name, opts)
-
+    menu.open()
 end
 
 function M.toolbar.show(name, opts)
