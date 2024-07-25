@@ -17,7 +17,7 @@ function M.setup(override)
         return vim.notify("sacrilege.nvim requires Neovim >= 0.7.0", vim.log.levels.ERROR, { title = "sacrilege.nvim" })
     end
 
-    vim.api.nvim_create_autocmd({ "BufEnter", "BufLeave", "CmdlineLeave" },
+    vim.api.nvim_create_autocmd({ "BufEnter", "InsertLeave", "TermLeave" },
     {
         group = vim.api.nvim_create_augroup("Sacrilege", { }),
         pattern = { "*" },
@@ -28,8 +28,8 @@ function M.setup(override)
 
     vim.defer_fn(trigger, 0)
 
-    vim.keymap.set("i", "<Esc>", "<Esc><Cmd>startinsert<CR><Right>")
-    vim.keymap.set("i", "<C-c>", "<Esc><Esc>:")
+    vim.keymap.set("i", "<Esc>", "<Esc>a")
+    vim.keymap.set("i", "<C-c>", "<Esc>:")
 end
 
 return M
