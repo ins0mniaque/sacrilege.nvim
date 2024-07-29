@@ -3,7 +3,8 @@ local M = { }
 local defaults =
 {
     insertmode = true,
-    selectmode = true
+    selectmode = true,
+    mouse      = true
 }
 
 local options = { }
@@ -13,6 +14,7 @@ local metatable =
     __index = function(table, key)
         if     key == "insertmode" then return options.insertmode
         elseif key == "selectmode" then return options.selectmode
+        elseif key == "mouse"      then return options.mouse
         else                            return rawget(table, key)
         end
     end,
@@ -22,8 +24,8 @@ local metatable =
             options.insertmode = value
 
             M.trigger()
-        elseif key == "selectmode" then 
-            vim.notify("selectmode cannot be changed after setup", vim.log.levels.ERROR, { title = "sacrilege.nvim" })
+        elseif key == "selectmode" or key == "mouse" then 
+            vim.notify(key .. " cannot be changed after setup", vim.log.levels.ERROR, { title = "sacrilege.nvim" })
         else
             rawset(table, key, value)
         end
@@ -83,6 +85,13 @@ function M.setup(opts)
         map_arrow_selection("Down")
         map_arrow_selection("Left")
         map_arrow_selection("Right")
+    end
+
+    if options.mouse then
+        vim.opt.mouse      = "a"
+        vim.opt.mousemodel = "popup_setpos"
+
+        pcall(vim.cmd.aunmenu, "PopUp.How-to\\ disable\\ mouse")
     end
 end
 
