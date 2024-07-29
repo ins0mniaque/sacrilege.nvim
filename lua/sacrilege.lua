@@ -54,6 +54,9 @@ function M.setup(opts)
     vim.keymap.set("i", "<C-c>", function() return options.insertmode and "<Esc>:" or "<C-c>" end, { expr = true, desc = "Command Mode" })
 
     if options.selectmode then
+        vim.opt.selection  = "exclusive"
+        vim.opt.selectmode = { "mouse", "key", "cmd" }
+
         vim.keymap.set({ "n", "i", "s" }, "<M-LeftMouse>", "<4-LeftMouse>", { desc = "Start block selection" })
         vim.keymap.set({ "n", "i", "s" }, "<M-LeftDrag>", "<LeftDrag>", { desc = "Block selection" })
         vim.keymap.set({ "n", "i", "s" }, "<M-LeftRelease>", "", { desc = "End block selection" })
