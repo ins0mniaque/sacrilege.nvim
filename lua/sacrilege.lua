@@ -54,6 +54,7 @@ function M.setup(opts)
     vim.keymap.set("i", "<C-c>", function() return options.insertmode and "<Esc>:" or "<C-c>" end, { expr = true, desc = "Command Mode" })
 
     if options.selectmode then
+        vim.opt.keymodel   = { }
         vim.opt.selection  = "exclusive"
         vim.opt.selectmode = { "mouse", "key", "cmd" }
 
