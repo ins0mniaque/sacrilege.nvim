@@ -56,7 +56,21 @@ function M.setup(opts)
 
     M.trigger()
 
-    vim.keymap.set("i", "<Esc>", function() return options.insertmode and ""       or "<Esc>" end, { expr = true, desc = "Escape" })
+    local function escape()
+        return options.insertmode and "" or "<Esc>"
+    end
+
+    if vim.snippet then
+        escape = function()
+            if vim.snippet.active() then
+                vim.snippet.stop()
+            end
+
+            return options.insertmode and "" or "<Esc>"
+        end
+    end
+
+    vim.keymap.set("i", "<Esc>", escape, { expr = true, desc = "Escape" })
     vim.keymap.set("i", "<C-c>", function() return options.insertmode and "<Esc>:" or "<C-c>" end, { expr = true, desc = "Command Mode" })
 
     if options.selectmode then
