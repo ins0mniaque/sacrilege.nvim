@@ -4,7 +4,9 @@ local defaults =
 {
     insertmode = true,
     selectmode = true,
-    mouse      = true
+    mouse      = true,
+    tab        = true,
+    comment    = true
 }
 
 local options = { }
@@ -15,6 +17,8 @@ local metatable =
         if     key == "insertmode" then return options.insertmode
         elseif key == "selectmode" then return options.selectmode
         elseif key == "mouse"      then return options.mouse
+        elseif key == "tab"        then return options.tab
+        elseif key == "comment"    then return options.comment
         else                            return rawget(table, key)
         end
     end,
@@ -24,7 +28,7 @@ local metatable =
             options.insertmode = value
 
             M.trigger()
-        elseif key == "selectmode" or key == "mouse" then 
+        elseif key == "selectmode" or key == "mouse" or key == "tab" or key == "comment" then 
             vim.notify(key .. " cannot be changed after setup", vim.log.levels.ERROR, { title = "sacrilege.nvim" })
         else
             rawset(table, key, value)
@@ -60,6 +64,8 @@ function M.setup(opts)
         vim.opt.selection  = "exclusive"
         vim.opt.selectmode = { "mouse", "key", "cmd" }
 
+        vim.keymap.set({ "n", "i", "s" }, "<C-a>", "<C-\\><C-N><C-\\><C-N>gggH<C-O>G", { desc = "Select All" })
+
         vim.keymap.set({ "n", "i", "s" }, "<M-LeftMouse>", "<4-LeftMouse>", { desc = "Start block selection" })
         vim.keymap.set({ "n", "i", "s" }, "<M-LeftDrag>", "<LeftDrag>", { desc = "Block selection" })
         vim.keymap.set({ "n", "i", "s" }, "<M-LeftRelease>", "", { desc = "End block selection" })
@@ -92,6 +98,35 @@ function M.setup(opts)
         vim.opt.mousemodel = "popup_setpos"
 
         pcall(vim.cmd.aunmenu, "PopUp.How-to\\ disable\\ mouse")
+    end
+
+    if options.tab then
+        local function map_snippet(direction, rhs)
+            return function() return rhs or "" end
+        end
+
+        if vim.snippet then
+            map_snippet = function(direction, rhs)
+                return function()
+                    if vim.snippet.active({ direction = direction }) then
+                        return "<Cmd>lua vim.snippet.jump(".. direction ..")<CR>"
+                    end
+
+                    return rhs or ""
+                end
+            end
+        end
+
+        vim.keymap.set("i", '<Tab>', map_snippet(1, "<Tab>"), { expr = true, desc = "Tab" })
+        vim.keymap.set("s", '<Tab>', map_snippet(1, "<C-O>>gv"), { expr = true, desc = "Indent" })
+        vim.keymap.set("i", '<S-Tab>', map_snippet(-1, "<C-d>"), { expr = true, desc = "Unindent" })
+        vim.keymap.set("s", '<S-Tab>', map_snippet(-1, "<C-O><gv"), { expr = true, desc = "Unindent" })
+    end
+
+    if options.comment then
+        vim.keymap.set("i", "<C-_>", "<C-\\><C-N>gcci", { desc = "Toggle Line Comment", remap = true })
+        vim.keymap.set("s", "<C-_>", "<C-g>gcgv", { desc = "Toggle Line Comment", remap = true })
+        vim.keymap.set("x", "<C-_>", "gcgv", { desc = "Toggle Line Comment", remap = true })
     end
 end
 
