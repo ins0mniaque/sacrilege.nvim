@@ -60,9 +60,10 @@ function M.setup(opts)
     vim.keymap.set("i", "<C-c>", function() return options.insertmode and "<Esc>:" or "<C-c>" end, { expr = true, desc = "Command Mode" })
 
     if options.selectmode then
-        vim.opt.keymodel   = { }
-        vim.opt.selection  = "exclusive"
-        vim.opt.selectmode = { "mouse", "key", "cmd" }
+        vim.opt.keymodel    = { }
+        vim.opt.selection   = "exclusive"
+        vim.opt.selectmode  = { "mouse", "key", "cmd" }
+        vim.opt.virtualedit = "block"
 
         vim.keymap.set({ "n", "i", "s" }, "<C-a>", "<C-\\><C-N><C-\\><C-N>gggH<C-O>G", { desc = "Select All" })
 
