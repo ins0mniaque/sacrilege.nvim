@@ -79,6 +79,17 @@ function M.setup(opts)
         vim.opt.selectmode  = { "mouse", "key", "cmd" }
         vim.opt.virtualedit = "block"
 
+        if vim.snippet then
+            vim.api.nvim_create_autocmd({ "ModeChanged" },
+            {
+                group = vim.api.nvim_create_augroup("Sacrilege.SnippetMode", { }),
+                pattern = { "*:s" },
+                callback = function(event)
+                    vim.opt.selection = vim.snippet.active() and "inclusive" or "exclusive"
+                end
+            })
+        end
+
         vim.keymap.set({ "n", "i", "s" }, "<C-a>", "<C-\\><C-N><C-\\><C-N>gggH<C-O>G", { desc = "Select All" })
 
         vim.keymap.set({ "n", "i", "s" }, "<M-LeftMouse>", "<4-LeftMouse>", { desc = "Start block selection" })
