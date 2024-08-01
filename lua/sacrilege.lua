@@ -1,3 +1,5 @@
+local ui = require("sacrilege.ui")
+
 local M = { }
 
 local defaults =
@@ -46,61 +48,6 @@ local metatable =
 
 setmetatable(M, metatable)
 
-local function send(keys, remap)
-    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(keys, true, false, true), remap and "t" or "n", true)
-end
-
-local function input(prompt, callback, default)
-    vim.ui.input({ prompt = prompt, default = default }, function(arg)
-        if not arg then return end
-
-        callback(arg)
-    end)
-end
-
-local function select(prompt, items, sort)
-    local function callback(choice)
-        if not choice then return end
-
-        local action = items[choice]
-
-        if     type(action) == "function" then action()
-        elseif type(action) == "string"   then vim.cmd(action)
-        end
-    end
-
-    local keys = vim.tbl_keys(items)
-
-    table.sort(keys, sort)
-
-    vim.ui.select(keys, { prompt = prompt }, callback)
-end
-
-local function try_close_popup()
-    for _, win in ipairs(vim.api.nvim_list_wins()) do
-        if vim.api.nvim_win_get_config(win).relative == 'win' then
-            vim.api.nvim_win_close(win, true)
-            return true
-        end
-    end
-
-    return false
-end
-
-local function get_selected_text()
-    local s_start = vim.fn.getpos("v")
-    local s_end = vim.fn.getpos(".")
-    local n_lines = math.abs(s_end[2] - s_start[2]) + 1
-    local lines = vim.api.nvim_buf_get_lines(0, s_start[2] - 1, s_end[2], false)
-    lines[1] = string.sub(lines[1], s_start[3], -1)
-    if n_lines == 1 then
-      lines[n_lines] = string.sub(lines[n_lines], 1, s_end[3] - s_start[3])
-    else
-      lines[n_lines] = string.sub(lines[n_lines], 1, s_end[3])
-    end
-    return table.concat(lines, '\n')
-  end
-
 function M.setup(opts)
     if vim.fn.has("nvim-0.7.0") ~= 1 then
         return vim.notify("sacrilege.nvim requires Neovim >= 0.7.0", vim.log.levels.ERROR, { title = "sacrilege.nvim" })
@@ -140,7 +87,7 @@ function M.setup(opts)
         vim.cmd("startinsert")
 
         if not try_close_popup() and not options.insertmode then
-            send("<Esc>")
+            ui.send("<Esc>")
         end
     end
 
@@ -296,21 +243,21 @@ function M.setup(opts)
 
     if options.comment then
         vim.keymap.set("i", "<C-_>", "<C-\\><C-N>gcci", { desc = "Toggle Line Comment", remap = true })
-        vim.keymap.set("s", "<C-_>", function() send("<C-g>") send("gc", true) send("<C-\\><C-N><C-g>gv") end, { desc = "Toggle Line Comment" })
-        vim.keymap.set("x", "<C-_>", function() send("gc", true) send("<C-\\><C-N><C-g>gv") end, { desc = "Toggle Line Comment" })
+        vim.keymap.set("s", "<C-_>", function() ui.send("<C-g>") ui.send("gc", true) ui.send("<C-\\><C-N><C-g>gv") end, { desc = "Toggle Line Comment" })
+        vim.keymap.set("x", "<C-_>", function() ui.send("gc", true) ui.send("<C-\\><C-N><C-g>gv") end, { desc = "Toggle Line Comment" })
     end
 
     if options.common then
         vim.keymap.set({ "n", "i", "v", "c" }, "<C-n>", vim.cmd.tabnew, { desc = "New tab" })
-        vim.keymap.set({ "n", "i", "v", "c" }, "<C-o>", M.file_browser, { desc = "Open..." })
-        vim.keymap.set({ "n", "i", "v" }, "<C-s>", function() if vim.fn.expand("%") == "" then input("Save to: ", vim.cmd.write) else vim.cmd.write() end end, { desc = "Save" })
-        vim.keymap.set({ "n", "i", "v" }, "<C-M-s>", function() input("Save as: ", vim.cmd.saveas) end, { desc = "Save As..." })
+        vim.keymap.set({ "n", "i", "v", "c" }, "<C-o>", ui.browse, { desc = "Open..." })
+        vim.keymap.set({ "n", "i", "v" }, "<C-s>", ui.save, { desc = "Save" })
+        vim.keymap.set({ "n", "i", "v" }, "<C-M-s>", ui.saveas, { desc = "Save As..." })
         vim.keymap.set({ "n", "i", "v" }, "<C-w>", "<Cmd>confirm quit<CR>", { desc = "Close" })
         vim.keymap.set({ "n", "i", "v" }, "<F28>", "<Cmd>confirm quit<CR>", { desc = "Close" })
         vim.keymap.set({ "n", "i", "v", "c" }, "<C-q>", "<Cmd>confirm quitall<CR>", { desc = "Quit" })
         vim.keymap.set({ "n", "i", "v", "c" }, "<F52>", "<Cmd>confirm quitall<CR>", { desc = "Quit" })
 
-        vim.keymap.set({ "n", "i", "v", "c" }, "<C-p>", M.command_palette, { desc = "Command Palette..." })
+        vim.keymap.set({ "n", "i", "v", "c" }, "<C-p>", ui.command_palette, { desc = "Command Palette..." })
         vim.keymap.set({ "n", "i", "v", "c" }, "<C-d>", vim.diagnostic.setloclist, { desc = "Toggle Diagnostics" })
     end
 
@@ -332,12 +279,12 @@ function M.setup(opts)
     end
 
     if options.find then
-        vim.keymap.set({ "n", "i", "v" }, "<C-f>", function() input("Find: ", function(arg) send("<C-\\><C-N><C-\\><C-N>/"..arg.."<CR>") end, get_selected_text():gsub("\n", "\\n")) end, { desc = "Find..." })
+        vim.keymap.set({ "n", "i", "v" }, "<C-f>", ui.find, { desc = "Find..." })
         vim.keymap.set({ "n", "i", "v" }, '<F15>', '<C-\\><C-N><C-\\><C-N><Left>gN', { desc = "Find Previous" })
         vim.keymap.set({ "n", "i", "v" }, '<F3>', '<C-\\><C-N><C-\\><C-N>gn', { desc = "Find Next" })
-        vim.keymap.set({ "n", "i", "v" }, "<C-h>", function() input("Replace: ", function(arg) input("Replace with: ", function(arg2) send("<Cmd>%s/" .. arg .. "/" .. arg2 .. "/g<CR>") end, arg) end, get_selected_text():gsub("\n", "\\n")) end, { desc = "Replace..." })
-        vim.keymap.set({ "n", "i", "v" }, "<C-M-f>", function() input("Find in files: ", function(arg) vim.cmd("vimgrep " .. arg .. " **/*") end) end, { desc = "Find in files..." })
-        vim.keymap.set({ "n", "i", "v" }, "<C-g>", function() input("Line Number: ", function(line) vim.api.nvim_win_set_cursor(0, { tonumber(line), 0 }) end) end, { desc = "Go to Line..." })
+        vim.keymap.set({ "n", "i", "v" }, "<C-h>", ui.replace, { desc = "Replace..." })
+        vim.keymap.set({ "n", "i", "v" }, "<C-M-f>", ui.find_in_files, { desc = "Find in files..." })
+        vim.keymap.set({ "n", "i", "v" }, "<C-g>", ui.go_to_line, { desc = "Go to Line..." })
     end
 
     if options.format then
@@ -411,9 +358,9 @@ function M.setup(opts)
                 end
 
                 if client.supports_method(vim.lsp.protocol.Methods.textDocument_hover) then
-                    vim.keymap.set({ "n", "i", "v" }, "<F1>", function() try_close_popup() vim.lsp.buf.hover() end, { buffer = event.buf, desc = "Hover" })
+                    vim.keymap.set({ "n", "i", "v" }, "<F1>", function() ui.try_close_popup() vim.lsp.buf.hover() end, { buffer = event.buf, desc = "Hover" })
                 elseif client.supports_method(vim.lsp.protocol.Methods.textDocument_signatureHelp) then
-                    vim.keymap.set({ "n", "i", "v" }, "<F1>", function() try_close_popup() vim.lsp.buf.signature_help() end, { buffer = event.buf, desc = "Hover" })
+                    vim.keymap.set({ "n", "i", "v" }, "<F1>", function() ui.try_close_popup() vim.lsp.buf.signature_help() end, { buffer = event.buf, desc = "Hover" })
                 end
 
                 if client.supports_method(vim.lsp.protocol.Methods.textDocument_definition) then
@@ -503,7 +450,7 @@ end
 local function selectmode()
     local mode = vim.fn.mode()
     if mode == "v" or mode == "V" or mode == "\22" then
-        send("<C-\\><C-N>gv")
+        ui.send("<C-\\><C-N>gv")
     end
 end
 
@@ -511,66 +458,6 @@ function M.trigger_selectmode()
     if options.selectmode then
         vim.defer_fn(selectmode, 0)
     end
-end
-
-function M.command_palette()
-    local commands = { }
-
-    local selstart = vim.fn.getpos('v')
-    local cursor   = vim.fn.getpos('.')
-
-    local function parse(keymaps)
-        for _, keymap in pairs(keymaps) do
-            if keymap.desc then
-                commands[string.format("%-48s %s", keymap.desc, keymap.lhs)] = function()
-                    if keymap.mode == "i" then
-                        vim.cmd.startinsert()
-                    elseif keymap.mode == "n" then
-                        vim.cmd("normal! :noh")
-                    elseif keymap.mode == "v" or keymap.mode == "s" then
-                        vim.fn.setpos('.', selstart)
-                        vim.cmd("normal! v")
-                        vim.fn.setpos('.', cursor)
-                    end
-
-                    send(keymap.lhs, true)
-                end
-            end
-        end
-    end
-
-    local mode = vim.fn.mode()
-    if     mode == "s" or mode == "S" or mode == "\19" then mode = "s"
-    elseif mode == "v" or mode == "V" or mode == "\22" then mode = "v"
-    elseif mode ~= "i"                                 then mode = "n"
-    end
-
-    parse(vim.api.nvim_get_keymap(mode))
-    parse(vim.api.nvim_buf_get_keymap(0, mode))
-
-    select("Commands", commands, function(l, r) return l:lower() < r:lower() end)
-end
-
-function M.file_browser()
-    local cwdContent = vim.split(vim.fn.glob(vim.fn.getcwd() .. "/*"), '\n', { trimempty = true })
-
-    local items = { [".."] = function() vim.cmd("cd ..") M.file_browser() end }
-
-    for _, cwdItem in pairs(cwdContent) do
-        if vim.fn.isdirectory(cwdItem) ~= 0 then
-            items[cwdItem] = function()
-                vim.cmd("cd " .. cwdItem)
-
-                M.file_browser()
-            end
-        else
-            items[cwdItem] = function()
-                vim.cmd.tabnew(cwdItem)
-            end
-        end
-    end
-
-    select("Open File", items, function(l, r) return l:lower() < r:lower() end)
 end
 
 return M
