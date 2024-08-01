@@ -182,13 +182,14 @@ function M.setup(opts)
         map_arrow_selection("Right")
     end
 
-    -- TODO: Fix menu not working in SELECT mode
     if options.mouse then
         vim.opt.mouse      = "a"
         vim.opt.mousemodel = "popup_setpos"
 
         pcall(vim.cmd.aunmenu, "PopUp.-1-")
         pcall(vim.cmd.aunmenu, "PopUp.How-to\\ disable\\ mouse")
+
+        vim.keymap.set("s", "<RightMouse>", "<C-\\><C-g>gv<Cmd>:popup! PopUp<CR>", { desc = "Popup menu" })
 
         local menus =
         {
