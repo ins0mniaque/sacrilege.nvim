@@ -83,10 +83,10 @@ function M.setup(opts)
         end
 
         vim.cmd("nohl")
-        vim.cmd("stopinsert")
-        vim.cmd("startinsert")
+        vim.cmd("echon '\r\r'")
+        vim.cmd("echon ''")
 
-        if not try_close_popup() and not options.insertmode then
+        if not ui.try_close_popup() and not options.insertmode then
             ui.send("<Esc>")
         end
     end
