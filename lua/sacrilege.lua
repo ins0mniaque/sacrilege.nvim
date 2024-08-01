@@ -131,8 +131,9 @@ function M.setup(opts)
 
     vim.keymap.set("i", "<Esc>", escape, { desc = "Escape" })
     vim.keymap.set("i", "<C-c>", function() return options.insertmode and "" or "<C-c>" end, { expr = true })
-    vim.keymap.set("i", "<C-M-c>", "<Esc>:", { desc = "Command Line Mode" })
-    vim.keymap.set("i", "<C-M-t>", "<Cmd>terminal<CR>", { desc = "Terminal" })
+
+    vim.keymap.set({ "n", "i", "v" }, "<C-M-c>", "<Esc>:", { desc = "Command Line Mode" })
+    vim.keymap.set({ "n", "i", "v", "c" }, "<C-M-t>", "<Cmd>terminal<CR>", { desc = "Terminal" })
 
     if options.selectmode then
         vim.opt.keymodel    = { }
@@ -151,13 +152,15 @@ function M.setup(opts)
             })
         end
 
-        vim.keymap.set("n", "<C-a>", "ggVG", { desc = "Select All" })
-        vim.keymap.set("v", "<C-a>", "gg0oG$", { desc = "Select All" })
-        vim.keymap.set("i", "<C-a>", "<C-Home><C-O>VG", { desc = "Select All" })
+        vim.keymap.set("v", "<BS>", "d", { desc = "Delete" })
 
-        vim.keymap.set({ "n", "i", "s" }, "<M-LeftMouse>", "<4-LeftMouse>", { desc = "Start block selection" })
-        vim.keymap.set({ "n", "i", "s" }, "<M-LeftDrag>", "<LeftDrag>", { desc = "Block selection" })
-        vim.keymap.set({ "n", "i", "s" }, "<M-LeftRelease>", "", { desc = "End block selection" })
+        vim.keymap.set("n", "<C-a>", "ggVG", { desc = "Select All" })
+        vim.keymap.set("i", "<C-a>", "<C-Home><C-O>VG", { desc = "Select All" })
+        vim.keymap.set("v", "<C-a>", "gg0oG$", { desc = "Select All" })
+
+        vim.keymap.set({ "n", "i", "v" }, "<M-LeftMouse>", "<4-LeftMouse>", { desc = "Start block selection" })
+        vim.keymap.set({ "n", "i", "v" }, "<M-LeftDrag>", "<LeftDrag>", { desc = "Block selection" })
+        vim.keymap.set({ "n", "i", "v" }, "<M-LeftRelease>", "", { desc = "End block selection" })
 
         local function map_mode(mode, rhs, otherwise)
             return function() return vim.fn.mode() == mode and rhs or otherwise or "" end
@@ -168,12 +171,12 @@ function M.setup(opts)
             vim.keymap.set("i", "<C-S-" .. arrow .. ">", "<C-o>v<C-g><C-" .. arrow .. ">", { desc = "Select word" })
             vim.keymap.set("i", "<M-S-" .. arrow .. ">", "<C-o><C-v><C-g><" .. arrow .. ">", { desc = "Block select character" })
             vim.keymap.set("i", "<C-M-S-" .. arrow .. ">", "<C-o><C-v><C-g><C-" .. arrow .. ">", { desc = "Block select word" })
-            vim.keymap.set("s", "<S-" .. arrow .. ">", "<" .. arrow .. ">", { desc = "Select character" })
-            vim.keymap.set("s", "<C-S-" .. arrow .. ">", "<C-" .. arrow .. ">", { desc = "Select word" })
-            vim.keymap.set("s", "<M-S-" .. arrow .. ">", map_mode("\19", "<" .. arrow .. ">", "<C-o><C-v><C-g><" .. arrow .. "><C-g>"), { expr = true, desc = "Block select character" })
-            vim.keymap.set("s", "<C-M-S-" .. arrow .. ">", map_mode("\19", "<C-" .. arrow .. ">", "<C-o><C-v><C-g><C-" .. arrow .. "><C-g>"), { expr = true, desc = "Block select word" })
-            vim.keymap.set("s", "<" .. arrow .. ">", "<Esc><" .. arrow .. ">", { desc = "Stop selection" })
-            vim.keymap.set("s", "<C-" .. arrow .. ">", "<Esc><C-" .. arrow .. ">", { desc = "Stop selection" })
+            vim.keymap.set("v", "<S-" .. arrow .. ">", "<" .. arrow .. ">", { desc = "Select character" })
+            vim.keymap.set("v", "<C-S-" .. arrow .. ">", "<C-" .. arrow .. ">", { desc = "Select word" })
+            vim.keymap.set("v", "<M-S-" .. arrow .. ">", map_mode("\19", "<" .. arrow .. ">", "<C-o><C-v><C-g><" .. arrow .. "><C-g>"), { expr = true, desc = "Block select character" })
+            vim.keymap.set("v", "<C-M-S-" .. arrow .. ">", map_mode("\19", "<C-" .. arrow .. ">", "<C-o><C-v><C-g><C-" .. arrow .. "><C-g>"), { expr = true, desc = "Block select word" })
+            vim.keymap.set("v", "<" .. arrow .. ">", "<Cmd>startinsert<CR><Esc><" .. arrow .. ">", { desc = "Stop selection" })
+            vim.keymap.set("v", "<C-" .. arrow .. ">", "<Cmd>startinsert<CR><Esc><C-" .. arrow .. ">", { desc = "Stop selection" })
         end
 
         map_arrow_selection("Up")
@@ -203,7 +206,7 @@ function M.setup(opts)
             { "Code Action", "<M-a>" },
             { "Hover", "<F1>" },
             { "Format Selection", "<M-f>", selection = true },
-            { "Toggle Selection Line Comment", "<C-/>", selection = true }
+            { "Toggle Selection Line Comment", "<C-_>", selection = true }
         }
 
         for _, menu in pairs(menus) do
@@ -261,27 +264,30 @@ function M.setup(opts)
 
         vim.keymap.set("i", '<Tab>', map_snippet(1, "<Tab>"), { expr = true, desc = "Tab" })
         vim.keymap.set("s", '<Tab>', map_snippet(1, "<C-O>>gv"), { expr = true, desc = "Indent" })
+        vim.keymap.set("x", '<Tab>', map_snippet(1, "<C-g><C-O>>gv"), { expr = true, desc = "Indent" })
         vim.keymap.set("i", '<S-Tab>', map_snippet(-1, "<C-d>"), { expr = true, desc = "Unindent" })
         vim.keymap.set("s", '<S-Tab>', map_snippet(-1, "<C-O><gv"), { expr = true, desc = "Unindent" })
+        vim.keymap.set("x", '<S-Tab>', map_snippet(-1, "<C-g><C-O><gv"), { expr = true, desc = "Unindent" })
     end
 
     if options.comment then
         vim.keymap.set("i", "<C-_>", "<C-\\><C-N>gcci", { desc = "Toggle Line Comment", remap = true })
         vim.keymap.set("s", "<C-_>", function() send("<C-g>") send("gc", true) send("<C-\\><C-N><C-g>gv") end, { desc = "Toggle Line Comment" })
+        vim.keymap.set("x", "<C-_>", function() send("gc", true) send("<C-\\><C-N><C-g>gv") end, { desc = "Toggle Line Comment" })
     end
 
     if options.common then
-        vim.keymap.set({ "n", "i", "s" }, "<C-n>", vim.cmd.tabnew, { desc = "New tab" })
-        vim.keymap.set({ "n", "i", "s" }, "<C-o>", M.file_browser, { desc = "Open..." })
-        vim.keymap.set({ "n", "i", "s" }, "<C-s>", function() if vim.fn.expand("%") == "" then input("Save to: ", vim.cmd.write) else vim.cmd.write() end end, { desc = "Save" })
-        vim.keymap.set({ "n", "i", "s" }, "<C-M-s>", function() input("Save as: ", vim.cmd.saveas) end, { desc = "Save As..." })
-        vim.keymap.set({ "n", "i", "s" }, "<C-w>", "<Cmd>confirm quit<CR>", { desc = "Close" })
-        vim.keymap.set({ "n", "i", "s" }, "<F28>", "<Cmd>confirm quit<CR>", { desc = "Close" })
-        vim.keymap.set({ "n", "i", "s" }, "<C-q>", "<Cmd>confirm quitall<CR>", { desc = "Quit" })
-        vim.keymap.set({ "n", "i", "s" }, "<F52>", "<Cmd>confirm quitall<CR>", { desc = "Quit" })
+        vim.keymap.set({ "n", "i", "v", "c" }, "<C-n>", vim.cmd.tabnew, { desc = "New tab" })
+        vim.keymap.set({ "n", "i", "v", "c" }, "<C-o>", M.file_browser, { desc = "Open..." })
+        vim.keymap.set({ "n", "i", "v" }, "<C-s>", function() if vim.fn.expand("%") == "" then input("Save to: ", vim.cmd.write) else vim.cmd.write() end end, { desc = "Save" })
+        vim.keymap.set({ "n", "i", "v" }, "<C-M-s>", function() input("Save as: ", vim.cmd.saveas) end, { desc = "Save As..." })
+        vim.keymap.set({ "n", "i", "v" }, "<C-w>", "<Cmd>confirm quit<CR>", { desc = "Close" })
+        vim.keymap.set({ "n", "i", "v" }, "<F28>", "<Cmd>confirm quit<CR>", { desc = "Close" })
+        vim.keymap.set({ "n", "i", "v", "c" }, "<C-q>", "<Cmd>confirm quitall<CR>", { desc = "Quit" })
+        vim.keymap.set({ "n", "i", "v", "c" }, "<F52>", "<Cmd>confirm quitall<CR>", { desc = "Quit" })
 
-        vim.keymap.set({ "n", "i", "s" }, "<C-p>", M.command_palette, { desc = "Command Palette..." })
-        vim.keymap.set({ "n", "i", "s" }, "<C-d>", vim.diagnostic.setloclist, { desc = "Toggle Diagnostics" })
+        vim.keymap.set({ "n", "i", "v", "c" }, "<C-p>", M.command_palette, { desc = "Command Palette..." })
+        vim.keymap.set({ "n", "i", "v", "c" }, "<C-d>", vim.diagnostic.setloclist, { desc = "Toggle Diagnostics" })
     end
 
     if options.clipboard then
@@ -291,38 +297,39 @@ function M.setup(opts)
         vim.keymap.set("n", "<C-V>", "\"+gP", { desc = "Paste" })
         vim.keymap.set("o", "<C-V>", "<C-C>\"+gP<C-\\><C-G>", { desc = "Paste" })
         vim.keymap.set("i", "<C-V>", "<C-\\><C-O>\"+gP", { desc = "Paste" })
-        vim.keymap.set("c", "<C-V>", "<C-C>\"+gP<C-\\><C-G>", { desc = "Paste" })
+        vim.keymap.set("c", "<C-V>", "<C-R>\"", { desc = "Paste" })
         vim.keymap.set("v", "<C-V>", "\"_x", { desc = "Delete" })
     end
 
     if options.undo then
-        vim.keymap.set({ "n", "i", "s" }, "<C-z>", "<C-O>u", { desc = "Undo" })
-        vim.keymap.set({ "n", "i", "s" }, "<C-M-z>", "<C-O><C-r>", { desc = "Redo" })
-        vim.keymap.set({ "n", "i", "s" }, "<C-y>", "<C-O><C-r>", { desc = "Redo" })
+        vim.keymap.set({ "n", "i", "v" }, "<C-z>", "<Cmd>undo<CR>", { desc = "Undo" })
+        vim.keymap.set({ "n", "i", "v" }, "<C-M-z>", "<Cmd>redo<CR>", { desc = "Redo" })
+        vim.keymap.set({ "n", "i", "v" }, "<C-y>", "<Cmd>redo<CR>", { desc = "Redo" })
     end
 
     if options.find then
-        vim.keymap.set({ "n", "i", "s" }, "<C-f>", function() input("Find: ", function(arg) send("<C-\\><C-N><C-\\><C-N>/"..arg.."<CR>") end, get_selected_text():gsub("\n", "\\n")) end, { desc = "Find..." })
-        vim.keymap.set({ "n", "i", "s" }, '<F15>', '<C-\\><C-N><C-\\><C-N><Left>gN', { desc = "Find Previous" })
-        vim.keymap.set({ "n", "i", "s" }, '<F3>', '<C-\\><C-N><C-\\><C-N>gn', { desc = "Find Next" })
-        vim.keymap.set({ "n", "i", "s" }, "<C-h>", function() input("Replace: ", function(arg) input("Replace with: ", function(arg2) send("<Cmd>%s/" .. arg .. "/" .. arg2 .. "/g<CR>") end, arg) end, get_selected_text():gsub("\n", "\\n")) end, { desc = "Replace..." })
-        vim.keymap.set({ "n", "i", "s" }, "<C-M-f>", function() input("Find in files: ", function(arg) vim.cmd("vimgrep " .. arg .. " **/*") end) end, { desc = "Find in files..." })
-        vim.keymap.set({ "n", "i", "s" }, "<C-g>", function() input("Line Number: ", function(line) vim.api.nvim_win_set_cursor(0, { tonumber(line), 0 }) end) end, { desc = "Go to Line..." })
+        vim.keymap.set({ "n", "i", "v" }, "<C-f>", function() input("Find: ", function(arg) send("<C-\\><C-N><C-\\><C-N>/"..arg.."<CR>") end, get_selected_text():gsub("\n", "\\n")) end, { desc = "Find..." })
+        vim.keymap.set({ "n", "i", "v" }, '<F15>', '<C-\\><C-N><C-\\><C-N><Left>gN', { desc = "Find Previous" })
+        vim.keymap.set({ "n", "i", "v" }, '<F3>', '<C-\\><C-N><C-\\><C-N>gn', { desc = "Find Next" })
+        vim.keymap.set({ "n", "i", "v" }, "<C-h>", function() input("Replace: ", function(arg) input("Replace with: ", function(arg2) send("<Cmd>%s/" .. arg .. "/" .. arg2 .. "/g<CR>") end, arg) end, get_selected_text():gsub("\n", "\\n")) end, { desc = "Replace..." })
+        vim.keymap.set({ "n", "i", "v" }, "<C-M-f>", function() input("Find in files: ", function(arg) vim.cmd("vimgrep " .. arg .. " **/*") end) end, { desc = "Find in files..." })
+        vim.keymap.set({ "n", "i", "v" }, "<C-g>", function() input("Line Number: ", function(line) vim.api.nvim_win_set_cursor(0, { tonumber(line), 0 }) end) end, { desc = "Go to Line..." })
     end
 
     if options.format then
         vim.keymap.set("n", "<M-f>", "gg=G", { desc = "Format Buffer" })
         vim.keymap.set("i", "<M-f>", "<C-\\><C-N><C-\\><C-N>gg=G", { desc = "Format Buffer" })
         vim.keymap.set("s", "<M-f>", "<C-O>=gv", { desc = "Format Selection" })
+        vim.keymap.set("x", "<M-f>", "<C-g><C-O>=gv", { desc = "Format Selection" })
     end
 
     if options.dap then
-        vim.keymap.set({ "n", "i", "s" }, "<F5>", function() require("dap").continue() end, { desc = "Debug: Start/Continue" })
-        vim.keymap.set({ "n", "i", "s" }, "<F11>", function() require("dap").step_into() end, { desc = "Debug: Step Into" })
-        vim.keymap.set({ "n", "i", "s" }, "<F10>", function() require("dap").step_over() end, { desc = "Debug: Step Over" })
-        vim.keymap.set({ "n", "i", "s" }, "<F23>", function() require("dap").step_out() end, { desc = "Debug: Step Out" })
-        vim.keymap.set({ "n", "i", "s" }, "<F9>", function() require("dap").toggle_breakpoint() end, { desc = "Debug: Toggle Breakpoint" })
-        vim.keymap.set({ "n", "i", "s" }, "<F21>", function() input("Breakpoint condition: ", require("dap").set_breakpoint) end, { desc = "Debug: Set Conditional Breakpoint" })
+        vim.keymap.set({ "n", "i", "v" }, "<F5>", function() require("dap").continue() end, { desc = "Debug: Start/Continue" })
+        vim.keymap.set({ "n", "i", "v" }, "<F11>", function() require("dap").step_into() end, { desc = "Debug: Step Into" })
+        vim.keymap.set({ "n", "i", "v" }, "<F10>", function() require("dap").step_over() end, { desc = "Debug: Step Over" })
+        vim.keymap.set({ "n", "i", "v" }, "<F23>", function() require("dap").step_out() end, { desc = "Debug: Step Out" })
+        vim.keymap.set({ "n", "i", "v" }, "<F9>", function() require("dap").toggle_breakpoint() end, { desc = "Debug: Toggle Breakpoint" })
+        vim.keymap.set({ "n", "i", "v" }, "<F21>", function() input("Breakpoint condition: ", require("dap").set_breakpoint) end, { desc = "Debug: Set Conditional Breakpoint" })
     end
 
     if options.treesitter then
@@ -352,18 +359,18 @@ function M.setup(opts)
                 end
 
                 if not options.lsp or not supports_lsp_method(event.buf, vim.lsp.protocol.Methods.textDocument_definition) then
-                    vim.keymap.set({ "n", "i", "s" }, "<F12>", treesitter.definition, { buffer = event.buf, desc = "Go to Definition" })
-                    vim.keymap.set({ "n", "i", "s" }, "<C-g>d", treesitter.definition, { buffer = event.buf, desc = "Go to Definition" })
+                    vim.keymap.set({ "n", "i", "v" }, "<F12>", treesitter.definition, { buffer = event.buf, desc = "Go to Definition" })
+                    vim.keymap.set({ "n", "i", "v" }, "<C-g>d", treesitter.definition, { buffer = event.buf, desc = "Go to Definition" })
                 end
 
                 if not options.lsp or not supports_lsp_method(event.buf, vim.lsp.protocol.Methods.textDocument_references) then
-                    vim.keymap.set({ "n", "i", "s" }, "<F24>", treesitter.references, { buffer = event.buf, desc = "Find all references..." })
-                    vim.keymap.set({ "n", "i", "s" }, "<C-g>r", treesitter.references, { buffer = event.buf, desc = "Find all references..." })
+                    vim.keymap.set({ "n", "i", "v" }, "<F24>", treesitter.references, { buffer = event.buf, desc = "Find All References..." })
+                    vim.keymap.set({ "n", "i", "v" }, "<C-g>r", treesitter.references, { buffer = event.buf, desc = "Find All References..." })
                 end
 
                 if not options.lsp or not supports_lsp_method(event.buf, vim.lsp.protocol.Methods.textDocument_rename) then
-                    vim.keymap.set({ "n", "i", "s" }, "<F2>", treesitter.rename, { buffer = event.buf, desc = "Rename..." })
-                    vim.keymap.set({ "n", "i", "s" }, "<C-r>", treesitter.rename, { buffer = event.buf, desc = "Rename..." })
+                    vim.keymap.set({ "n", "i", "v" }, "<F2>", treesitter.rename, { buffer = event.buf, desc = "Rename..." })
+                    vim.keymap.set({ "n", "i", "v" }, "<C-r>", treesitter.rename, { buffer = event.buf, desc = "Rename..." })
                 end
             end
         })
@@ -380,49 +387,49 @@ function M.setup(opts)
                 end
 
                 if client.supports_method(vim.lsp.protocol.Methods.textDocument_hover) then
-                    vim.keymap.set({ "n", "i", "s" }, "<F1>", function() try_close_popup() vim.lsp.buf.hover() end, { buffer = event.buf, desc = "Hover" })
+                    vim.keymap.set({ "n", "i", "v" }, "<F1>", function() try_close_popup() vim.lsp.buf.hover() end, { buffer = event.buf, desc = "Hover" })
                 elseif client.supports_method(vim.lsp.protocol.Methods.textDocument_signatureHelp) then
-                    vim.keymap.set({ "n", "i", "s" }, "<F1>", function() try_close_popup() vim.lsp.buf.signature_help() end, { buffer = event.buf, desc = "Hover" })
+                    vim.keymap.set({ "n", "i", "v" }, "<F1>", function() try_close_popup() vim.lsp.buf.signature_help() end, { buffer = event.buf, desc = "Hover" })
                 end
 
                 if client.supports_method(vim.lsp.protocol.Methods.textDocument_definition) then
-                    vim.keymap.set({ "n", "i", "s" }, "<F12>", vim.lsp.buf.definition, { buffer = event.buf, desc = "Go to Definition" })
-                    vim.keymap.set({ "n", "i", "s" }, "<C-g>d", vim.lsp.buf.definition, { buffer = event.buf, desc = "Go to Definition" })
+                    vim.keymap.set({ "n", "i", "v" }, "<F12>", vim.lsp.buf.definition, { buffer = event.buf, desc = "Go to Definition" })
+                    vim.keymap.set({ "n", "i", "v" }, "<C-g>d", vim.lsp.buf.definition, { buffer = event.buf, desc = "Go to Definition" })
                 end
 
                 if client.supports_method(vim.lsp.protocol.Methods.textDocument_references) then
-                    vim.keymap.set({ "n", "i", "s" }, "<F24>", vim.lsp.buf.references, { buffer = event.buf, desc = "Find all References..." })
-                    vim.keymap.set({ "n", "i", "s" }, "<C-g>r", vim.lsp.buf.references, { buffer = event.buf, desc = "Find all References..." })
+                    vim.keymap.set({ "n", "i", "v" }, "<F24>", vim.lsp.buf.references, { buffer = event.buf, desc = "Find All References..." })
+                    vim.keymap.set({ "n", "i", "v" }, "<C-g>r", vim.lsp.buf.references, { buffer = event.buf, desc = "Find All References..." })
                 end
 
                 if client.supports_method(vim.lsp.protocol.Methods.textDocument_implementation) then
-                    vim.keymap.set({ "n", "i", "s" }, "<C-g>i", vim.lsp.buf.implementation, { buffer = event.buf, desc = "Go to Implementation" })
+                    vim.keymap.set({ "n", "i", "v" }, "<C-g>i", vim.lsp.buf.implementation, { buffer = event.buf, desc = "Go to Implementation" })
                 end
 
                 if client.supports_method(vim.lsp.protocol.Methods.textDocument_typeDefinition) then
-                    vim.keymap.set({ "n", "i", "s" }, "<C-g>t", vim.lsp.buf.type_definition, { buffer = event.buf, desc = "Go to Type Definition" })
+                    vim.keymap.set({ "n", "i", "v" }, "<C-g>t", vim.lsp.buf.type_definition, { buffer = event.buf, desc = "Go to Type Definition" })
                 end
 
                 if client.supports_method(vim.lsp.protocol.Methods.textDocument_documentSymbol) then
-                    vim.keymap.set({ "n", "i", "s" }, "<C-g>s", vim.lsp.buf.document_symbol, { buffer = event.buf, desc = "Find in Document Symbols..." })
+                    vim.keymap.set({ "n", "i", "v" }, "<C-g>s", vim.lsp.buf.document_symbol, { buffer = event.buf, desc = "Find in Document Symbols..." })
                 end
 
                 if client.supports_method(vim.lsp.protocol.Methods.workspace_symbol) then
-                    vim.keymap.set({ "n", "i", "s" }, "<C-g>S", vim.lsp.buf.workspace_symbol, { buffer = event.buf, desc = "Find in Workspace Symbols..." })
+                    vim.keymap.set({ "n", "i", "v" }, "<C-g>S", vim.lsp.buf.workspace_symbol, { buffer = event.buf, desc = "Find in Workspace Symbols..." })
                 end
 
                 if client.supports_method(vim.lsp.protocol.Methods.textDocument_declaration) then
-                    vim.keymap.set({ "n", "i", "s" }, "<C-g>D", vim.lsp.buf.declaration, { buffer = event.buf, desc = "Go to Declaration" })
+                    vim.keymap.set({ "n", "i", "v" }, "<C-g>D", vim.lsp.buf.declaration, { buffer = event.buf, desc = "Go to Declaration" })
                 end
 
                 if client.supports_method(vim.lsp.protocol.Methods.textDocument_rename) then
-                    vim.keymap.set({ "n", "i", "s" }, "<F2>", vim.lsp.buf.rename, { buffer = event.buf, desc = "Rename" })
-                    vim.keymap.set({ "n", "i", "s" }, "<C-r>", vim.lsp.buf.rename, { buffer = event.buf, desc = "Rename" })
+                    vim.keymap.set({ "n", "i", "v" }, "<F2>", vim.lsp.buf.rename, { buffer = event.buf, desc = "Rename" })
+                    vim.keymap.set({ "n", "i", "v" }, "<C-r>", vim.lsp.buf.rename, { buffer = event.buf, desc = "Rename" })
                 end
 
                 if client.supports_method(vim.lsp.protocol.Methods.textDocument_codeAction) then
-                    vim.keymap.set({ "n", "i", "s" }, "<F49>", vim.lsp.buf.code_action, { buffer = event.buf, desc = "Code Action" })
-                    vim.keymap.set({ "n", "i", "s" }, "<M-a>", vim.lsp.buf.code_action, { buffer = event.buf, desc = "Code Action" })
+                    vim.keymap.set({ "n", "i", "v" }, "<F49>", vim.lsp.buf.code_action, { buffer = event.buf, desc = "Code Action" })
+                    vim.keymap.set({ "n", "i", "v" }, "<M-a>", vim.lsp.buf.code_action, { buffer = event.buf, desc = "Code Action" })
                 end
 
                 if options.format then
@@ -431,23 +438,23 @@ function M.setup(opts)
                     end
 
                     if client.supports_method(vim.lsp.protocol.Methods.textDocument_rangeFormatting) then
-                        vim.keymap.set("s", "<M-f>", function() vim.lsp.buf.format({ async = true, range = { start = vim.api.nvim_buf_get_mark(0, "<"), ["end"] = vim.api.nvim_buf_get_mark(0, ">") } }) end, { buffer = event.buf, desc = "Format Selection" })
+                        vim.keymap.set("v", "<M-f>", function() vim.lsp.buf.format({ async = true, range = { start = vim.api.nvim_buf_get_mark(0, "<"), ["end"] = vim.api.nvim_buf_get_mark(0, ">") } }) end, { buffer = event.buf, desc = "Format Selection" })
                     end
                 end
  
                 if client.supports_method(vim.lsp.protocol.Methods.textDocument_inlayHint) then
-                    vim.keymap.set({ "n", "i", "s" }, "<F13>", function() vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf }) end, { buffer = event.buf, desc = "Toggle Hints" })
+                    vim.keymap.set({ "n", "i", "v" }, "<F13>", function() vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf }) end, { buffer = event.buf, desc = "Toggle Hints" })
                 end
             end
         })
     end
 
     if options.tests then
-        vim.keymap.set({ "n", "i", "s" }, "<C-t>r", function() require("neotest").run.run() end, { desc = "Run Current Test" })
-        vim.keymap.set({ "n", "i", "s" }, "<C-t>R", function() require("neotest").run.run(vim.fn.expand("%")) end, { desc = "Run All Tests" })
-        vim.keymap.set({ "n", "i", "s" }, "<C-t>d", function() require("neotest").run.run({strategy = "dap"}) end, { desc = "Debug Current Test" })
-        vim.keymap.set({ "n", "i", "s" }, "<C-t>s", function() require("neotest").run.stop() end, { desc = "Stop Current Test" })
-        vim.keymap.set({ "n", "i", "s" }, "<C-t>a", function() require("neotest").run.attach() end, { desc = "Attach Current Test" })
+        vim.keymap.set({ "n", "i", "v" }, "<C-t>r", function() require("neotest").run.run() end, { desc = "Run Current Test" })
+        vim.keymap.set({ "n", "i", "v" }, "<C-t>R", function() require("neotest").run.run(vim.fn.expand("%")) end, { desc = "Run All Tests" })
+        vim.keymap.set({ "n", "i", "v" }, "<C-t>d", function() require("neotest").run.run({strategy = "dap"}) end, { desc = "Debug Current Test" })
+        vim.keymap.set({ "n", "i", "v" }, "<C-t>s", function() require("neotest").run.stop() end, { desc = "Stop Current Test" })
+        vim.keymap.set({ "n", "i", "v" }, "<C-t>a", function() require("neotest").run.attach() end, { desc = "Attach Current Test" })
     end
 end
 
