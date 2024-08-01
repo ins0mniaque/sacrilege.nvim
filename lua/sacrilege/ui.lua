@@ -5,6 +5,10 @@ function M.send(keys, remap)
 end
 
 function M.input(prompt, defaultOrCallback, callback)
+    if vim.fn.mode() == "c" then
+        M.send("<C-r>")
+    end
+
     vim.ui.input({ prompt = prompt, default = callback and defaultOrCallback }, function(arg)
         if not arg then return end
 
@@ -13,6 +17,10 @@ function M.input(prompt, defaultOrCallback, callback)
 end
 
 function M.select(prompt, items, sort)
+    if vim.fn.mode() == "c" then
+        M.send("<C-r>")
+    end
+
     local function callback(choice)
         if not choice then return end
 
