@@ -31,7 +31,11 @@ local metatable =
         if key == "insertmode" then 
             options.insertmode = value
 
-            M.trigger()
+            M.trigger_insertmode()
+        elseif key == "selectmode" then 
+            options.selectmode = value
+
+            M.trigger_selectmode()
         elseif vim.list_contains(metakeys, key) then 
             vim.notify(key .. " cannot be changed after setup", vim.log.levels.ERROR, { title = "sacrilege.nvim" })
         else
@@ -104,16 +108,27 @@ function M.setup(opts)
 
     options = vim.tbl_deep_extend("force", defaults, opts or { }) or { }
 
+    local group = vim.api.nvim_create_augroup("Sacrilege.InsertMode", { })
+
     vim.api.nvim_create_autocmd({ "BufEnter", "InsertLeave", "TermLeave" },
     {
-        group = vim.api.nvim_create_augroup("Sacrilege", { }),
+        group = group,
         pattern = { "*" },
         callback = function(event)
-            M.trigger()
+            M.trigger_insertmode()
         end
     })
 
-    M.trigger()
+    vim.api.nvim_create_autocmd({ "ModeChanged" },
+    {
+        group = group,
+        pattern = { "*:n" },
+        callback = function(event)
+            M.trigger_insertmode()
+        end
+    })
+
+    M.trigger_insertmode()
 
     local function escape()
         if vim.snippet and vim.snippet.active() then
@@ -140,6 +155,15 @@ function M.setup(opts)
         vim.opt.selection   = "exclusive"
         vim.opt.selectmode  = { "mouse", "key", "cmd" }
         vim.opt.virtualedit = "block"
+
+        vim.api.nvim_create_autocmd({ "ModeChanged" },
+        {
+            group = vim.api.nvim_create_augroup("Sacrilege.SelectMode", { }),
+            pattern = { "*:v", "*:V", "*:\22" },
+            callback = function(event)
+                M.trigger_selectmode()
+            end
+        })
 
         if vim.snippet then
             vim.api.nvim_create_autocmd({ "ModeChanged" },
@@ -175,8 +199,8 @@ function M.setup(opts)
             vim.keymap.set("v", "<C-S-" .. arrow .. ">", "<C-" .. arrow .. ">", { desc = "Select word" })
             vim.keymap.set("v", "<M-S-" .. arrow .. ">", map_mode("\19", "<" .. arrow .. ">", "<C-o><C-v><C-g><" .. arrow .. "><C-g>"), { expr = true, desc = "Block select character" })
             vim.keymap.set("v", "<C-M-S-" .. arrow .. ">", map_mode("\19", "<C-" .. arrow .. ">", "<C-o><C-v><C-g><C-" .. arrow .. "><C-g>"), { expr = true, desc = "Block select word" })
-            vim.keymap.set("v", "<" .. arrow .. ">", "<Cmd>startinsert<CR><Esc><" .. arrow .. ">", { desc = "Stop selection" })
-            vim.keymap.set("v", "<C-" .. arrow .. ">", "<Cmd>startinsert<CR><Esc><C-" .. arrow .. ">", { desc = "Stop selection" })
+            vim.keymap.set("v", "<" .. arrow .. ">", "<Esc><" .. arrow .. ">", { desc = "Stop selection" })
+            vim.keymap.set("v", "<C-" .. arrow .. ">", "<Esc><C-" .. arrow .. ">", { desc = "Stop selection" })
         end
 
         map_arrow_selection("Up")
@@ -223,7 +247,7 @@ function M.setup(opts)
 
         vim.api.nvim_create_autocmd({ "MenuPopup" },
         {
-            group = vim.api.nvim_create_augroup("Sacrilege.PopUp", { }),
+            group = vim.api.nvim_create_augroup("Sacrilege.Menu", { }),
             pattern = { "*" },
             callback = function(event)
                 local mode = vim.fn.mode()
@@ -458,7 +482,7 @@ function M.setup(opts)
     end
 end
 
-function M.desecrate()
+local function insertmode()
     if vim.bo.modifiable and
        not vim.bo.readonly and
        vim.bo.buftype ~= "nofile" or
@@ -470,9 +494,22 @@ function M.desecrate()
     end
 end
 
-function M.trigger()
+function M.trigger_insertmode()
     if options.insertmode then
-        vim.defer_fn(M.desecrate, 0)
+        vim.defer_fn(insertmode, 0)
+    end
+end
+
+local function selectmode()
+    local mode = vim.fn.mode()
+    if mode == "v" or mode == "V" or mode == "\22" then
+        send("<C-\\><C-N>gv")
+    end
+end
+
+function M.trigger_selectmode()
+    if options.selectmode then
+        vim.defer_fn(selectmode, 0)
     end
 end
 
