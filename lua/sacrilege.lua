@@ -259,6 +259,7 @@ function M.setup(opts)
 
         vim.keymap.set({ "n", "i", "v", "c" }, "<C-p>", ui.command_palette, { desc = "Command Palette..." })
         vim.keymap.set({ "n", "i", "v", "c" }, "<C-d>", vim.diagnostic.setloclist, { desc = "Toggle Diagnostics" })
+        vim.keymap.set({ "n", "i", "v" }, "<C-l>", function() ui.send("<C-\\><C-N>:messages<CR>") end, { desc = "Toggle Message Log" })
     end
 
     if options.clipboard then
