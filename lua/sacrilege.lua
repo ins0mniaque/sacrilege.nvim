@@ -38,13 +38,13 @@ local metatable =
     end,
 
     __newindex = function(table, key, value)
-        if key == "insertmode" then 
+        if key == "insertmode" then
             options.insertmode = value
 
             if options.insertmode then
-                vim.defer_fn(editor.insertmode, 0)
+                vim.defer_fn(editor.toggleinsert, 0)
             end
-        elseif key == "selectmode" then 
+        elseif key == "selectmode" then
             options.selectmode = value
 
             if options.selectmode then
@@ -69,24 +69,24 @@ function M.setup(opts)
 
     vim.api.nvim_create_autocmd({ "BufEnter", "InsertLeave", "TermLeave" },
     {
-        desc = "Revert to Insert Mode",
+        desc = "Toggle Insert Mode",
         group = insertmode_group,
         pattern = { "*" },
-        callback = function(event)
+        callback = function(_)
             if options.insertmode then
-                vim.defer_fn(editor.insertmode, 0)
+                vim.defer_fn(editor.toggleinsert, 0)
             end
         end
     })
 
     vim.api.nvim_create_autocmd({ "ModeChanged" },
     {
-        desc = "Revert to Insert Mode",
+        desc = "Toggle Insert Mode",
         group = insertmode_group,
         pattern = { "*:n" },
-        callback = function(event)
+        callback = function(_)
             if options.insertmode then
-                vim.defer_fn(editor.insertmode, 0)
+                vim.defer_fn(editor.toggleinsert, 0)
             end
         end
     })
@@ -95,12 +95,12 @@ function M.setup(opts)
 
     vim.api.nvim_create_autocmd({ "ModeChanged" },
     {
-        desc = "Revert to Select Mode",
+        desc = "Stop Visual Mode",
         group = selectmode_group,
         pattern = { "*:v", "*:V", "*:\22" },
-        callback = function(event)
+        callback = function(_)
             if options.selectmode then
-                vim.defer_fn(editor.selectmode, 0)
+                vim.defer_fn(editor.stopvisual, 0)
             end
         end
     })
@@ -111,7 +111,7 @@ function M.setup(opts)
             desc = "Fix Active Snippet Exclusive Selection",
             group = selectmode_group,
             pattern = { "*:s" },
-            callback = function(event)
+            callback = function(_)
                 if options.selectmode then
                     vim.opt.selection = options.snippet.active() and "inclusive" or "exclusive"
                 end
@@ -190,23 +190,26 @@ function M.setup(opts)
             desc = "Synchronize Popup Menu Mode",
             group = vim.api.nvim_create_augroup("Sacrilege.Popup", { }),
             pattern = { "*" },
-            callback = function(event)
+            callback = function(_)
                 update_popup(editor.mapmode())
             end
         })
     end
 
     if options.insertmode then
-        vim.defer_fn(editor.insertmode, 0)
+        vim.defer_fn(editor.toggleinsert, 0)
     end
 end
 
 function M.escape()
-    if options.snippet and options.snippet.active() then
+    if options.snippet and options.snippet.active and options.snippet.stop and options.snippet.active() then
         options.snippet.stop()
     end
 
+    -- Clear highlights
     vim.cmd("nohl")
+
+    -- Clear command-line echo
     vim.cmd("echon '\r\r'")
     vim.cmd("echon ''")
 

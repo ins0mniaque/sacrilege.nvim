@@ -67,8 +67,8 @@ function M.rename(new_name, opts)
         return
     end
 
-    local function complete_rename(new_name)
-        if not new_name or #new_name < 1 then
+    local function complete_rename(new_text)
+        if not new_text or #new_text < 1 then
             return
         end
 
@@ -86,7 +86,7 @@ function M.rename(new_name, opts)
 
         for _, node in pairs(nodes_to_rename) do
             local lsp_range = ts_utils.node_to_lsp_range(node)
-            local text_edit = { range = lsp_range, newText = new_name }
+            local text_edit = { range = lsp_range, newText = new_text }
             table.insert(edits, text_edit)
         end
 

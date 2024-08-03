@@ -41,12 +41,12 @@ function M.parse(options, definitions, predicate)
                             found = subdefinition
                         end
                     end
-    
+
                     definition = found
                 end
 
                 local function map_mode(mode, default)
-                    if (definition[1] and (definition[mode] or default) ~= false) or (not definition[1] and definition[mode]) then 
+                    if (definition[1] and (definition[mode] or default) ~= false) or (not definition[1] and definition[mode]) then
                         for _, key in pairs(bound) do
                             map(mode, key, definition[1] or definition[mode], { desc = name })
                         end
@@ -76,9 +76,7 @@ function M.parse_popup(options, popup)
 
     local updates = { }
 
-    for _, menu in pairs(options.popup) do
-        local menucmd = vim.cmd.amenu
-
+    for _, menu in pairs(popup) do
         if type(menu) == "string" then
             menu = { menu }
         end
@@ -152,7 +150,7 @@ function M.parse_popup(options, popup)
                 menucmd(verb .. " PopUp." .. name)
             end)
         else
-            menucmd((menu.position or "") .. " PopUp." .. menu[1] .. " :")
+            vim.cmd.amenu((menu.position or "") .. " PopUp." .. menu[1] .. " :")
         end
     end
 

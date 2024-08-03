@@ -5,8 +5,8 @@ function M.commands(language)
     local editor = require("sacrilege.editor")
     local ui = require("sacrilege.ui")
 
-    local localized, err = pcall("require", "sacrilege.presets.default." .. (language or editor.detect_language() or "en_US"))
-    if not localized then
+    local ok, localized = pcall(require, "sacrilege.presets.default." .. (language or editor.detect_language() or "en_US"))
+    if not ok then
         localized = require("sacrilege.presets.default." .. "en_US")
     end
 

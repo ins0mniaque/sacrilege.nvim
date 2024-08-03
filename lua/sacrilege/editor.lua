@@ -14,7 +14,7 @@ function M.mapmode(mode)
     end
 end
 
-function M.insertmode()
+function M.toggleinsert()
     if vim.bo.modifiable and
        not vim.bo.readonly and
        vim.bo.buftype ~= "nofile" or
@@ -26,7 +26,7 @@ function M.insertmode()
     end
 end
 
-function M.selectmode()
+function M.stopvisual()
     if M.mapmode() == "x" then
         M.send("<C-\\><C-N>gv")
     end
@@ -41,9 +41,8 @@ function M.detect_language()
 
     if not language or #language == 0 then
         language = os.getenv("LANG")
-        if language and #language == 0 then
-            language = nil
-        else
+
+        if language and #language > 0 then
             local dot = language:find("%.")
             if dot then
                 language = language:sub(1, dot - 1)
@@ -51,13 +50,13 @@ function M.detect_language()
         end
     end
 
-    return language
+    return language and #language > 0 and language
 end
 
 function M.supports_lsp_method(bufnr, method)
     local clients = vim.lsp.get_clients()
     for _, client in pairs(clients) do
-        if vim.lsp.buf_is_attached(bufnr, client.id) and client.supports_method(method) then 
+        if vim.lsp.buf_is_attached(bufnr, client.id) and client.supports_method(method) then
             return true
         end
     end
