@@ -36,6 +36,7 @@ function M.names()
         selectall = "Select All",
         stopselect = "Stop Selection",
 
+        mouseselect = "Set Selection End",
         mousestartselect = "Start Selection",
         mousestartblockselect = "Start Block Selection",
         mousedragselect = "Drag Select",

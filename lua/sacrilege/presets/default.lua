@@ -41,6 +41,7 @@ function M.commands(language)
             selectall = { n = "ggVG", i = "<C-Home><C-O>VG", v = "gg0oG$" },
             stopselect = { s = "<Esc><Arrow>", x = "<Esc><Arrow>" },
 
+            mouseselect = "<S-LeftMouse>",
             mousestartselect = "<LeftMouse>",
             mousestartblockselect = "<4-LeftMouse>",
             mousedragselect = "<LeftDrag>",
@@ -150,6 +151,7 @@ function M.keys()
         selectall = "<C-a>",
         stopselect = { "<Arrow>", "<C-Arrow>" },
 
+        mouseselect = false,
         mousestartselect = false,
         mousestartblockselect = "<M-LeftMouse>",
         mousedragselect = "<M-LeftDrag>",
