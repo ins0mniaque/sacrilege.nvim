@@ -43,10 +43,7 @@ function M.detect_language()
         language = os.getenv("LANG")
 
         if language and #language > 0 then
-            local dot = language:find("%.")
-            if dot then
-                language = language:sub(1, dot - 1)
-            end
+            language = vim.split(language, ".", { plain = true })[1]
         end
     end
 

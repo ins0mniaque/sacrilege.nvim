@@ -1,36 +1,95 @@
-local ts_utils = require("nvim-treesitter.ts_utils")
-local locals = require("nvim-treesitter.locals")
-local parsers = require("nvim-treesitter.parsers")
-local utils = require("nvim-treesitter.utils")
+local M = { }
 
-local M =
-{
-    get_buf_lang = parsers.get_buf_lang,
-    has_parser   = parsers.has_parser
-}
+local parser_files
+
+function M.reset_cache()
+    parser_files = setmetatable({ },
+    {
+        __index = function(table, key)
+            rawset(table, key, vim.api.nvim_get_runtime_file("parser/" .. key .. ".*", false))
+
+            return rawget(table, key)
+        end,
+    })
+end
+
+M.reset_cache()
+
+function M.ft_to_lang(ft)
+    local result = vim.treesitter.language.get_lang(ft)
+
+    if result then
+        return result
+    else
+        ft = vim.split(ft, ".", { plain = true })[1]
+
+        return vim.treesitter.language.get_lang(ft) or ft
+    end
+end
+
+function M.get_buf_lang(bufnr)
+    bufnr = bufnr or vim.api.nvim_get_current_buf()
+
+    return M.ft_to_lang(vim.api.nvim_buf_get_option(bufnr, "ft"))
+end
+
+function M.has_parser(lang)
+    lang = lang or M.get_buf_lang()
+
+    if not lang or #lang == 0 then
+        return false
+    end
+
+    -- HACK: nvim internal API
+    if vim._ts_has_language(lang) then
+        return true
+    end
+
+    return #parser_files[lang] > 0
+end
+
+function M.get_parser(bufnr, lang)
+    bufnr = bufnr or vim.api.nvim_get_current_buf()
+    lang = lang or M.get_buf_lang(bufnr)
+
+    if M.has_parser(lang) then
+        return vim.treesitter.get_parser(bufnr, lang)
+    end
+end
+
+local ts_utils -- require("nvim-treesitter.ts_utils")
+local locals   -- require("nvim-treesitter.locals")
 
 function M.definition(opts)
-    local bufnr = opts and opts.bufnr or vim.api.nvim_get_current_buf()
-    local node_at_point = ts_utils.get_node_at_cursor()
+    ts_utils = ts_utils or require("nvim-treesitter.ts_utils")
+    locals   = locals   or require("nvim-treesitter.locals")
 
-    if not node_at_point then
+    local bufnr = opts and opts.bufnr or vim.api.nvim_get_current_buf()
+    local winid = vim.fn.bufwinid(bufnr)
+    local node_at_cursor = ts_utils.get_node_at_cursor(winid)
+
+    if not node_at_cursor then
         return
     end
 
-    local definition = locals.find_definition(node_at_point, bufnr)
+    local definition = locals.find_definition(node_at_cursor, bufnr)
 
     ts_utils.goto_node(definition)
 end
 
 function M.references(opts)
-    local bufnr = opts and opts.bufnr or vim.api.nvim_get_current_buf()
-    local node_at_point = ts_utils.get_node_at_cursor()
+    ts_utils = ts_utils or require("nvim-treesitter.ts_utils")
+    locals   = locals   or require("nvim-treesitter.locals")
 
-    if not node_at_point then
+    local bufnr = opts and opts.bufnr or vim.api.nvim_get_current_buf()
+    local winid = vim.fn.bufwinid(bufnr)
+    local node_at_cursor = ts_utils.get_node_at_cursor(winid)
+
+    if not node_at_cursor then
         return
     end
 
-    local definition, scope = locals.find_definition(node_at_point, bufnr)
+    local definition, scope = locals.find_definition(node_at_cursor, bufnr)
     local usages = locals.find_usages(definition, scope, bufnr)
 
     if #usages < 1 then
@@ -59,11 +118,15 @@ function M.references(opts)
 end
 
 function M.rename(new_name, opts)
-    local bufnr = opts and opts.bufnr or vim.api.nvim_get_current_buf()
-    local node_at_point = ts_utils.get_node_at_cursor()
+    ts_utils = ts_utils or require("nvim-treesitter.ts_utils")
+    locals   = locals   or require("nvim-treesitter.locals")
 
-    if not node_at_point then
-        utils.print_warning("Nothing to rename")
+    local bufnr = opts and opts.bufnr or vim.api.nvim_get_current_buf()
+    local winid = vim.fn.bufwinid(bufnr)
+    local node_at_cursor = ts_utils.get_node_at_cursor(winid)
+
+    if not node_at_cursor then
+        vim.fn.cmd([[echohl WarningMsg | echo "Nothing to rename" | echohl None]])
         return
     end
 
@@ -72,10 +135,10 @@ function M.rename(new_name, opts)
             return
         end
 
-        local definition, scope = locals.find_definition(node_at_point, bufnr)
+        local definition, scope = locals.find_definition(node_at_cursor, bufnr)
         local nodes_to_rename = { }
 
-        nodes_to_rename[node_at_point:id()] = node_at_point
+        nodes_to_rename[node_at_cursor:id()] = node_at_cursor
         nodes_to_rename[definition:id()] = definition
 
         for _, n in ipairs(locals.find_usages(definition, scope, bufnr)) do
@@ -94,8 +157,8 @@ function M.rename(new_name, opts)
     end
 
     if not new_name or #new_name < 1 then
-        local node_text = vim.treesitter.get_node_text(node_at_point, bufnr)
-        local input = { prompt = "New name: ", default = node_text or "" }
+        local text = vim.treesitter.get_node_text(node_at_point, bufnr)
+        local input = { prompt = "New name: ", default = text or "" }
 
         vim.ui.input(input, complete_rename)
     else
