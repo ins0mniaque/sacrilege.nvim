@@ -20,6 +20,8 @@ function M.names()
         open = "Open...",
         save = "Save",
         saveas = "Save As...",
+        split = "Split Down",
+        vsplit = "Split Right",
         close = "Close",
         quit = "Quit",
 

@@ -32,6 +32,8 @@ function M.commands(language)
             open = { ui.browse, c = true },
             save = ui.save,
             saveas = ui.saveas,
+            split = vim.cmd.split,
+            vsplit = vim.cmd.vsplit,
             close = "<Cmd>confirm quit<CR>",
             quit = { "<Cmd>confirm quitall<CR>", c = true },
 
@@ -136,8 +138,10 @@ function M.keys()
         open = "<C-o>",
         save = "<C-s>",
         saveas = "<C-M-s>",
+        split = "<F7>",
+        vsplit = "<F8>",
         close = { "<C-w>", "<F28>" },
-        quit = { "<C-q>", "F52" },
+        quit = { "<C-q>", "<F52>" },
 
         undo = "<C-z>",
         redo = { "<C-M-z>", "<C-y>" },
@@ -188,7 +192,7 @@ function M.keys()
         workspace_symbol = "<C-g>S",
         declaration = "<C-g>D",
         rename = { "<C-r>", "<F2>" },
-        code_action = { "<M-a>", "F49" },
+        code_action = { "<M-a>", "<F49>" },
         hint = "<F13>",
 
         run_test = "<C-t>r",
@@ -203,6 +207,8 @@ function M.popup()
     return
     {
         { "command_palette", position = ".100" },
+        { "split", position = ".100" },
+        { "vsplit", position = ".100" },
         { "close", position = ".100" },
         { "-top-", position = ".100" },
         "-bottom-",
