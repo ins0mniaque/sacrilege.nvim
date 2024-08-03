@@ -37,6 +37,9 @@ function M.commands(language)
             close = "<Cmd>confirm quit<CR>",
             quit = { "<Cmd>confirm quitall<CR>", c = true },
 
+            tabprevious = "<Cmd>tabprevious<CR>",
+            tabnext = "<Cmd>tabnext<CR>",
+
             select = { i = "<C-o>v<C-g><Arrow>", v = function(arrow) local mode = vim.fn.mode() editor.send(mode == "\19" or mode == "\22" and ("<C-v>gv<" .. arrow .. ">v") or ("<" .. arrow .. ">")) end },
             selectword = { i = "<C-o>v<C-g><C-Arrow>", v = function(arrow) local mode = vim.fn.mode() editor.send(mode == "\19" or mode == "\22" and ("<C-v>gv<C-" .. arrow .. ">v") or ("<C-" .. arrow .. ">")) end },
             blockselect ={ i = "<C-o><C-v><C-g><Arrow>", v = function(arrow) local mode = vim.fn.mode() editor.send(mode == "\19" or mode == "\22" and ("<" .. arrow .. ">") or ("<C-v><" .. arrow .. "><C-g>")) end },
@@ -142,6 +145,9 @@ function M.keys()
         vsplit = "<F8>",
         close = { "<C-w>", "<F28>" },
         quit = { "<C-q>", "<F52>" },
+
+        tabprevious = "<C-S-Tab>",
+        tabnext = "<C-Tab>",
 
         undo = "<C-z>",
         redo = { "<C-M-z>", "<C-y>" },

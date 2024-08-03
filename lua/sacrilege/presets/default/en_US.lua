@@ -25,6 +25,9 @@ function M.names()
         close = "Close",
         quit = "Quit",
 
+        tabprevious = "Previous Tab",
+        tabnext = "Next Tab",
+
         undo = "Undo",
         redo = "Redo",
         copy = "Copy",
