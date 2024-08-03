@@ -1,12 +1,10 @@
-local M = { }
+local editor = require("sacrilege.editor")
 
-function M.send(keys, remap)
-    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(keys, true, false, true), remap and "t" or "n", true)
-end
+local M = { }
 
 function M.input(prompt, defaultOrCallback, callback)
     if vim.fn.mode() == "c" then
-        M.send("<C-r>")
+        editor.send("<C-r>")
     end
 
     vim.ui.input({ prompt = prompt, default = callback and defaultOrCallback }, function(arg)
@@ -18,7 +16,7 @@ end
 
 function M.select(prompt, items, sort)
     if vim.fn.mode() == "c" then
-        M.send("<C-r>")
+        editor.send("<C-r>")
     end
 
     local function callback(choice)
@@ -36,33 +34,6 @@ function M.select(prompt, items, sort)
     table.sort(keys, sort)
 
     vim.ui.select(keys, { prompt = prompt }, callback)
-end
-
-function M.get_selected_text()
-    local s_start = vim.fn.getpos("v")
-    local s_end = vim.fn.getpos(".")
-    local n_lines = math.abs(s_end[2] - s_start[2]) + 1
-    local lines = vim.api.nvim_buf_get_lines(0, s_start[2] - 1, s_end[2], false)
-
-    lines[1] = string.sub(lines[1], s_start[3], -1)
-    if n_lines == 1 then
-        lines[n_lines] = string.sub(lines[n_lines], 1, s_end[3] - s_start[3])
-    else
-        lines[n_lines] = string.sub(lines[n_lines], 1, s_end[3])
-    end
-
-    return table.concat(lines, '\n')
-end
-
-function M.try_close_popup()
-    for _, win in ipairs(vim.api.nvim_list_wins()) do
-        if vim.api.nvim_win_get_config(win).relative == 'win' then
-            vim.api.nvim_win_close(win, true)
-            return true
-        end
-    end
-
-    return false
 end
 
 function M.command_palette()
@@ -85,7 +56,7 @@ function M.command_palette()
                         vim.fn.setpos('.', cursor)
                     end
 
-                    send(keymap.lhs, true)
+                    editor.send(keymap.lhs, true)
                 end
             end
         end
@@ -126,14 +97,14 @@ end
 
 function M.find()
     M.input("Find: ", M.get_selected_text():gsub("\n", "\\n"), function(text)
-        M.send("<C-\\><C-N><C-\\><C-N>/" .. text .. "<CR>")
+        editor.send("<C-\\><C-N><C-\\><C-N>/" .. text .. "<CR>")
     end)
 end
 
 function M.replace()
     M.input("Replace: ", M.get_selected_text():gsub("\n", "\\n"), function(old_text)
         M.input("Replace with: ", old_text, function(new_text)
-            M.send("<Cmd>%s/" .. old_text .. "/" .. new_text .. "/g<CR>")
+            editor.send("<Cmd>%s/" .. old_text .. "/" .. new_text .. "/g<CR>")
         end)
     end)
 end

@@ -1,8 +1,13 @@
 local ts_utils = require("nvim-treesitter.ts_utils")
 local locals = require("nvim-treesitter.locals")
+local parsers = require("nvim-treesitter.parsers")
 local utils = require("nvim-treesitter.utils")
 
-local M = { }
+local M =
+{
+    get_buf_lang = parsers.get_buf_lang,
+    has_parser   = parsers.has_parser
+}
 
 function M.definition(opts)
     local bufnr = opts and opts.bufnr or vim.api.nvim_get_current_buf()
