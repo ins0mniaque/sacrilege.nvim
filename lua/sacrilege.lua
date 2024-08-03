@@ -136,7 +136,7 @@ function M.setup(opts)
         end
     end
 
-    config.parse(options, options.commands.definitions)
+    config.parse(options, options.commands.global)
 
     if options.commands.treesitter then
         local treesitter = require("sacrilege.treesitter")

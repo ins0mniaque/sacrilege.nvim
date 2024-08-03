@@ -96,7 +96,7 @@ function M.parse_popup(options, popup)
             local c = false
             local o = false
 
-            local command = options.commands.definitions[menu[1]]
+            local command = options.commands.global[menu[1]]
 
             if type(command) == "table" then
                 if type(command[1]) == "table" then

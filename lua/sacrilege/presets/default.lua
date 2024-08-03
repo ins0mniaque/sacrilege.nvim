@@ -13,7 +13,7 @@ function M.commands(language)
     return
     {
         names = localized.names(),
-        definitions =
+        global =
         {
             escape = { i = function() sacrilege = sacrilege or require("sacrilege") sacrilege.escape() end },
             interrupt = { i = function() sacrilege = sacrilege or require("sacrilege") sacrilege.interrupt() end },
