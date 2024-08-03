@@ -55,7 +55,7 @@ function M.commands(language)
             copy = { v = "\"+y" },
             cut = { v = "\"+x" },
             paste = { n = "\"+gP", i = "<C-o>\"+gP", v = "\"+P", c = "<C-r>\"", o = "<C-c>\"+gP<C-\\><C-g>" },
-            delete = { v = "d" },
+            delete = { v = "\"_d" },
 
             find = ui.find,
             find_previous = "<C-\\><C-N><Left>gN",
@@ -148,7 +148,7 @@ function M.keys()
         copy = "<C-c>",
         cut = "<C-x>",
         paste = "<C-v>",
-        delete = false,
+        delete = { "<BS>", "<Del>" },
 
         select = "<S-Arrow>",
         selectword = "<C-S-Arrow>",
