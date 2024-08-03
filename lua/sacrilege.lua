@@ -17,7 +17,6 @@ local defaults =
     selection =
     {
         mouse = true,
-        exclusive = true,
         virtual = true
     },
     commands = preset.commands(),
@@ -121,18 +120,16 @@ function M.setup(opts)
 
     if options.selection then
         vim.opt.keymodel = { }
+        vim.opt.selection = "exclusive"
+        vim.opt.virtualedit = "onemore"
 
         if options.selection.mouse then
             vim.opt.mouse = "a"
             vim.opt.selectmode = { "mouse", "key", "cmd" }
         end
 
-        if options.selection.exclusive then
-            vim.opt.selection = "exclusive"
-        end
-
         if options.selection.virtual then
-            vim.opt.virtualedit = "block"
+            vim.opt.virtualedit = "block,onemore"
         end
     end
 
