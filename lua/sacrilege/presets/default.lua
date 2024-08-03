@@ -66,8 +66,8 @@ function M.commands(language)
             comment =
             {
                 i = function() editor.send("<C-\\><C-N>") editor.send("gcci", true) end,
-                s = function() editor.send("<C-g>") editor.send("gc", true) editor.send("<C-\\><C-N><C-g>gv") end,
-                x = function() editor.send("gc", true) editor.send("<C-\\><C-N><C-g>gv") end
+                s = function() editor.send("<C-g>") editor.send("gc", true) editor.send("<C-\\><C-N>gv") end,
+                x = function() editor.send("gc", true) editor.send("<C-\\><C-N>gv") end
             },
             format = { n = "gg=G", i = "<C-\\><C-N>gg=G" },
             format_selection = { s = "<C-O>=gv", x = "<C-g><C-O>=gv" },
