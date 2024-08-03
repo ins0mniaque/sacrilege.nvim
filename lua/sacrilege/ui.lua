@@ -96,13 +96,13 @@ function M.browse()
 end
 
 function M.find()
-    M.input("Find: ", M.get_selected_text():gsub("\n", "\\n"), function(text)
+    M.input("Find: ", editor.get_selected_text():gsub("\n", "\\n"), function(text)
         editor.send("<C-\\><C-N><C-\\><C-N>/" .. text .. "<CR>")
     end)
 end
 
 function M.replace()
-    M.input("Replace: ", M.get_selected_text():gsub("\n", "\\n"), function(old_text)
+    M.input("Replace: ", editor.get_selected_text():gsub("\n", "\\n"), function(old_text)
         M.input("Replace with: ", old_text, function(new_text)
             editor.send("<Cmd>%s/" .. old_text .. "/" .. new_text .. "/g<CR>")
         end)
@@ -110,7 +110,7 @@ function M.replace()
 end
 
 function M.find_in_files()
-    M.input("Find in files: ", M.get_selected_text():gsub("\n", "\\n"), function(text)
+    M.input("Find in files: ", editor.get_selected_text():gsub("\n", "\\n"), function(text)
         vim.cmd("vimgrep " .. text .. " **/*")
     end)
 end

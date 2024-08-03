@@ -1,18 +1,19 @@
 local M = { }
 
 local function map(mode, lhs, rhs, opts)
-    -- TODO: Optimise with match...
-    if lhs:find("[Aa][rR][rR][oO][wW]>") then
+    local arrow = "[Aa][rR][rR][oO][wW]>"
+
+    if lhs:find(arrow) then
         if type(rhs) == "string" then
-            vim.keymap.set(mode, lhs:gsub("[Aa][rR][rR][oO][wW]>", "Left>"), rhs:gsub("[Aa][rR][rR][oO][wW]>", "Left>"), opts)
-            vim.keymap.set(mode, lhs:gsub("[Aa][rR][rR][oO][wW]>", "Up>"), rhs:gsub("[Aa][rR][rR][oO][wW]>", "Up>"), opts)
-            vim.keymap.set(mode, lhs:gsub("[Aa][rR][rR][oO][wW]>", "Right>"), rhs:gsub("[Aa][rR][rR][oO][wW]>", "Right>"), opts)
-            vim.keymap.set(mode, lhs:gsub("[Aa][rR][rR][oO][wW]>", "Down>"), rhs:gsub("[Aa][rR][rR][oO][wW]>", "Down>"), opts)
+            vim.keymap.set(mode, lhs:gsub(arrow, "Left>"), rhs:gsub(arrow, "Left>"), opts)
+            vim.keymap.set(mode, lhs:gsub(arrow, "Up>"), rhs:gsub(arrow, "Up>"), opts)
+            vim.keymap.set(mode, lhs:gsub(arrow, "Right>"), rhs:gsub(arrow, "Right>"), opts)
+            vim.keymap.set(mode, lhs:gsub(arrow, "Down>"), rhs:gsub(arrow, "Down>"), opts)
         else
-            vim.keymap.set(mode, lhs:gsub("[Aa][rR][rR][oO][wW]>", "Left>"), function() rhs("Left") end, opts)
-            vim.keymap.set(mode, lhs:gsub("[Aa][rR][rR][oO][wW]>", "Up>"), function() rhs("Up") end, opts)
-            vim.keymap.set(mode, lhs:gsub("[Aa][rR][rR][oO][wW]>", "Right>"), function() rhs("Right") end, opts)
-            vim.keymap.set(mode, lhs:gsub("[Aa][rR][rR][oO][wW]>", "Down>"), function() rhs("Down") end, opts)
+            vim.keymap.set(mode, lhs:gsub(arrow, "Left>"), function() rhs("Left") end, opts)
+            vim.keymap.set(mode, lhs:gsub(arrow, "Up>"), function() rhs("Up") end, opts)
+            vim.keymap.set(mode, lhs:gsub(arrow, "Right>"), function() rhs("Right") end, opts)
+            vim.keymap.set(mode, lhs:gsub(arrow, "Down>"), function() rhs("Down") end, opts)
         end
     else
         vim.keymap.set(mode, lhs, rhs, opts)
