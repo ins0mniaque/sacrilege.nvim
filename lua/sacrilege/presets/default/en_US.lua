@@ -12,7 +12,8 @@ function M.names()
         command_palette = "Command Palette...",
         cmdline = "Command Line Mode",
         terminal = "Terminal",
-        diagnostic = "Toggle Diagnostics",
+        diagnostics = "Toggle Diagnostics",
+        diagnostic = "Toggle Diagnostic Popup",
         messages = "Toggle Message Log",
 
         new = "New Tab",

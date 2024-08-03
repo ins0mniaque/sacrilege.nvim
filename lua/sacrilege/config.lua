@@ -142,7 +142,6 @@ function M.parse_popup(options, popup)
             end
 
             menucmd((menu.position or "") .. " PopUp." .. name .. " " .. key)
-            menucmd("disable PopUp." .. name)
 
             table.insert(updates, function(mode)
                 local verb = vim.fn.maparg(key, mode) ~= "" and "enable" or "disable"

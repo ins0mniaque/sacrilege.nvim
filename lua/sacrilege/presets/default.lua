@@ -24,7 +24,8 @@ function M.commands(language)
             command_palette = { ui.command_palette, c = true },
             cmdline = "<Esc>:",
             terminal = { vim.cmd.terminal, c = true },
-            diagnostic = { vim.diagnostic.setloclist, c = true },
+            diagnostics = { vim.diagnostic.setloclist, c = true },
+            diagnostic = function() if not editor.try_close_popup() then vim.diagnostic.open_float({ scope = 'cursor', focus = false }) end end,
             messages = function() editor.send("<C-\\><C-N>:messages<CR>") end,
 
             new = { vim.cmd.tabnew, c = true },
@@ -98,8 +99,8 @@ function M.commands(language)
 
             hover =
             {
-                { function() editor.try_close_popup() vim.lsp.buf.hover() end, method = vim.lsp.protocol.Methods.textDocument_hover },
-                { function() editor.try_close_popup() vim.lsp.buf.signature_help() end, method = vim.lsp.protocol.Methods.textDocument_signatureHelp }
+                { function() if not editor.try_close_popup() then vim.lsp.buf.hover() end end, method = vim.lsp.protocol.Methods.textDocument_hover },
+                { function() if not editor.try_close_popup() then vim.lsp.buf.signature_help() end end, method = vim.lsp.protocol.Methods.textDocument_signatureHelp }
             },
             definition = { vim.lsp.buf.definition, method = vim.lsp.protocol.Methods.textDocument_definition },
             references = { vim.lsp.buf.references, method = vim.lsp.protocol.Methods.textDocument_references },
@@ -127,7 +128,8 @@ function M.keys()
         command_palette = "<C-p>",
         cmdline = "<C-M-c>",
         terminal = "<C-M-t>",
-        diagnostic = "<C-d>",
+        diagnostics = "<C-d>",
+        diagnostic = "<F49>",
         messages = "<C-l>",
 
         new = "<C-n>",
