@@ -74,19 +74,22 @@ function M.command_palette()
     M.select("Commands", commands, function(l, r) return l:lower() < r:lower() end)
 end
 
-function M.browse()
-    local paths   = vim.split(vim.fn.glob(vim.fn.getcwd() .. "/*"), '\n', { trimempty = true })
-    local entries = { [".."] = function() vim.cmd("cd ..") M.browse() end }
+function M.browse(directory)
+    directory = directory or vim.fn.getcwd()
+
+    local paths   = vim.split(vim.fn.glob(directory:gsub("/$", "") .. "/*"), '\n', { trimempty = true })
+    local entries = { }
+
+    local parent = vim.fn.fnamemodify(directory, ":h")
+    if parent and parent ~= directory then
+        entries[".."] = function() M.browse(parent) end
+    end
 
     for _, path in pairs(paths) do
-        if vim.fn.isdirectory(path) ~= 0 then
-            entries[path] = function()
-                vim.cmd("cd " .. path)
-
-                M.browse()
-            end
-        else
-            entries[path] = function()
+        entries[path] = function()
+            if vim.fn.isdirectory(path) ~= 0 then
+                M.browse(path)
+            else
                 vim.cmd.tabnew(path)
             end
         end
