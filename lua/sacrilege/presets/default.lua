@@ -67,9 +67,9 @@ function M.commands(language)
 
             undo = vim.cmd.undo,
             redo = vim.cmd.redo,
-            copy = { v = "\"+y" },
-            cut = { v = "\"+x" },
-            paste = { n = "\"+gP", i = "<C-o>\"+gP", v = "\"+P", c = "<C-r>\"", o = "<C-c>\"+gP<C-\\><C-g>" },
+            copy = { v = "y" },
+            cut = { v = "x" },
+            paste = { n = "gP", i = "<C-o>gP", v = "\"_dP", c = "<C-r>\"", o = "<C-c>gP<C-\\><C-g>" },
             delete = { v = "\"_d" },
 
             find = ui.find,
