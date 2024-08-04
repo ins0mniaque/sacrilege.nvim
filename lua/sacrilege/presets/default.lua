@@ -78,6 +78,7 @@ function M.commands(language)
             find_next = "<C-\\><C-N>gn",
             replace = ui.replace,
             find_in_files = ui.find_in_files,
+            replace_in_files  = ui.replace_in_files,
             line = ui.go_to_line,
 
             indent = { s = "<C-O>>gv", x = "<C-g><C-O>>gv" },
@@ -188,6 +189,7 @@ function M.keys()
         find_next = "<F3>",
         replace = "<C-r>",
         find_in_files = "<C-M-f>",
+        replace_in_files = "<C-M-r>",
         line = "<C-g>",
 
         indent = false,

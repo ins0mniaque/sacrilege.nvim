@@ -54,6 +54,7 @@ function M.names()
         find_next = "Find Next",
         replace = "Replace",
         find_in_files = "Find in Files...",
+        replace_in_files = "Replace in Files...",
         line = "Go to Line...",
 
         comment = "Toggle Line Comment",

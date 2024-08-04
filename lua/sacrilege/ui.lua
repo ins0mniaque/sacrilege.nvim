@@ -97,23 +97,39 @@ end
 
 function M.find()
     M.input("Find: ", editor.get_selected_text():gsub("\n", "\\n"), function(text)
-        editor.send("<Cmd>/" .. text .. "<CR>")
+        vim.cmd("/" .. text)
     end)
 end
 
 function M.replace()
     M.input("Replace: ", editor.get_selected_text():gsub("\n", "\\n"), function(old_text)
-        editor.send("<Cmd>/" .. old_text .. "<CR>")
+        vim.cmd("/" .. old_text)
 
         M.input("Replace with: ", old_text, function(new_text)
-            editor.send("<Cmd>%s/" .. old_text .. "/" .. new_text .. "/g<CR>")
+            vim.cmd("%s/" .. old_text .. "/" .. new_text .. "/g")
         end)
     end)
 end
 
 function M.find_in_files()
     M.input("Find in files: ", editor.get_selected_text():gsub("\n", "\\n"), function(text)
-        vim.cmd("vimgrep " .. text .. " **/*")
+        vim.cmd.vimgrep(text .. " **/*")
+        vim.cmd.cwindow()
+        vim.cmd.wincmd("p")
+    end)
+end
+
+function M.replace_in_files()
+    M.input("Replace in files: ", editor.get_selected_text():gsub("\n", "\\n"), function(old_text)
+        vim.cmd.vimgrep(old_text .. " **/*")
+        vim.cmd.cwindow()
+        vim.cmd.wincmd("p")
+
+        vim.defer_fn(function()
+            M.input("Replace with: ", old_text, function(new_text)
+                vim.cmd.cfdo("%s/" .. old_text .. "/" .. new_text .. "/g")
+            end)
+        end, 0)
     end)
 end
 
