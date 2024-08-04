@@ -119,7 +119,7 @@ function M.setup(opts)
         end
     })
 
-    if options.snippet and options.snippet.active and options.selection and options.selection.exclusive then
+    if options.snippet and options.snippet.active and options.selection then
         vim.api.nvim_create_autocmd({ "ModeChanged" },
         {
             desc = "Fix Active Snippet Exclusive Selection",
