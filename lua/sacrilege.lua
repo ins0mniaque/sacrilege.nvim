@@ -141,6 +141,9 @@ function M.setup(opts)
         if options.selection.mouse then
             vim.opt.mouse = "a"
             vim.opt.selectmode = { "mouse", "key", "cmd" }
+
+            -- Fix delayed mouse word selection
+            vim.keymap.set("i", "<2-LeftMouse>", "<2-LeftMouse><2-LeftRelease>")
         end
 
         if options.selection.virtual then
