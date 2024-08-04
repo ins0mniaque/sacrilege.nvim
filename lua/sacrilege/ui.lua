@@ -97,12 +97,14 @@ end
 
 function M.find()
     M.input("Find: ", editor.get_selected_text():gsub("\n", "\\n"), function(text)
-        editor.send("<C-\\><C-N><C-\\><C-N>/" .. text .. "<CR>")
+        editor.send("<Cmd>/" .. text .. "<CR>")
     end)
 end
 
 function M.replace()
     M.input("Replace: ", editor.get_selected_text():gsub("\n", "\\n"), function(old_text)
+        editor.send("<Cmd>/" .. old_text .. "<CR>")
+
         M.input("Replace with: ", old_text, function(new_text)
             editor.send("<Cmd>%s/" .. old_text .. "/" .. new_text .. "/g<CR>")
         end)
