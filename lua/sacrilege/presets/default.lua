@@ -1,13 +1,25 @@
 local M = { }
 
 function M.commands(language)
-    local sacrilege -- require("sacrilege")
+    local sacrilege = require("sacrilege")
     local editor = require("sacrilege.editor")
     local ui = require("sacrilege.ui")
+    local methods = vim.lsp.protocol.Methods
 
     local ok, localized = pcall(require, "sacrilege.presets.default." .. (language or editor.detect_language() or "en_US"))
     if not ok then
         localized = require("sacrilege.presets.default." .. "en_US")
+    end
+
+    local function arrow_command(rhs, block_rhs)
+        return function(arrow)
+            local mode = vim.fn.mode()
+            local keys = mode == "\19" or mode == "\22" and block_rhs or rhs
+
+            keys = keys:gsub("[Aa][rR][rR][oO][wW]>", arrow .. ">")
+
+            editor.send(keys)
+        end
     end
 
     return
@@ -15,10 +27,10 @@ function M.commands(language)
         names = localized.names(),
         global =
         {
-            escape = { i = function() sacrilege = sacrilege or require("sacrilege") sacrilege.escape() end },
-            interrupt = { i = function() sacrilege = sacrilege or require("sacrilege") sacrilege.interrupt() end },
-            tab = { function() sacrilege = sacrilege or require("sacrilege") sacrilege.tab() end, n = false },
-            shifttab = { function() sacrilege = sacrilege or require("sacrilege") sacrilege.shifttab() end, n = false },
+            escape = { i = sacrilege.escape },
+            interrupt = { i = sacrilege.interrupt },
+            tab = { sacrilege.tab, n = false },
+            shifttab = { sacrilege.shifttab, n = false },
             popup = { s = "<C-\\><C-g>gv<Cmd>:popup! PopUp<CR>" },
 
             command_palette = { ui.command_palette, c = true },
@@ -40,10 +52,10 @@ function M.commands(language)
             tabprevious = "<Cmd>tabprevious<CR>",
             tabnext = "<Cmd>tabnext<CR>",
 
-            select = { i = "<C-o>v<C-g><Arrow>", v = function(arrow) local mode = vim.fn.mode() editor.send(mode == "\19" or mode == "\22" and ("<C-v>gv<" .. arrow .. ">v") or ("<" .. arrow .. ">")) end },
-            selectword = { i = "<C-o>v<C-g><C-Arrow>", v = function(arrow) local mode = vim.fn.mode() editor.send(mode == "\19" or mode == "\22" and ("<C-v>gv<C-" .. arrow .. ">v") or ("<C-" .. arrow .. ">")) end },
-            blockselect ={ i = "<C-o><C-v><C-g><Arrow>", v = function(arrow) local mode = vim.fn.mode() editor.send(mode == "\19" or mode == "\22" and ("<" .. arrow .. ">") or ("<C-v><" .. arrow .. "><C-g>")) end },
-            blockselectword ={ i = "<C-o><C-v><C-g><C-Arrow>", v = function(arrow) local mode = vim.fn.mode() editor.send(mode == "\19" or mode == "\22" and ("<C-" .. arrow .. ">") or ("<C-v><C-" .. arrow .. "><C-g>")) end },
+            select = { i = "<C-o>v<C-g><Arrow>", v = arrow_command("<Arrow>", "<C-v>gv<Arrow>v") },
+            selectword = { i = "<C-o>v<C-g><C-Arrow>", v = arrow_command("<C-Arrow>", "<C-v>gv<C-Arrow>v") },
+            blockselect ={ i = "<C-o><C-v><C-g><Arrow>", v = arrow_command("<C-v><Arrow><C-g>", "<Arrow>") },
+            blockselectword ={ i = "<C-o><C-v><C-g><C-Arrow>", v = arrow_command("<C-v><C-Arrow><C-g>", "<C-Arrow>") },
             selectall = { n = "ggVG", i = "<C-Home><C-O>VG", v = "gg0oG$" },
             stopselect = { s = "<Esc><Arrow>", x = "<Esc><Arrow>" },
 
@@ -93,30 +105,30 @@ function M.commands(language)
         },
         treesitter =
         {
-            definition = { function() require("sacrilege.treesitter").definition() end, method = vim.lsp.protocol.Methods.textDocument_definition },
-            references = { function() require("sacrilege.treesitter").references() end, method = vim.lsp.protocol.Methods.textDocument_references },
-            rename = { function() require("sacrilege.treesitter").rename() end, method = vim.lsp.protocol.Methods.textDocument_rename },
+            definition = { function() require("sacrilege.treesitter").definition() end, method = methods.textDocument_definition },
+            references = { function() require("sacrilege.treesitter").references() end, method = methods.textDocument_references },
+            rename = { function() require("sacrilege.treesitter").rename() end, method = methods.textDocument_rename },
         },
         lsp =
         {
-            format = { function() vim.lsp.buf.format({ async = true }) end, method = vim.lsp.protocol.Methods.textDocument_formatting },
-            format_selection = { function() vim.lsp.buf.format({ async = true, range = { start = vim.api.nvim_buf_get_mark(0, "<"), ["end"] = vim.api.nvim_buf_get_mark(0, ">") } }) end, method = vim.lsp.protocol.Methods.textDocument_rangeFormatting },
+            format = { function() vim.lsp.buf.format({ async = true }) end, method = methods.textDocument_formatting },
+            format_selection = { function() vim.lsp.buf.format({ async = true, range = { start = vim.api.nvim_buf_get_mark(0, "<"), ["end"] = vim.api.nvim_buf_get_mark(0, ">") } }) end, method = methods.textDocument_rangeFormatting },
 
             hover =
             {
-                { function() if not editor.try_close_popup() then vim.lsp.buf.hover() end end, method = vim.lsp.protocol.Methods.textDocument_hover },
-                { function() if not editor.try_close_popup() then vim.lsp.buf.signature_help() end end, method = vim.lsp.protocol.Methods.textDocument_signatureHelp }
+                { function() if not editor.try_close_popup() then vim.lsp.buf.hover() end end, method = methods.textDocument_hover },
+                { function() if not editor.try_close_popup() then vim.lsp.buf.signature_help() end end, method = methods.textDocument_signatureHelp }
             },
-            definition = { vim.lsp.buf.definition, method = vim.lsp.protocol.Methods.textDocument_definition },
-            references = { vim.lsp.buf.references, method = vim.lsp.protocol.Methods.textDocument_references },
-            implementation = { vim.lsp.buf.implementation, method = vim.lsp.protocol.Methods.textDocument_implementation },
-            type_definition = { vim.lsp.buf.type_definition, method = vim.lsp.protocol.Methods.textDocument_typeDefinition },
-            document_symbol = { vim.lsp.buf.document_symbol, method = vim.lsp.protocol.Methods.textDocument_documentSymbol },
-            workspace_symbol = { vim.lsp.buf.workspace_symbol, method = vim.lsp.protocol.Methods.workspace_symbol },
-            declaration = { vim.lsp.buf.declaration, method = vim.lsp.protocol.Methods.textDocument_declaration },
-            rename = { vim.lsp.buf.rename, method = vim.lsp.protocol.Methods.textDocument_rename },
-            code_action = { vim.lsp.buf.code_action, method = vim.lsp.protocol.Methods.textDocument_codeAction },
-            hint = { function() vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = 0 }, { bufnr = 0 }) end, method = vim.lsp.protocol.Methods.textDocument_inlayHint },
+            definition = { vim.lsp.buf.definition, method = methods.textDocument_definition },
+            references = { vim.lsp.buf.references, method = methods.textDocument_references },
+            implementation = { vim.lsp.buf.implementation, method = methods.textDocument_implementation },
+            type_definition = { vim.lsp.buf.type_definition, method = methods.textDocument_typeDefinition },
+            document_symbol = { vim.lsp.buf.document_symbol, method = methods.textDocument_documentSymbol },
+            workspace_symbol = { vim.lsp.buf.workspace_symbol, method = methods.workspace_symbol },
+            declaration = { vim.lsp.buf.declaration, method = methods.textDocument_declaration },
+            rename = { vim.lsp.buf.rename, method = methods.textDocument_rename },
+            code_action = { vim.lsp.buf.code_action, method = methods.textDocument_codeAction },
+            hint = { function() vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = 0 }, { bufnr = 0 }) end, method = methods.textDocument_inlayHint },
         }
     }
 end

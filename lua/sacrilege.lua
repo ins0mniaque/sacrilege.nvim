@@ -1,6 +1,5 @@
 local config = require("sacrilege.config")
 local editor = require("sacrilege.editor")
-local preset = require("sacrilege.presets.default")
 
 local M = { }
 
@@ -19,9 +18,7 @@ local defaults =
         mouse = true,
         virtual = true
     },
-    commands = preset.commands(),
-    keys = preset.keys(),
-    popup = preset.popup()
+    preset = "sacrilege.presets.default"
 }
 
 local options = { }
@@ -62,7 +59,25 @@ function M.setup(opts)
         return vim.notify("sacrilege.nvim requires Neovim >= 0.7.0", vim.log.levels.ERROR, { title = "sacrilege.nvim" })
     end
 
-    options = vim.tbl_deep_extend("force", defaults, opts or { }) or { }
+    local preset
+
+    if opts and opts.preset and opts.preset ~= false and opts.preset ~= "" then
+        local ok, result = pcall(require, opts.preset)
+        if ok then
+            preset = result
+        end
+    else
+        preset = require(defaults.preset)
+    end
+
+    options = vim.tbl_deep_extend("force", defaults,
+    {
+        commands = preset and preset.commands(),
+        keys = preset and preset.keys(),
+        popup = preset and preset.popup()
+    })
+
+    options = vim.tbl_deep_extend("force", options, opts or { })
 
     local insertmode_group = vim.api.nvim_create_augroup("Sacrilege.InsertMode", { })
 
