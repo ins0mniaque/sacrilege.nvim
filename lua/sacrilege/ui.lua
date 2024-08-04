@@ -113,7 +113,7 @@ end
 
 function M.find_in_files()
     M.input("Find in files: ", editor.get_selected_text():gsub("\n", "\\n"), function(text)
-        vim.cmd.vimgrep(text .. " **/*")
+        vim.cmd("silent vimgrep " .. text .. " **/*")
         vim.cmd.cwindow()
         vim.cmd.wincmd("p")
     end)
@@ -121,7 +121,7 @@ end
 
 function M.replace_in_files()
     M.input("Replace in files: ", editor.get_selected_text():gsub("\n", "\\n"), function(old_text)
-        vim.cmd.vimgrep(old_text .. " **/*")
+        vim.cmd("silent vimgrep " .. old_text .. " **/*")
         vim.cmd.cwindow()
         vim.cmd.wincmd("p")
 
