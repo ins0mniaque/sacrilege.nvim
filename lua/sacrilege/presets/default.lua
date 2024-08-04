@@ -69,8 +69,9 @@ function M.commands(language)
             redo = vim.cmd.redo,
             copy = { v = "y" },
             cut = { v = "x" },
-            paste = { n = "gP", i = "<C-o>gP", v = "\"_dP", c = "<C-r>\"", o = "<C-c>gP<C-\\><C-g>" },
+            paste = { n = "gP", i = "<C-r>\"", v = "\"_dP", c = "<C-r>\"", o = "<C-c>gP<C-\\><C-g>" },
             delete = { v = "\"_d" },
+            deleteword = { n = "cvb", i = "<C-\\><C-N>cvb", v = "\"_d" },
 
             find = ui.find,
             find_previous = "<C-\\><C-N><Left>gN",
@@ -167,6 +168,7 @@ function M.keys()
         cut = "<C-x>",
         paste = "<C-v>",
         delete = { "<BS>", "<Del>" },
+        deleteword = { "<C-BS>", "<M-BS>" },
 
         select = "<S-Arrow>",
         selectword = "<C-S-Arrow>",
@@ -184,7 +186,7 @@ function M.keys()
         find = "<C-f>",
         find_previous = "<F15>",
         find_next = "<F3>",
-        replace = "<C-h>",
+        replace = "<C-r>",
         find_in_files = "<C-M-f>",
         line = "<C-g>",
 
@@ -209,7 +211,7 @@ function M.keys()
         document_symbol = "<C-g>s",
         workspace_symbol = "<C-g>S",
         declaration = "<C-g>D",
-        rename = { "<C-r>", "<F2>" },
+        rename = { "<M-r>", "<F2>" },
         code_action = { "<M-a>", "<F49>" },
         hint = "<F13>",
 

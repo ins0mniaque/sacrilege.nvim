@@ -34,6 +34,7 @@ function M.names()
         cut = "Cut",
         paste = "Paste",
         delete = "Delete",
+        deleteword = "Delete Word",
 
         select = "Select Character",
         selectword = "Select Word",
