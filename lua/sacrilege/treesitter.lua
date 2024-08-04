@@ -126,7 +126,7 @@ function M.rename(new_name, opts)
     local node_at_cursor = ts_utils.get_node_at_cursor(winid)
 
     if not node_at_cursor then
-        vim.fn.cmd([[echohl WarningMsg | echo "Nothing to rename" | echohl None]])
+        vim.cmd([[echohl WarningMsg | echo "Nothing to rename" | echohl None]])
         return
     end
 
