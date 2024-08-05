@@ -2,21 +2,24 @@ local M = { }
 
 local function map(mode, lhs, rhs, opts)
     local arrow = "[Aa][rR][rR][oO][wW]>"
+    local input = "<[Ii][nN][pP][uU][tT]>"
 
     if lhs:find(arrow) then
-        if type(rhs) == "string" then
-            vim.keymap.set(mode, lhs:gsub(arrow, "Left>"), rhs:gsub(arrow, "Left>"), opts)
-            vim.keymap.set(mode, lhs:gsub(arrow, "Up>"), rhs:gsub(arrow, "Up>"), opts)
-            vim.keymap.set(mode, lhs:gsub(arrow, "Right>"), rhs:gsub(arrow, "Right>"), opts)
-            vim.keymap.set(mode, lhs:gsub(arrow, "Down>"), rhs:gsub(arrow, "Down>"), opts)
+        if type(rhs) == "function" then
+            map(mode, lhs:gsub(arrow, "Left>"), function(lhs) rhs(lhs, "Left") end, opts)
+            map(mode, lhs:gsub(arrow, "Up>"), function(lhs) rhs(lhs, "Up") end, opts)
+            map(mode, lhs:gsub(arrow, "Right>"), function(lhs) rhs(lhs, "Right") end, opts)
+            map(mode, lhs:gsub(arrow, "Down>"), function(lhs) rhs(lhs, "Down") end, opts)
         else
-            vim.keymap.set(mode, lhs:gsub(arrow, "Left>"), function() rhs("Left") end, opts)
-            vim.keymap.set(mode, lhs:gsub(arrow, "Up>"), function() rhs("Up") end, opts)
-            vim.keymap.set(mode, lhs:gsub(arrow, "Right>"), function() rhs("Right") end, opts)
-            vim.keymap.set(mode, lhs:gsub(arrow, "Down>"), function() rhs("Down") end, opts)
+            map(mode, lhs:gsub(arrow, "Left>"), rhs:gsub(arrow, "Left>"), opts)
+            map(mode, lhs:gsub(arrow, "Up>"), rhs:gsub(arrow, "Up>"), opts)
+            map(mode, lhs:gsub(arrow, "Right>"), rhs:gsub(arrow, "Right>"), opts)
+            map(mode, lhs:gsub(arrow, "Down>"), rhs:gsub(arrow, "Down>"), opts)
         end
+    elseif type(rhs) == "function" then
+        vim.keymap.set(mode, lhs, function() rhs(lhs) end, opts)
     else
-        vim.keymap.set(mode, lhs, rhs, opts)
+        vim.keymap.set(mode, lhs, rhs:gsub(input, lhs), opts)
     end
 end
 

@@ -16,7 +16,7 @@ function M.commands(language)
     local neotest = plugin.new("nvim-neotest/neotest", "neotest")
 
     local function arrow_command(rhs, block_rhs)
-        return function(arrow)
+        return function(lhs, arrow)
             local mode = vim.fn.mode()
             local keys = mode == "\19" or mode == "\22" and block_rhs or rhs
 
