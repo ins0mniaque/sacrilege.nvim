@@ -57,12 +57,12 @@ function M.get_parser(bufnr, lang)
     end
 end
 
-local ts_utils -- require("nvim-treesitter.ts_utils")
-local locals   -- require("nvim-treesitter.locals")
+local plugin  = require("sacrilege.plugin")
+local nvim_ts = plugin.new("nvim-treesitter/nvim-treesitter", "nvim-treesitter")
 
 function M.definition(opts)
-    ts_utils = ts_utils or require("nvim-treesitter.ts_utils")
-    locals   = locals   or require("nvim-treesitter.locals")
+    local locals   = nvim_ts.load("locals")   if not locals   then return end
+    local ts_utils = nvim_ts.load("ts_utils") if not ts_utils then return end
 
     local bufnr = opts and opts.bufnr or vim.api.nvim_get_current_buf()
     local winid = vim.fn.bufwinid(bufnr)
@@ -78,8 +78,8 @@ function M.definition(opts)
 end
 
 function M.references(opts)
-    ts_utils = ts_utils or require("nvim-treesitter.ts_utils")
-    locals   = locals   or require("nvim-treesitter.locals")
+    local locals   = nvim_ts.load("locals")   if not locals   then return end
+    local ts_utils = nvim_ts.load("ts_utils") if not ts_utils then return end
 
     local bufnr = opts and opts.bufnr or vim.api.nvim_get_current_buf()
     local winid = vim.fn.bufwinid(bufnr)
@@ -118,16 +118,15 @@ function M.references(opts)
 end
 
 function M.rename(new_name, opts)
-    ts_utils = ts_utils or require("nvim-treesitter.ts_utils")
-    locals   = locals   or require("nvim-treesitter.locals")
+    local locals   = nvim_ts.load("locals")   if not locals   then return end
+    local ts_utils = nvim_ts.load("ts_utils") if not ts_utils then return end
 
     local bufnr = opts and opts.bufnr or vim.api.nvim_get_current_buf()
     local winid = vim.fn.bufwinid(bufnr)
     local node_at_cursor = ts_utils.get_node_at_cursor(winid)
 
     if not node_at_cursor then
-        vim.cmd([[echohl WarningMsg | echo "Nothing to rename" | echohl None]])
-        return
+        return vim.notify("Nothing to rename", vim.log.levels.INFO, { title = "sacrilege.nvim" })
     end
 
     local function complete_rename(new_text)
@@ -157,7 +156,7 @@ function M.rename(new_name, opts)
     end
 
     if not new_name or #new_name < 1 then
-        local text = vim.treesitter.get_node_text(node_at_point, bufnr)
+        local text = vim.treesitter.get_node_text(node_at_cursor, bufnr)
         local input = { prompt = "New name: ", default = text or "" }
 
         vim.ui.input(input, complete_rename)

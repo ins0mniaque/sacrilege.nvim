@@ -4,12 +4,16 @@ function M.commands(language)
     local sacrilege = require("sacrilege")
     local editor = require("sacrilege.editor")
     local ui = require("sacrilege.ui")
+    local plugin = require("sacrilege.plugin")
     local methods = vim.lsp.protocol.Methods
 
     local ok, localized = pcall(require, "sacrilege.presets.default." .. (language or editor.detect_language() or "en_US"))
     if not ok then
-        localized = require("sacrilege.presets.default." .. "en_US")
+        localized = require("sacrilege.presets.default.en_US")
     end
+
+    local dap     = plugin.new("mfussenegger/nvim-dap", "dap")
+    local neotest = plugin.new("nvim-neotest/neotest", "neotest")
 
     local function arrow_command(rhs, block_rhs)
         return function(arrow)
@@ -93,18 +97,18 @@ function M.commands(language)
             format = { n = "gg=G", i = "<C-\\><C-N>gg=G" },
             format_selection = { s = "<C-O>=gv", x = "<C-g><C-O>=gv" },
 
-            continue = function() require("dap").continue() end,
-            step_into = function() require("dap").step_into() end,
-            step_over = function() require("dap").step_over() end,
-            step_out = function() require("dap").step_out() end,
-            breakpoint = function() require("dap").toggle_breakpoint() end,
-            conditional_breakpoint = function() ui.input("Breakpoint condition: ", require("dap").set_breakpoint) end,
+            continue = dap:try(function(dap) dap.continue() end),
+            step_into = dap:try(function(dap) dap.step_into() end),
+            step_over = dap:try(function(dap) dap.step_over() end),
+            step_out = dap:try(function(dap) dap.step_out() end),
+            breakpoint = dap:try(function(dap) dap.toggle_breakpoint() end),
+            conditional_breakpoint = dap:try(function(dap) ui.input("Breakpoint condition: ", dap.set_breakpoint) end),
 
-            run_test = function() require("neotest").run.run() end,
-            run_all_tests = function() require("neotest").run.run(vim.fn.expand("%")) end,
-            debug_test = function() require("neotest").run.run({ strategy = "dap" }) end,
-            stop_test = function() require("neotest").run.stop() end,
-            attach_test = function() require("neotest").run.attach() end
+            run_test = neotest:try(function(neotest) neotest.run.run() end),
+            run_all_tests = neotest:try(function(neotest) neotest.run.run(vim.fn.expand("%")) end),
+            debug_test = neotest:try(function(neotest) neotest.run.run({ strategy = "dap" }) end),
+            stop_test = neotest:try(function(neotest) neotest.run.stop() end),
+            attach_test = neotest:try(function(neotest) neotest.run.attach() end)
         },
         treesitter =
         {
