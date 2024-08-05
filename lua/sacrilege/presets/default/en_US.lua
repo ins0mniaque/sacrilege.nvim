@@ -7,6 +7,8 @@ function M.names()
         interrupt = "Interrupt",
         tab = "Indent / Snippet Jump Next",
         shifttab = "Unindent / Snippet Jump Previous",
+        up = "Up / Select Previous Completion",
+        down = "Down / Select Next Completion",
         popup = "Popup Menu",
 
         command_palette = "Command Palette...",

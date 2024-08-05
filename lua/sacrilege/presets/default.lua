@@ -37,6 +37,8 @@ function M.commands(language)
             interrupt = { i = sacrilege.interrupt },
             tab = { sacrilege.tab, n = false },
             shifttab = { sacrilege.shifttab, n = false },
+            up = { sacrilege.up, n = false },
+            down = { sacrilege.down, n = false },
             popup = { s = "<C-\\><C-g>gv<Cmd>:popup! PopUp<CR>" },
 
             command_palette = { ui.command_palette, c = true },
@@ -159,6 +161,8 @@ function M.keys()
         interrupt = "<C-c>",
         tab = "<Tab>",
         shifttab = "<S-Tab>",
+        up = "<Up>",
+        down = "<Down>",
         popup = "<RightMouse>",
 
         command_palette = "<C-p>",
@@ -198,8 +202,8 @@ function M.keys()
         completion_trigger = "<C-Space>",
         completion_confirm = { "<Space>", "<CR>" },
         completion_selectconfirm = "<S-CR>",
-        completion_select_previous = "<Up>",
-        completion_select_next = "<Down>",
+        completion_select_previous = false,
+        completion_select_next = false,
 
         snippet_jump_previous = false,
         snippet_jump_next = false,
