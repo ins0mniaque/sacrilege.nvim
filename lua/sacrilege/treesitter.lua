@@ -126,7 +126,7 @@ function M.rename(new_name, opts)
     local node_at_cursor = ts_utils.get_node_at_cursor(winid)
 
     if not node_at_cursor then
-        return vim.notify("Nothing to rename", vim.log.levels.INFO, { title = "sacrilege.nvim" })
+        return require("sacrilege.editor").notify("Nothing to rename")
     end
 
     local function complete_rename(new_text)

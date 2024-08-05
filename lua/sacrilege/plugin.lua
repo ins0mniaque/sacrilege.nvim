@@ -10,7 +10,7 @@ function M.new(plugin, root)
             if ok then
                 return module
             else
-                return vim.notify("Plugin " .. (plugin or modname) .. " is not installed", vim.log.levels.WARN, { title = "sacrilege.nvim" })
+                return require("sacrilege.editor").notify("Plugin " .. (plugin or modname) .. " is not installed", vim.log.levels.WARN)
             end
         end,
 

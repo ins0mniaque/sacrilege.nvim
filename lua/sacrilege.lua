@@ -66,7 +66,7 @@ setmetatable(M, metatable)
 
 function M.setup(opts)
     if vim.fn.has("nvim-0.7.0") ~= 1 then
-        return vim.notify("sacrilege.nvim requires Neovim >= 0.7.0", vim.log.levels.ERROR, { title = "sacrilege.nvim" })
+        return editor.notify("sacrilege.nvim requires Neovim >= 0.7.0", vim.log.levels.ERROR)
     end
 
     local preset
