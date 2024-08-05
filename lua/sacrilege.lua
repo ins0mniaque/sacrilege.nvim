@@ -257,7 +257,11 @@ function M.tab()
     local mode = editor.mapmode()
 
     if mode == "s" or mode == "x" then
-        editor.send("<C-O>>gv")
+        if vim.fn.getpos("v")[2] ~= vim.fn.getpos(".")[2] then
+            editor.send("<C-O>>gv")
+        else
+            editor.send("<Space><BS><Tab>")
+        end
     else
         editor.send("<Tab>")
     end
