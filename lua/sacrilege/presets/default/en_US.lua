@@ -29,14 +29,6 @@ function M.names()
         tabprevious = "Previous Tab",
         tabnext = "Next Tab",
 
-        undo = "Undo",
-        redo = "Redo",
-        copy = "Copy",
-        cut = "Cut",
-        paste = "Paste",
-        delete = "Delete",
-        deleteword = "Delete Word",
-
         select = "Select Character",
         selectword = "Select Word",
         blockselect = "Block Select Character",
@@ -49,6 +41,24 @@ function M.names()
         mousestartblockselect = "Start Block Selection",
         mousedragselect = "Drag Select",
         mousestopselect = "Stop Selection",
+
+        completion_abort = "Abort Completion",
+        completion_trigger = "Trigger Completion",
+        completion_confirm = "Confirm Completion",
+        completion_selectconfirm = "Select and Confirm Completion",
+        completion_select_previous = "Select Previous Completion",
+        completion_select_next = "Select Next Completion",
+
+        snippet_jump_previous = "Snippet Jump Previous",
+        snippet_jump_next = "Snippet Jump Next",
+
+        undo = "Undo",
+        redo = "Redo",
+        copy = "Copy",
+        cut = "Cut",
+        paste = "Paste",
+        delete = "Delete",
+        deleteword = "Delete Word",
 
         find = "Find...",
         find_previous = "Find Previous",

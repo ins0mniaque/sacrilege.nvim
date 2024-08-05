@@ -3,6 +3,8 @@ local M = { }
 function M.commands(language)
     local sacrilege = require("sacrilege")
     local editor = require("sacrilege.editor")
+    local completion = require("sacrilege.completion")
+    local snippet = require("sacrilege.snippet")
     local ui = require("sacrilege.ui")
     local plugin = require("sacrilege.plugin")
     local methods = vim.lsp.protocol.Methods
@@ -69,6 +71,17 @@ function M.commands(language)
             mousestartblockselect = "<4-LeftMouse>",
             mousedragselect = "<LeftDrag>",
             mousestopselect = "",
+
+            -- TODO: Fix completion_confirm (<CR>, <Space> not working)
+            completion_abort = { function(lhs) if not completion.abort() then editor.send(lhs) end end, n = false, v = false, c = true },
+            completion_trigger = { function(lhs) if not completion.trigger() then editor.send(lhs) end end, n = false, v = false, c = true },
+            completion_confirm = { function(lhs) if not completion.confirm({ select = false }) then editor.send(lhs) end end, n = false, v = false, c = true },
+            completion_selectconfirm = { function(lhs) if not completion.confirm({ select = true }) then editor.send(lhs) end end, n = false, v = false, c = true },
+            completion_select_previous = { function(lhs) if not completion.select(-1) then editor.send(lhs) end end, n = false, v = false, c = true },
+            completion_select_next = { function(lhs) if not completion.select(1) then editor.send(lhs) end end, n = false, v = false, c = true },
+
+            snippet_jump_previous = { v = function(lhs) if not snippet.jump(-1) then editor.send(lhs) end end },
+            snippet_jump_next = { v = function(lhs) if not snippet.jump(1) then editor.send(lhs) end end },
 
             undo = vim.cmd.undo,
             redo = vim.cmd.redo,
@@ -169,14 +182,6 @@ function M.keys()
         tabprevious = "<C-S-Tab>",
         tabnext = "<C-Tab>",
 
-        undo = "<C-z>",
-        redo = { "<C-M-z>", "<C-y>" },
-        copy = "<C-c>",
-        cut = "<C-x>",
-        paste = "<C-v>",
-        delete = { "<BS>", "<Del>" },
-        deleteword = { "<C-BS>", "<M-BS>" },
-
         select = "<S-Arrow>",
         selectword = "<C-S-Arrow>",
         blockselect = "<M-S-Arrow>",
@@ -189,6 +194,24 @@ function M.keys()
         mousestartblockselect = "<M-LeftMouse>",
         mousedragselect = "<M-LeftDrag>",
         mousestopselect = "<M-LeftRelease>",
+
+        completion_abort = false,
+        completion_trigger = "<C-Space>",
+        completion_confirm = { "<Space>", "<CR>" },
+        completion_selectconfirm = { "<Tab>", "<S-CR>" },
+        completion_select_previous = "<Up>",
+        completion_select_next = "<Down>",
+
+        snippet_jump_previous = false,
+        snippet_jump_next = false,
+
+        undo = "<C-z>",
+        redo = { "<C-M-z>", "<C-y>" },
+        copy = "<C-c>",
+        cut = "<C-x>",
+        paste = "<C-v>",
+        delete = { "<BS>", "<Del>" },
+        deleteword = { "<C-BS>", "<M-BS>" },
 
         find = "<C-f>",
         find_previous = "<F15>",

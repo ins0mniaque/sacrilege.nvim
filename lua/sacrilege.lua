@@ -17,7 +17,7 @@ local defaults =
             -- TODO: Add native completion implementation
             visible = function() return vim.fn.pumvisible() == 1 end,
             abort = function() end,
-            complete = function() end,
+            trigger = function() end,
             confirm = function() end,
             select = function() end
         }
@@ -247,7 +247,7 @@ function M.escape()
     vim.cmd("echon '\r\r'")
     vim.cmd("echon ''")
 
-    if not completion.stop() and not editor.try_close_popup() and not options.insertmode then
+    if not completion.abort() and not editor.try_close_popup() and not options.insertmode then
         editor.send("<Esc>")
     end
 end

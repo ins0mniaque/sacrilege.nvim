@@ -19,9 +19,7 @@ end
 function M.jump(direction)
     for _, engine in pairs(engines) do
         if engine and engine.jump and engine.active and engine.active({ direction = direction }) then
-            engine.jump(direction)
-
-            return true
+            return engine.jump(direction) ~= false
         end
     end
 
@@ -31,9 +29,7 @@ end
 function M.stop()
     for _, engine in pairs(engines) do
         if engine and engine.stop and engine.active and engine.active() then
-            engine.stop()
-
-            return true
+            return engine.stop() ~= false
         end
     end
 

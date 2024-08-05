@@ -19,30 +19,24 @@ end
 function M.abort()
     for _, engine in pairs(engines) do
         if engine and engine.abort and engine.visible and engine.visible() then
-            engine.abort()
-
-            return true
+            return engine.abort() ~= false
         end
     end
 
     return false
 end
 
-function M.complete()
+function M.trigger()
     if engines.default then
         local default = engines[engines.default]
-        if default and default.complete and default.visible and not default.visible() then
-            default.complete()
-
-            return true
+        if default and default.trigger and default.visible and not default.visible() then
+            return default.trigger() ~= false
         end
     end
 
     for _, engine in pairs(engines) do
-        if engine and engine.complete and engine.visible and not engine.visible() then
-            engine.complete()
-
-            return true
+        if engine and engine.trigger and engine.visible and not engine.visible() then
+            return engine.trigger() ~= false
         end
     end
 
@@ -52,9 +46,7 @@ end
 function M.confirm(opts)
     for _, engine in pairs(engines) do
         if engine and engine.confirm and engine.visible and engine.visible() then
-            engine.confirm(opts)
-
-            return true
+            return engine.confirm(opts) ~= false
         end
     end
 
@@ -64,9 +56,7 @@ end
 function M.select(direction)
     for _, engine in pairs(engines) do
         if engine and engine.select and engine.visible and engine.visible() then
-            engine.select(direction)
-
-            return true
+            return engine.select(direction) ~= false
         end
     end
 
