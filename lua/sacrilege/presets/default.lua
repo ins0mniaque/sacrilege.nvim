@@ -87,7 +87,7 @@ function M.commands(language)
             redo = vim.cmd.redo,
             copy = { v = "\"+y" },
             cut = { v = "\"+x" },
-            paste = { n = "\"+gP", i = "<C-\\><C-O>\"+gP", v = "\"_d\"+P", c = "<C-c>\"+gP<C-\\><C-g>", o = "<C-c>\"+gP<C-\\><C-g>" },
+            paste = { n = "\"+gP", i = "<C-\\><C-O>\"+gP", v = "\"_d\"+P", c = "<C-r>+", o = "<C-c>\"+gP<C-\\><C-g>" },
             delete = { v = "\"_d" },
             deleteword = { n = "cvb", i = "<C-\\><C-N>cvb", v = "\"_d" },
 
