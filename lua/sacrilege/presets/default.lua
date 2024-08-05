@@ -18,7 +18,7 @@ function M.commands(language)
     local neotest = plugin.new("nvim-neotest/neotest", "neotest")
 
     local function arrow_command(rhs, block_rhs)
-        return function(lhs, arrow)
+        return function(arrow)
             local mode = vim.fn.mode()
             local keys = mode == "\19" or mode == "\22" and block_rhs or rhs
 
@@ -72,16 +72,15 @@ function M.commands(language)
             mousedragselect = "<LeftDrag>",
             mousestopselect = "",
 
-            -- TODO: Fix completion_confirm (<CR>, <Space> not working)
-            completion_abort = { function(lhs) if not completion.abort() then editor.send(lhs) end end, n = false, v = false, c = true },
-            completion_trigger = { function(lhs) if not completion.trigger() then editor.send(lhs) end end, n = false, v = false, c = true },
-            completion_confirm = { function(lhs) if not completion.confirm({ select = false }) then editor.send(lhs) end end, n = false, v = false, c = true },
-            completion_selectconfirm = { function(lhs) if not completion.confirm({ select = true }) then editor.send(lhs) end end, n = false, v = false, c = true },
-            completion_select_previous = { function(lhs) if not completion.select(-1) then editor.send(lhs) end end, n = false, v = false, c = true },
-            completion_select_next = { function(lhs) if not completion.select(1) then editor.send(lhs) end end, n = false, v = false, c = true },
+            completion_abort = { function(lhs) if not completion.abort() then editor.send(lhs) end end, lhs = true, n = false, v = false, c = true },
+            completion_trigger = { function(lhs) if not completion.trigger() then editor.send(lhs) end end, lhs = true, n = false, v = false, c = true },
+            completion_confirm = { function(lhs) if not completion.confirm({ select = false }) then editor.send(lhs) end end, lhs = true, n = false, v = false, c = true },
+            completion_selectconfirm = { function(lhs) if not completion.confirm({ select = true }) then editor.send(lhs) end end, lhs = true, n = false, v = false, c = true },
+            completion_select_previous = { function(lhs) if not completion.select(-1) then editor.send(lhs) end end, lhs = true, n = false, v = false, c = true },
+            completion_select_next = { function(lhs) if not completion.select(1) then editor.send(lhs) end end, lhs = true, n = false, v = false, c = true },
 
-            snippet_jump_previous = { v = function(lhs) if not snippet.jump(-1) then editor.send(lhs) end end },
-            snippet_jump_next = { v = function(lhs) if not snippet.jump(1) then editor.send(lhs) end end },
+            snippet_jump_previous = { v = function(lhs) if not snippet.jump(-1) then editor.send(lhs) end end, lhs = true },
+            snippet_jump_next = { v = function(lhs) if not snippet.jump(1) then editor.send(lhs) end end, lhs = true },
 
             undo = vim.cmd.undo,
             redo = vim.cmd.redo,
