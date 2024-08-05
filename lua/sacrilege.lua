@@ -1,5 +1,7 @@
 local config = require("sacrilege.config")
 local editor = require("sacrilege.editor")
+local completion = require("sacrilege.completion")
+local snippet = require("sacrilege.snippet")
 
 local M = { }
 
@@ -7,11 +9,27 @@ local defaults =
 {
     insertmode = true,
     selectmode = true,
+    completion =
+    {
+        default = "native",
+        native =
+        {
+            -- TODO: Add native completion implementation
+            visible = function() return vim.fn.pumvisible() == 1 end,
+            abort = function() end,
+            complete = function() end,
+            confirm = function() end,
+            select = function() end
+        }
+    },
     snippet =
     {
-        active = vim.snippet and vim.snippet.active,
-        jump = vim.snippet and vim.snippet.jump,
-        stop = vim.snippet and vim.snippet.stop
+        native = vim.snippet and
+        {
+            active = vim.snippet.active,
+            jump = vim.snippet.jump,
+            stop = vim.snippet.stop
+        }
     },
     selection =
     {
@@ -79,6 +97,9 @@ function M.setup(opts)
 
     options = vim.tbl_deep_extend("force", options, opts or { })
 
+    completion.setup(options.completion)
+    snippet.setup(options.snippet)
+
     local insertmode_group = vim.api.nvim_create_augroup("Sacrilege.InsertMode", { })
 
     vim.api.nvim_create_autocmd({ "BufEnter", "InsertLeave", "TermLeave" },
@@ -119,7 +140,7 @@ function M.setup(opts)
         end
     })
 
-    if options.snippet and options.snippet.active and options.selection then
+    if options.selection and options.snippet then
         vim.api.nvim_create_autocmd({ "ModeChanged" },
         {
             desc = "Fix Active Snippet Exclusive Selection",
@@ -127,7 +148,7 @@ function M.setup(opts)
             pattern = { "*:s" },
             callback = function(_)
                 if options.selectmode then
-                    vim.opt.selection = options.snippet.active() and "inclusive" or "exclusive"
+                    vim.opt.selection = snippet.active() and "inclusive" or "exclusive"
                 end
             end
         })
@@ -217,9 +238,7 @@ function M.setup(opts)
 end
 
 function M.escape()
-    if options.snippet and options.snippet.active and options.snippet.stop and options.snippet.active() then
-        options.snippet.stop()
-    end
+    snippet.stop()
 
     -- Clear highlights
     vim.cmd("nohl")
@@ -228,7 +247,7 @@ function M.escape()
     vim.cmd("echon '\r\r'")
     vim.cmd("echon ''")
 
-    if not editor.try_close_popup() and not options.insertmode then
+    if not completion.stop() and not editor.try_close_popup() and not options.insertmode then
         editor.send("<Esc>")
     end
 end
@@ -240,32 +259,29 @@ function M.interrupt()
 end
 
 function M.tab()
-    if options.snippet and options.snippet.active and options.snippet.jump and options.snippet.active({ direction = 1 }) then
-        options.snippet.jump(1)
-    else
-        local mode = editor.mapmode()
+    if completion.confirm({ select = true }) then return end
+    if snippet.jump(1) then return end
 
-        if mode == "s" or mode == "x" then
-            editor.send("<C-O>>gv")
-        else
-            editor.send("<Tab>")
-        end
+    local mode = editor.mapmode()
+
+    if mode == "s" or mode == "x" then
+        editor.send("<C-O>>gv")
+    else
+        editor.send("<Tab>")
     end
 end
 
 function M.shifttab()
-    if options.snippet and options.snippet.active and options.snippet.jump and options.snippet.active({ direction = -1 }) then
-        options.snippet.jump(-1)
-    else
-        local mode = editor.mapmode()
+    if snippet.jump(-1) then return end
 
-        if mode == "i" then
-            editor.send("<C-d>")
-        elseif mode == "s" or mode == "x" then
-            editor.send("<C-O><gv")
-        else
-            editor.send("<S-Tab>")
-        end
+    local mode = editor.mapmode()
+
+    if mode == "i" then
+        editor.send("<C-d>")
+    elseif mode == "s" or mode == "x" then
+        editor.send("<C-O><gv")
+    else
+        editor.send("<S-Tab>")
     end
 end
 
