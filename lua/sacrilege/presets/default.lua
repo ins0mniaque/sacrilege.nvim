@@ -197,7 +197,7 @@ function M.keys()
         completion_abort = false,
         completion_trigger = "<C-Space>",
         completion_confirm = { "<Space>", "<CR>" },
-        completion_selectconfirm = { "<Tab>", "<S-CR>" },
+        completion_selectconfirm = "<S-CR>",
         completion_select_previous = "<Up>",
         completion_select_next = "<Down>",
 
