@@ -12,15 +12,7 @@ local defaults =
     completion =
     {
         default = "native",
-        native =
-        {
-            -- TODO: Add native completion implementation
-            visible = function() return vim.fn.pumvisible() == 1 end,
-            abort = function() end,
-            trigger = function() end,
-            confirm = function() end,
-            select = function() end
-        }
+        native  = completion.native("<C-o>")
     },
     snippet =
     {
