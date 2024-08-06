@@ -133,8 +133,8 @@ function M.commands(language)
         },
         lsp =
         {
-            format = { function() vim.lsp.buf.format({ async = true }) end, method = methods.textDocument_formatting },
-            format_selection = { function() vim.lsp.buf.format({ async = true, range = { start = vim.api.nvim_buf_get_mark(0, "<"), ["end"] = vim.api.nvim_buf_get_mark(0, ">") } }) end, method = methods.textDocument_rangeFormatting },
+            format = { function() vim.lsp.buf.format({ async = true }) end, method = methods.textDocument_formatting, v = false },
+            format_selection = { function() vim.lsp.buf.format({ async = true, range = { start = vim.api.nvim_buf_get_mark(0, "<"), ["end"] = vim.api.nvim_buf_get_mark(0, ">") } }) end, method = methods.textDocument_rangeFormatting, n = false, i = false },
 
             hover =
             {
