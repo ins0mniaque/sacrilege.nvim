@@ -192,7 +192,7 @@ function M.keys()
         blockselect = "<M-S-Arrow>",
         blockselectword = "<C-M-S-Arrow>",
         selectall = "<C-A>",
-        stopselect = { "<Arrow>", "<C-Arrow>" },
+        stopselect = { "<Left>", "<Right>", "<C-Arrow>" },
 
         mouseselect = false,
         mousestartselect = false,

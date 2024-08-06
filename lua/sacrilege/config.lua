@@ -1,26 +1,38 @@
 local M = { }
 
-local function parse(action, mode, lhs, rhs, opts, requires_lhs)
+local function parse(action, mode, lhs, rhs, opts)
     local arrow = "[Aa][rR][rR][oO][wW]>"
     local input = "<[Ii][nN][pP][uU][tT]>"
 
     if lhs:find(arrow) then
         if type(rhs) == "function" then
-            parse(action, mode, lhs:gsub(arrow, "Left>"),  requires_lhs and function(lhs) rhs(lhs, "Left")  end or function() rhs("Left")  end, opts, requires_lhs)
-            parse(action, mode, lhs:gsub(arrow, "Up>"),    requires_lhs and function(lhs) rhs(lhs, "Up")    end or function() rhs("Up")    end, opts, requires_lhs)
-            parse(action, mode, lhs:gsub(arrow, "Right>"), requires_lhs and function(lhs) rhs(lhs, "Right") end or function() rhs("Right") end, opts, requires_lhs)
-            parse(action, mode, lhs:gsub(arrow, "Down>"),  requires_lhs and function(lhs) rhs(lhs, "Down")  end or function() rhs("Down")  end, opts, requires_lhs)
+            parse(action, mode, lhs:gsub(arrow, "Left>"),  opts.lhs and function(lhs) rhs(lhs, "Left")  end or function() rhs("Left")  end, opts)
+            parse(action, mode, lhs:gsub(arrow, "Up>"),    opts.lhs and function(lhs) rhs(lhs, "Up")    end or function() rhs("Up")    end, opts)
+            parse(action, mode, lhs:gsub(arrow, "Right>"), opts.lhs and function(lhs) rhs(lhs, "Right") end or function() rhs("Right") end, opts)
+            parse(action, mode, lhs:gsub(arrow, "Down>"),  opts.lhs and function(lhs) rhs(lhs, "Down")  end or function() rhs("Down")  end, opts)
         else
-            parse(action, mode, lhs:gsub(arrow, "Left>"),  rhs:gsub(arrow, "Left>"),  opts, requires_lhs)
-            parse(action, mode, lhs:gsub(arrow, "Up>"),    rhs:gsub(arrow, "Up>"),    opts, requires_lhs)
-            parse(action, mode, lhs:gsub(arrow, "Right>"), rhs:gsub(arrow, "Right>"), opts, requires_lhs)
-            parse(action, mode, lhs:gsub(arrow, "Down>"),  rhs:gsub(arrow, "Down>"),  opts, requires_lhs)
+            parse(action, mode, lhs:gsub(arrow, "Left>"),  rhs:gsub(arrow, "Left>"),  opts)
+            parse(action, mode, lhs:gsub(arrow, "Up>"),    rhs:gsub(arrow, "Up>"),    opts)
+            parse(action, mode, lhs:gsub(arrow, "Right>"), rhs:gsub(arrow, "Right>"), opts)
+            parse(action, mode, lhs:gsub(arrow, "Down>"),  rhs:gsub(arrow, "Down>"),  opts)
         end
-    elseif type(rhs) == "function" then
-        action(mode, lhs, requires_lhs and function() rhs(lhs) end or rhs, opts)
-    else
-        action(mode, lhs, requires_lhs and rhs:gsub(input, lhs) or rhs, opts)
+
+        return
     end
+
+    if type(rhs) == "function" then
+        rhs = opts.lhs and function() rhs(lhs) end or rhs
+    else
+        if rhs:find(arrow) then
+            rhs = rhs:gsub(arrow, lhs:match("[-<](%a+)>") .. ">")
+        end
+
+        rhs = opts.lhs and rhs:gsub(input, lhs) or rhs
+    end
+
+    opts.lhs = nil
+
+    action(mode, lhs, rhs, opts)
 end
 
 function M.parse(action, options, definitions, buffer, predicate)
@@ -51,7 +63,7 @@ function M.parse(action, options, definitions, buffer, predicate)
                 local function map_mode(mode, default)
                     if (definition[1] and (definition[mode] or default) ~= false) or (not definition[1] and definition[mode]) then
                         for _, key in pairs(bound) do
-                            parse(action, mode, key, definition[1] or definition[mode], { buffer = buffer, desc = name }, definition.lhs or false)
+                            parse(action, mode, key, definition[1] or definition[mode], { buffer = buffer, desc = name, lhs = definition.lhs })
                         end
                     end
                 end
@@ -66,7 +78,7 @@ function M.parse(action, options, definitions, buffer, predicate)
                 map_mode("o", false)
             elseif definition then
                 for _, key in pairs(bound) do
-                    parse(action, { "n", "i", "v" }, key, definition, { buffer = buffer, desc = name }, false)
+                    parse(action, { "n", "i", "v" }, key, definition, { buffer = buffer, desc = name })
                 end
             end
         end
