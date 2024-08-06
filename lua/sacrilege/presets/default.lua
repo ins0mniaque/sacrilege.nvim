@@ -102,7 +102,7 @@ function M.commands(language)
             line = ui.go_to_line,
 
             indent = { s = "<C-O>>gv", x = "<C-G><C-O>>gv" },
-            unindent = { i = "<C-D>", s = "<C-O><gv", x = "<C-G><C-O><gv" },
+            unindent = { i = "<C-D>", s = "<C-O><lt>gv", x = "<C-G><C-O><lt>gv" },
             comment =
             {
                 i = function() editor.send("<C-\\><C-N>") editor.send("gcci", true) end,

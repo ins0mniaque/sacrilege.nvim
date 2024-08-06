@@ -281,7 +281,7 @@ function M.shifttab()
     if mode == "i" then
         editor.send("<C-d>")
     elseif mode == "s" or mode == "x" then
-        editor.send("<C-O><gv")
+        editor.send("<C-O><lt>gv")
     else
         editor.send("<S-Tab>")
     end
