@@ -45,43 +45,45 @@ function M.parse(action, options, definitions, buffer, predicate)
         local name = names[command] or command
         local bound = keys[command]
 
-        if bound and #bound > 0 then
-            if type(bound) == "string" then
-                bound = { bound }
+        if not bound or #bound == 0 then
+            bound = { "<Plug>(" .. command .. ")" }
+        end
+
+        if type(bound) == "string" then
+            bound = { bound }
+        end
+
+        if type(definition) == "table" then
+            if type(definition[1]) == "table" then
+                local found = nil
+                for _, subdefinition in pairs(definition) do
+                    if not found and (not predicate or predicate(subdefinition)) then
+                        found = subdefinition
+                    end
+                end
+
+                definition = found
             end
 
-            if type(definition) == "table" then
-                if type(definition[1]) == "table" then
-                    local found = nil
-                    for _, subdefinition in pairs(definition) do
-                        if not found and (not predicate or predicate(subdefinition)) then
-                            found = subdefinition
-                        end
-                    end
-
-                    definition = found
-                end
-
-                local function map_mode(mode, default)
-                    if (definition[1] and ((default and definition[mode] ~= false) or (not default and definition[mode]))) or (not definition[1] and definition[mode]) then
-                        for _, key in pairs(bound) do
-                            parse(action, mode, key, definition[1] or definition[mode], { buffer = buffer, desc = name, lhs = definition.lhs })
-                        end
+            local function map_mode(mode, default)
+                if (definition[1] and ((default and definition[mode] ~= false) or (not default and definition[mode]))) or (not definition[1] and definition[mode]) then
+                    for _, key in pairs(bound) do
+                        parse(action, mode, key, definition[1] or definition[mode], { buffer = buffer, desc = name, lhs = definition.lhs })
                     end
                 end
+            end
 
-                map_mode("n", true)
-                map_mode("i", true)
-                map_mode("v", true)
-                map_mode("s", false)
-                map_mode("x", false)
-                map_mode("c", false)
-                map_mode("t", false)
-                map_mode("o", false)
-            elseif definition then
-                for _, key in pairs(bound) do
-                    parse(action, { "n", "i", "v" }, key, definition, { buffer = buffer, desc = name })
-                end
+            map_mode("n", true)
+            map_mode("i", true)
+            map_mode("v", true)
+            map_mode("s", false)
+            map_mode("x", false)
+            map_mode("c", false)
+            map_mode("t", false)
+            map_mode("o", false)
+        elseif definition then
+            for _, key in pairs(bound) do
+                parse(action, { "n", "i", "v" }, key, definition, { buffer = buffer, desc = name })
             end
         end
     end
