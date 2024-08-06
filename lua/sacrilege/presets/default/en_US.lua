@@ -17,6 +17,7 @@ function M.names()
         diagnostics = "Toggle Diagnostics",
         diagnostic = "Toggle Diagnostic Popup",
         messages = "Toggle Message Log",
+        checkhealth = "Check Health",
 
         new = "New Tab",
         open = "Open...",

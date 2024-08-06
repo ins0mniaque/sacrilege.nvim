@@ -47,6 +47,7 @@ function M.commands(language)
             diagnostics = { vim.diagnostic.setloclist, c = true },
             diagnostic = function() if not editor.try_close_popup() then vim.diagnostic.open_float({ scope = 'cursor', focus = false }) end end,
             messages = function() editor.send("<C-\\><C-N>:messages<CR>") end,
+            checkhealth = "<Cmd>checkhealth<CR>",
 
             new = { vim.cmd.tabnew, c = true },
             open = { ui.browse, c = true },
@@ -171,6 +172,7 @@ function M.keys()
         diagnostics = "<C-D>",
         diagnostic = "<F49>",
         messages = "<C-M-L>",
+        checkhealth = "<C-M-S-F1>",
 
         new = "<C-N>",
         open = "<C-O>",
