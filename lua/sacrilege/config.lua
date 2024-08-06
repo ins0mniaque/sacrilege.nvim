@@ -63,7 +63,7 @@ function M.parse(action, options, definitions, buffer, predicate)
                 end
 
                 local function map_mode(mode, default)
-                    if (definition[1] and (definition[mode] or default) ~= false) or (not definition[1] and definition[mode]) then
+                    if (definition[1] and ((default and definition[mode] ~= false) or (not default and definition[mode]))) or (not definition[1] and definition[mode]) then
                         for _, key in pairs(bound) do
                             parse(action, mode, key, definition[1] or definition[mode], { buffer = buffer, desc = name, lhs = definition.lhs })
                         end
