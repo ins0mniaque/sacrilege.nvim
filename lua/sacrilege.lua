@@ -183,7 +183,7 @@ function M.setup(opts)
                     return
                 end
 
-                config.map(options, options.commands.treesitter, function(definition)
+                config.map(options, options.commands.treesitter, event.buf, function(definition)
                     return not definition.method or not editor.supports_lsp_method(event.buf, definition.method)
                 end)
             end
@@ -201,7 +201,7 @@ function M.setup(opts)
                     return
                 end
 
-                config.map(options, options.commands.lsp, function(definition)
+                config.map(options, options.commands.lsp, event.buf, function(definition)
                     return not definition.method or client.supports_method(definition.method)
                 end)
             end

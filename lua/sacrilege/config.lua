@@ -23,7 +23,7 @@ local function parse(action, mode, lhs, rhs, opts, requires_lhs)
     end
 end
 
-function M.parse(action, options, definitions, predicate)
+function M.parse(action, options, definitions, buffer, predicate)
     local names = options.commands.names
     local keys  = options.keys
 
@@ -51,7 +51,7 @@ function M.parse(action, options, definitions, predicate)
                 local function map_mode(mode, default)
                     if (definition[1] and (definition[mode] or default) ~= false) or (not definition[1] and definition[mode]) then
                         for _, key in pairs(bound) do
-                            parse(action, mode, key, definition[1] or definition[mode], { desc = name }, definition.lhs or false)
+                            parse(action, mode, key, definition[1] or definition[mode], { buffer = buffer, desc = name }, definition.lhs or false)
                         end
                     end
                 end
@@ -66,15 +66,15 @@ function M.parse(action, options, definitions, predicate)
                 map_mode("o", false)
             elseif definition then
                 for _, key in pairs(bound) do
-                    parse(action, { "n", "i", "v" }, key, definition, { desc = name }, false)
+                    parse(action, { "n", "i", "v" }, key, definition, { buffer = buffer, desc = name }, false)
                 end
             end
         end
     end
 end
 
-function M.map(options, definitions, predicate)
-    M.parse(vim.keymap.set, options, definitions, predicate)
+function M.map(options, definitions, buffer, predicate)
+    M.parse(vim.keymap.set, options, definitions, buffer, predicate)
 end
 
 function M.build_popup(options, popup)
