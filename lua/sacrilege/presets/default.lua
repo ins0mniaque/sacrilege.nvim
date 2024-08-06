@@ -35,10 +35,10 @@ function M.commands(language)
         {
             escape = { i = sacrilege.escape },
             interrupt = { i = sacrilege.interrupt },
-            tab = { sacrilege.tab, n = false },
+            tab = { sacrilege.tab, n = false, c = true },
             shifttab = { sacrilege.shifttab, n = false },
-            up = { sacrilege.up, n = false },
-            down = { sacrilege.down, n = false },
+            up = { sacrilege.up, n = false, c = true },
+            down = { sacrilege.down, n = false, c = true },
             popup = { s = "<C-\\><C-G>gv<Cmd>:popup! PopUp<CR>" },
 
             command_palette = { ui.command_palette, c = true },
