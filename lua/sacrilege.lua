@@ -38,6 +38,8 @@ local metatable =
     __index = function(table, key)
         if key == "insertmode" or key == "selectmode" then
             return options[key]
+        elseif key == "options" then
+            return vim.tbl_deep_extend("force", { }, options)
         end
 
         return rawget(table, key)
@@ -56,6 +58,8 @@ local metatable =
             if options.selectmode then
                 vim.defer_fn(editor.selectmode, 0)
             end
+        elseif key == "options" then
+            editor.notify("Cannot change options after setup", vim.log.levels.ERROR)
         else
             rawset(table, key, value)
         end
@@ -164,7 +168,7 @@ function M.setup(opts)
         end
     end
 
-    config.parse(options, options.commands.global)
+    config.map(options, options.commands.global)
 
     if options.commands.treesitter then
         local treesitter = require("sacrilege.treesitter")
@@ -179,7 +183,7 @@ function M.setup(opts)
                     return
                 end
 
-                config.parse(options, options.commands.treesitter, function(definition)
+                config.map(options, options.commands.treesitter, function(definition)
                     return not definition.method or not editor.supports_lsp_method(event.buf, definition.method)
                 end)
             end
@@ -197,7 +201,7 @@ function M.setup(opts)
                     return
                 end
 
-                config.parse(options, options.commands.lsp, function(definition)
+                config.map(options, options.commands.lsp, function(definition)
                     return not definition.method or client.supports_method(definition.method)
                 end)
             end
@@ -211,7 +215,7 @@ function M.setup(opts)
         pcall(vim.cmd.aunmenu, "PopUp.-1-")
         pcall(vim.cmd.aunmenu, "PopUp.How-to\\ disable\\ mouse")
 
-        local update_popup = config.parse_popup(options, options.popup)
+        local update_popup = config.build_popup(options, options.popup)
 
         vim.api.nvim_create_autocmd({ "MenuPopup" },
         {

@@ -1,29 +1,29 @@
 local M = { }
 
-local function map(mode, lhs, rhs, opts, requires_lhs)
+local function parse(action, mode, lhs, rhs, opts, requires_lhs)
     local arrow = "[Aa][rR][rR][oO][wW]>"
     local input = "<[Ii][nN][pP][uU][tT]>"
 
     if lhs:find(arrow) then
         if type(rhs) == "function" then
-            map(mode, lhs:gsub(arrow, "Left>"),  requires_lhs and function(lhs) rhs(lhs, "Left")  end or function() rhs("Left")  end, opts, requires_lhs)
-            map(mode, lhs:gsub(arrow, "Up>"),    requires_lhs and function(lhs) rhs(lhs, "Up")    end or function() rhs("Up")    end, opts, requires_lhs)
-            map(mode, lhs:gsub(arrow, "Right>"), requires_lhs and function(lhs) rhs(lhs, "Right") end or function() rhs("Right") end, opts, requires_lhs)
-            map(mode, lhs:gsub(arrow, "Down>"),  requires_lhs and function(lhs) rhs(lhs, "Down")  end or function() rhs("Down")  end, opts, requires_lhs)
+            parse(action, mode, lhs:gsub(arrow, "Left>"),  requires_lhs and function(lhs) rhs(lhs, "Left")  end or function() rhs("Left")  end, opts, requires_lhs)
+            parse(action, mode, lhs:gsub(arrow, "Up>"),    requires_lhs and function(lhs) rhs(lhs, "Up")    end or function() rhs("Up")    end, opts, requires_lhs)
+            parse(action, mode, lhs:gsub(arrow, "Right>"), requires_lhs and function(lhs) rhs(lhs, "Right") end or function() rhs("Right") end, opts, requires_lhs)
+            parse(action, mode, lhs:gsub(arrow, "Down>"),  requires_lhs and function(lhs) rhs(lhs, "Down")  end or function() rhs("Down")  end, opts, requires_lhs)
         else
-            map(mode, lhs:gsub(arrow, "Left>"),  rhs:gsub(arrow, "Left>"),  opts, requires_lhs)
-            map(mode, lhs:gsub(arrow, "Up>"),    rhs:gsub(arrow, "Up>"),    opts, requires_lhs)
-            map(mode, lhs:gsub(arrow, "Right>"), rhs:gsub(arrow, "Right>"), opts, requires_lhs)
-            map(mode, lhs:gsub(arrow, "Down>"),  rhs:gsub(arrow, "Down>"),  opts, requires_lhs)
+            parse(action, mode, lhs:gsub(arrow, "Left>"),  rhs:gsub(arrow, "Left>"),  opts, requires_lhs)
+            parse(action, mode, lhs:gsub(arrow, "Up>"),    rhs:gsub(arrow, "Up>"),    opts, requires_lhs)
+            parse(action, mode, lhs:gsub(arrow, "Right>"), rhs:gsub(arrow, "Right>"), opts, requires_lhs)
+            parse(action, mode, lhs:gsub(arrow, "Down>"),  rhs:gsub(arrow, "Down>"),  opts, requires_lhs)
         end
     elseif type(rhs) == "function" then
-        vim.keymap.set(mode, lhs, requires_lhs and function() rhs(lhs) end or rhs, opts)
+        action(mode, lhs, requires_lhs and function() rhs(lhs) end or rhs, opts)
     else
-        vim.keymap.set(mode, lhs, requires_lhs and rhs:gsub(input, lhs) or rhs, opts)
+        action(mode, lhs, requires_lhs and rhs:gsub(input, lhs) or rhs, opts)
     end
 end
 
-function M.parse(options, definitions, predicate)
+function M.parse(action, options, definitions, predicate)
     local names = options.commands.names
     local keys  = options.keys
 
@@ -51,7 +51,7 @@ function M.parse(options, definitions, predicate)
                 local function map_mode(mode, default)
                     if (definition[1] and (definition[mode] or default) ~= false) or (not definition[1] and definition[mode]) then
                         for _, key in pairs(bound) do
-                            map(mode, key, definition[1] or definition[mode], { desc = name }, definition.lhs or false)
+                            parse(action, mode, key, definition[1] or definition[mode], { desc = name }, definition.lhs or false)
                         end
                     end
                 end
@@ -66,14 +66,18 @@ function M.parse(options, definitions, predicate)
                 map_mode("o", false)
             elseif definition then
                 for _, key in pairs(bound) do
-                    map({ "n", "i", "v" }, key, definition, { desc = name }, false)
+                    parse(action, { "n", "i", "v" }, key, definition, { desc = name }, false)
                 end
             end
         end
     end
 end
 
-function M.parse_popup(options, popup)
+function M.map(options, definitions, predicate)
+    M.parse(vim.keymap.set, options, definitions, predicate)
+end
+
+function M.build_popup(options, popup)
     local names = options.commands.names
     local keys  = options.keys
 
