@@ -234,7 +234,9 @@ function M.setup(opts)
 end
 
 function M.escape()
-    snippet.stop()
+    if completion.abort() then return end
+    if snippet.stop() then return end
+    if editor.try_close_popup() then return end
 
     -- Clear highlights
     vim.cmd("nohl")
@@ -243,7 +245,7 @@ function M.escape()
     vim.cmd("echon '\r\r'")
     vim.cmd("echon ''")
 
-    if not completion.abort() and not editor.try_close_popup() and not options.insertmode then
+    if not options.insertmode then
         editor.send("<Esc>")
     end
 end
