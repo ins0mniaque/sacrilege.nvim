@@ -21,7 +21,9 @@ local function parse(action, mode, lhs, rhs, opts)
     end
 
     if type(rhs) == "function" then
-        rhs = opts.lhs and function() rhs(lhs) end or rhs
+        local capture_rhs = rhs
+
+        rhs = opts.lhs and function() capture_rhs(lhs) end or rhs
     else
         if rhs:find(arrow) then
             rhs = rhs:gsub(arrow, lhs:match("[-<](%a+)>") .. ">")
