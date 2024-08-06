@@ -71,6 +71,8 @@ function M.names()
         replace_in_files = "Replace in Files...",
         line = "Go to Line...",
 
+        indent = "Indent",
+        unindent = "Unindent",
         comment = "Toggle Line Comment",
         format = "Format Document",
         format_selection = "Format Selection",
