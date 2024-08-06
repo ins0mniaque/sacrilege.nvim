@@ -83,6 +83,14 @@ function M.get_selected_text()
     return table.concat(lines, '\n')
 end
 
+function M.get_selection_range()
+    return
+    {
+        ["start"] = vim.api.nvim_buf_get_mark(0, "<"),
+        ["end"]   = vim.api.nvim_buf_get_mark(0, ">")
+    }
+end
+
 function M.try_close_popup()
     for _, win in ipairs(vim.api.nvim_list_wins()) do
         if vim.api.nvim_win_get_config(win).relative == 'win' then

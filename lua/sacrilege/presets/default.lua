@@ -28,6 +28,18 @@ function M.commands(language)
         end
     end
 
+    local function completion_command(command)
+        return { function(lhs) if not command() then editor.send(lhs) end end, lhs = true, n = false, v = false, c = true }
+    end
+
+    local function snippet_command(command)
+        return { v = function(lhs) if not command() then editor.send(lhs) end end, lhs = true }
+    end
+
+    local function popup_command(command)
+        return function() if not editor.try_close_popup() then command() end end
+    end
+
     return
     {
         names = localized.names(),
@@ -45,7 +57,7 @@ function M.commands(language)
             cmdline = "<Esc>:",
             terminal = { vim.cmd.terminal, c = true },
             diagnostics = { vim.diagnostic.setloclist, c = true },
-            diagnostic = function() if not editor.try_close_popup() then vim.diagnostic.open_float({ scope = 'cursor', focus = false }) end end,
+            diagnostic = popup_command(function() vim.diagnostic.open_float({ scope = 'cursor', focus = false }) end),
             messages = function() editor.send("<C-\\><C-N>:messages<CR>") end,
             checkhealth = "<Cmd>checkhealth<CR>",
 
@@ -75,15 +87,15 @@ function M.commands(language)
             mousedragselect = "<LeftDrag>",
             mousestopselect = "",
 
-            completion_abort = { function(lhs) if not completion.abort() then editor.send(lhs) end end, lhs = true, n = false, v = false, c = true },
-            completion_trigger = { function(lhs) if not completion.trigger() then editor.send(lhs) end end, lhs = true, n = false, v = false, c = true },
-            completion_confirm = { function(lhs) if not completion.confirm({ select = false }) then editor.send(lhs) end end, lhs = true, n = false, v = false, c = true },
-            completion_selectconfirm = { function(lhs) if not completion.confirm({ select = true }) then editor.send(lhs) end end, lhs = true, n = false, v = false, c = true },
-            completion_select_previous = { function(lhs) if not completion.select(-1) then editor.send(lhs) end end, lhs = true, n = false, v = false, c = true },
-            completion_select_next = { function(lhs) if not completion.select(1) then editor.send(lhs) end end, lhs = true, n = false, v = false, c = true },
+            completion_abort = completion_command(completion.abort),
+            completion_trigger = completion_command(completion.trigger),
+            completion_confirm = completion_command(function() return completion.confirm({ select = false }) end),
+            completion_selectconfirm = completion_command(function() return completion.confirm({ select = true }) end),
+            completion_select_previous = completion_command(function() return completion.select(-1) end),
+            completion_select_next = completion_command(function() return completion.select(1) end),
 
-            snippet_jump_previous = { v = function(lhs) if not snippet.jump(-1) then editor.send(lhs) end end, lhs = true },
-            snippet_jump_next = { v = function(lhs) if not snippet.jump(1) then editor.send(lhs) end end, lhs = true },
+            snippet_jump_previous = snippet_command(function() return snippet.jump(-1) end),
+            snippet_jump_next = snippet_command(function() return snippet.jump(1) end),
 
             undo = vim.cmd.undo,
             redo = vim.cmd.redo,
@@ -134,12 +146,12 @@ function M.commands(language)
         lsp =
         {
             format = { function() vim.lsp.buf.format({ async = true }) end, method = methods.textDocument_formatting, v = false },
-            format_selection = { function() vim.lsp.buf.format({ async = true, range = { start = vim.api.nvim_buf_get_mark(0, "<"), ["end"] = vim.api.nvim_buf_get_mark(0, ">") } }) end, method = methods.textDocument_rangeFormatting, n = false, i = false },
+            format_selection = { function() vim.lsp.buf.format({ async = true, range = editor.get_selection_range() }) end, method = methods.textDocument_rangeFormatting, n = false, i = false },
 
             hover =
             {
-                { function() if not editor.try_close_popup() then vim.lsp.buf.hover() end end, method = methods.textDocument_hover },
-                { function() if not editor.try_close_popup() then vim.lsp.buf.signature_help() end end, method = methods.textDocument_signatureHelp }
+                { popup_command(vim.lsp.buf.hover), method = methods.textDocument_hover },
+                { popup_command(vim.lsp.buf.signature_help), method = methods.textDocument_signatureHelp }
             },
             definition = { vim.lsp.buf.definition, method = methods.textDocument_definition },
             references = { vim.lsp.buf.references, method = methods.textDocument_references },
