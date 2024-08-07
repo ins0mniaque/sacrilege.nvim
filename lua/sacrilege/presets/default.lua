@@ -222,7 +222,7 @@ function M.keys()
         snippet_jump_previous = false,
         snippet_jump_next = false,
 
-        undo = "<C-Z>",
+        undo = { "<C-Z>", "<C-U>" },
         redo = { "<C-M-Z>", "<C-Y>" },
         copy = "<C-C>",
         cut = "<C-X>",
