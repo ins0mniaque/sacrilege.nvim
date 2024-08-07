@@ -11,10 +11,31 @@ function M.native(key)
 
     return
     {
-        visible = function() return vim.fn.pumvisible() == 1 end,
-        abort = function() editor.send("<C-E>") end,
-        trigger = function() editor.send("<C-X>" .. key) end,
+        visible = function()
+            return vim.fn.pumvisible() == 1
+        end,
+
+        abort = function()
+            if vim.fn.pumvisible() ~= 1 then
+                return false
+            end
+
+            editor.send("<C-E>")
+
+            return true
+        end,
+
+        trigger = function()
+            editor.send("<C-X>" .. key)
+
+            return true
+        end,
+
         confirm = function(opts)
+            if vim.fn.pumvisible() ~= 1 then
+                return false
+            end
+
             local selected = vim.fn.complete_info({ "selected" }).selected ~= -1
 
             if opts and opts.select and not selected then
@@ -30,7 +51,12 @@ function M.native(key)
 
             return selected
         end,
+
         select = function(direction)
+            if vim.fn.pumvisible() ~= 1 then
+                return false
+            end
+
             if direction == -1 then
                 return editor.send("<C-P>")
             elseif direction == 1 then
