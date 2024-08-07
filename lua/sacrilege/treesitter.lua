@@ -9,7 +9,7 @@ function M.reset_cache()
             rawset(table, key, vim.api.nvim_get_runtime_file("parser/" .. key .. ".*", false))
 
             return rawget(table, key)
-        end,
+        end
     })
 end
 
