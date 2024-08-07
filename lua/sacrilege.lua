@@ -9,10 +9,38 @@ local defaults =
 {
     insertmode = true,
     selectmode = true,
+    autocomplete = true,
     completion =
     {
-        default = "native",
-        native  = completion.native("<C-o>")
+        default = function(what)
+            if what.line:find("/") and not what.line:find("[%s%(%)%[%]]") then
+                return "path"
+            elseif vim.bo.omnifunc ~= "" then
+                return "omni"
+            elseif vim.bo.completefunc ~= "" then
+                return "user"
+            -- elseif vim.bo.thesaurus ~= "" or vim.bo.thesaurusfunc ~= "" then
+            --     return "thesaurus"
+            -- elseif vim.bo.dictionary ~= "" then
+            --     return "dictionary"
+            -- elseif vim.wo.spell and vim.bo.spelllang ~= "" then
+            --     return "spell"
+            else
+                return "keyword"
+            end
+        end,
+        keyword = completion.native("<C-N>"),
+        line = completion.native("<C-L>"),
+        path = completion.native("<C-F>"),
+        tags = completion.native("<C-]>"),
+        definitions = completion.native("<C-D>"),
+        keyword_included = completion.native("<C-I>"),
+        dictionary = completion.native("<C-K>"),
+        thesaurus = completion.native("<C-T>"),
+        cmdline = completion.native("<C-V>"),
+        user = completion.native("<C-U>"),
+        omni = completion.native("<C-O>"),
+        spell = completion.native("s")
     },
     snippet =
     {

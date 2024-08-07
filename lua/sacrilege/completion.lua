@@ -1,3 +1,5 @@
+local editor = require("sacrilege.editor")
+
 local M = { }
 
 local engines = { }
@@ -6,17 +8,42 @@ function M.setup(opts)
     engines = vim.tbl_deep_extend("force", engines, opts or { })
 end
 
+local native_modes =
+{
+    ["<C-N>"] = "keyword",
+    ["<C-L>"] = "whole_line",
+    ["<C-F>"] = "files",
+    ["<C-]>"] = "tags",
+    ["<C-D>"] = "path_defines",
+    ["<C-I>"] = "path_patterns",
+    ["<C-K>"] = "dictionary",
+    ["<C-T>"] = "thesaurus",
+    ["<C-V>"] = "cmdline",
+    ["<C-U>"] = "function",
+    ["<C-O>"] = "omni",
+    ["s"]     = "spell"
+}
+
+local native_info
+
 function M.native(key)
-    local editor = require("sacrilege.editor")
+    local mode = native_modes[key]
+
+    local function visible()
+        if not native_info then
+            native_info = vim.fn.complete_info({ "mode", "pum_visible" })
+            vim.defer_fn(function() native_info = nil end, 0)
+        end
+
+        return native_info.pum_visible == 1 and native_info.mode == mode
+    end
 
     return
     {
-        visible = function()
-            return vim.fn.pumvisible() == 1
-        end,
+        visible = visible,
 
         abort = function()
-            if vim.fn.pumvisible() ~= 1 then
+            if not visible() then
                 return false
             end
 
@@ -26,13 +53,15 @@ function M.native(key)
         end,
 
         trigger = function()
-            editor.send("<C-X>" .. key)
+            if not visible() then
+                editor.send("<C-X>" .. key)
+            end
 
             return true
         end,
 
         confirm = function(opts)
-            if vim.fn.pumvisible() ~= 1 then
+            if not visible() then
                 return false
             end
 
@@ -53,7 +82,7 @@ function M.native(key)
         end,
 
         select = function(direction)
-            if vim.fn.pumvisible() ~= 1 then
+            if not visible() then
                 return false
             end
 
@@ -68,9 +97,63 @@ function M.native(key)
     }
 end
 
+function M.what()
+    local line
+
+    return setmetatable({ },
+    {
+        __index = function(table, key)
+
+            line = line or string.sub(vim.fn.getline("."), 1, vim.fn.getpos(".")[3] - 1)
+
+            if key == "line" then
+                rawset(table, "line", line:match("^%s*(.-)%s*$"))
+            elseif key == "keyword" then
+                rawset(table, "keyword", line:sub(vim.fn.match(line, '\\k*$', -1) + 1))
+            elseif key == "char" then
+                rawset(table, "char", line:sub(-1))
+            end
+
+            return rawget(table, key)
+        end
+    })
+end
+
+function M.resolve(name)
+    local engine = engines[name]
+
+    local what
+    local loop = 0
+    while loop < 32 and type(engine) == "function" do
+        what = what or M.what()
+        engine = engines[engine(what)]
+        loop = loop + 1
+    end
+
+    if loop >= 32 then
+        local looped = { name }
+        local loop_done = false
+        loop = 0
+
+        while loop < 32 and not loop_done and type(engine) == "function" do
+            local engine_name = engine(what)
+            loop_done = vim.tbl_contains(looped, engine_name)
+            table.insert(looped, engine_name)
+            engine = engines[engine_name]
+            loop = loop + 1
+        end
+
+        editor.notify("Completion loop detected for \"" .. name .. "\": " .. table.concat(looped, " => "), vim.log.levels.WARN)
+
+        return nil
+    end
+
+    return engine
+end
+
 function M.visible()
     for _, engine in pairs(engines) do
-        if engine and engine.visible and engine.visible() then
+        if type(engine) == "table" and engine.visible and engine.visible() then
             return engine
         end
     end
@@ -80,7 +163,7 @@ end
 
 function M.abort()
     for _, engine in pairs(engines) do
-        if engine and engine.abort and engine.visible and engine.visible() then
+        if type(engine) == "table" and engine.abort and engine.visible and engine.visible() then
             return engine.abort() ~= false
         end
     end
@@ -89,15 +172,14 @@ function M.abort()
 end
 
 function M.trigger()
-    if engines.default then
-        local default = engines[engines.default]
-        if default and default.trigger and default.visible and not default.visible() then
-            return default.trigger() ~= false
-        end
+    local default = M.resolve("default")
+
+    if type(default) == "table" and default.trigger and default.visible and not default.visible() then
+        return default.trigger() ~= false
     end
 
     for _, engine in pairs(engines) do
-        if engine and engine.trigger and engine.visible and not engine.visible() then
+        if type(engine) == "table" and engine.trigger and engine.visible and not engine.visible() then
             return engine.trigger() ~= false
         end
     end
@@ -107,7 +189,7 @@ end
 
 function M.confirm(opts)
     for _, engine in pairs(engines) do
-        if engine and engine.confirm and engine.visible and engine.visible() then
+        if type(engine) == "table" and engine.confirm and engine.visible and engine.visible() then
             return engine.confirm(opts) ~= false
         end
     end
@@ -117,7 +199,7 @@ end
 
 function M.select(direction)
     for _, engine in pairs(engines) do
-        if engine and engine.select and engine.visible and engine.visible() then
+        if type(engine) == "table" and engine.select and engine.visible and engine.visible() then
             return engine.select(direction) ~= false
         end
     end
