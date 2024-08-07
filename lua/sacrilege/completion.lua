@@ -12,25 +12,29 @@ function M.native(key)
     return
     {
         visible = function() return vim.fn.pumvisible() == 1 end,
-        abort = function() editor.send("<C-x><C-z>") end,
-        trigger = function() editor.send("<C-x>" .. key) end,
+        abort = function() editor.send("<C-E>") end,
+        trigger = function() editor.send("<C-X>" .. key) end,
         confirm = function(opts)
-            local selected = vim.fn.complete_info({ "selected" }).selected ~= nil
+            local selected = vim.fn.complete_info({ "selected" }).selected ~= -1
 
             if opts and opts.select and not selected then
-                editor.send("<C-n>")
+                editor.send("<C-N>")
                 selected = true
             end
 
-            editor.send("<C-y>")
+            if selected then
+                editor.send("<C-Y>")
+            else
+                editor.send("<C-X>")
+            end
 
             return selected
         end,
         select = function(direction)
             if direction == -1 then
-                return editor.send("<C-p>")
+                return editor.send("<C-P>")
             elseif direction == 1 then
-                return editor.send("<C-n>")
+                return editor.send("<C-N>")
             end
 
             return false
