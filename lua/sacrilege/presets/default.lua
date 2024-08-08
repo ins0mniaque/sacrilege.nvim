@@ -46,7 +46,7 @@ function M.commands(language)
         global =
         {
             escape = { sacrilege.escape, n = false, c = true },
-            interrupt = { sacrilege.interrupt, n = false, c = true },
+            interrupt = { sacrilege.interrupt, n = false, v = false, c = true },
             tab = { sacrilege.tab, n = false, c = true },
             shifttab = { sacrilege.shifttab, n = false },
             up = { sacrilege.up, n = false, c = true },
