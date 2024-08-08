@@ -125,9 +125,9 @@ function M.commands(language)
             format_selection = { s = "<C-O>=gv", x = "<C-G><C-O>=gv" },
 
             spellcheck = function() vim.o.spell = not vim.o.spell end,
-            spellerror_previous = "<C-\\><C-N>[s",
-            spellerror_next =  "<C-\\><C-N>]s",
-            spellsuggest =  "<Cmd>startinsert<CR><C-X>s",
+            spellerror_previous = "<C-\\><C-N><Left>[s",
+            spellerror_next =  "<C-\\><C-N><Right>]s",
+            spellsuggest =  "<Cmd>startinsert<CR><Right><C-X>s",
             spellrepeat = "<Cmd>spellrepall<CR>",
 
             continue = dap:try(function(dap) dap.continue() end),
