@@ -9,6 +9,8 @@ function M.names()
         shifttab = "Unindent / Snippet Jump Previous",
         up = "Up / Select Previous Completion",
         down = "Down / Select Next Completion",
+        left = "Left / Wild Menu Left",
+        right = "Right / Wild Menu Right",
         popup = "Popup Menu",
 
         command_palette = "Command Palette...",

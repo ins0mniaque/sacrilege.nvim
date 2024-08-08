@@ -51,6 +51,8 @@ function M.commands(language)
             shifttab = { sacrilege.shifttab, n = false },
             up = { sacrilege.up, n = false, c = true },
             down = { sacrilege.down, n = false, c = true },
+            left = { c = function() editor.send(vim.fn.pumvisible() == 1 and "<C-Y><Left>" or "<Left>") end },
+            right = { c = function() editor.send(vim.fn.pumvisible() == 1 and "<C-Y><Right>" or "<Right>") end },
             popup = { s = "<C-\\><C-G>gv<Cmd>:popup! PopUp<CR>" },
 
             command_palette = { ui.command_palette, c = true },
@@ -182,6 +184,8 @@ function M.keys()
         shifttab = "<S-Tab>",
         up = "<Up>",
         down = "<Down>",
+        left = "<Left>",
+        right = "<Right>",
         popup = "<RightMouse>",
 
         command_palette = "<C-P>",
