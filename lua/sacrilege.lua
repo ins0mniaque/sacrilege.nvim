@@ -352,7 +352,9 @@ function M.escape()
     vim.cmd("echon '\r\r'")
     vim.cmd("echon ''")
 
-    if not options.insertmode or vim.fn.mode() == "c" then
+    if vim.fn.mode() == "c" then
+        editor.send("<C-U><Esc>")
+    elseif not options.insertmode then
         editor.send("<Esc>")
     end
 end
