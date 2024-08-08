@@ -16,6 +16,17 @@ function M.active(opts)
     return nil
 end
 
+-- TODO: Default
+function M.expand(body)
+    for _, engine in pairs(engines) do
+        if engine and engine.expand and engine.expand(body) then
+            return engine.expand(body) ~= false
+        end
+    end
+
+    return false
+end
+
 function M.jump(direction)
     for _, engine in pairs(engines) do
         if engine and engine.jump and engine.active and engine.active({ direction = direction }) then

@@ -10,6 +10,7 @@ local defaults =
     insertmode = true,
     selectmode = true,
     autocomplete = true,
+    autosnippet = true,
     completion =
     {
         default = function(what)
@@ -47,6 +48,7 @@ local defaults =
         native = vim.snippet and
         {
             active = vim.snippet.active,
+            expand = vim.snippet.expand,
             jump = vim.snippet.jump,
             stop = vim.snippet.stop
         }
@@ -124,7 +126,7 @@ function M.setup(opts)
     completion.setup(options.completion)
     snippet.setup(options.snippet)
 
-    local insertmode_group = vim.api.nvim_create_augroup("Sacrilege.InsertMode", { })
+    local insertmode_group = vim.api.nvim_create_augroup("sacrilege/insertmode", { })
 
     vim.api.nvim_create_autocmd({ "BufEnter", "InsertLeave", "TermLeave" },
     {
@@ -150,7 +152,7 @@ function M.setup(opts)
         end
     })
 
-    local selectmode_group = vim.api.nvim_create_augroup("Sacrilege.SelectMode", { })
+    local selectmode_group = vim.api.nvim_create_augroup("sacrilege/selectmode", { })
 
     vim.api.nvim_create_autocmd({ "ModeChanged" },
     {
@@ -173,6 +175,97 @@ function M.setup(opts)
             callback = function(_)
                 if options.selectmode then
                     vim.opt.selection = snippet.active() and "inclusive" or "exclusive"
+                end
+            end
+        })
+    end
+
+    if options.autocomplete then
+        local namespace          = vim.api.nvim_create_namespace("sacrilege")
+        local autocomplete_group = vim.api.nvim_create_augroup("sacrilege/autocomplete", { })
+
+        -- TODO: Add option
+        local function on(char)
+            return char ~= " "
+        end
+
+        local lastrow, lastcol
+        local wasvisible = false
+
+        vim.on_key(function(_)
+            wasvisible = completion.visible() ~= nil
+        end, namespace)
+
+        -- TODO: CmdlineChanged/throttle + CursorMovedC
+        vim.api.nvim_create_autocmd("InsertCharPre",
+        {
+            desc = "Trigger Autocompletion",
+            group = autocomplete_group,
+            callback = function()
+                if vim.fn.state("m") == "m" or completion.visible() then
+                    return
+                end
+
+                local char = vim.v.char
+                if #char > 1 then
+                    char = char:sub(1, 1)
+                end
+
+                if on(char) then
+                    completion.trigger()
+                end
+            end
+        })
+
+        vim.api.nvim_create_autocmd({"CursorMoved", "TextChangedP"},
+        {
+            desc = "Trigger Autocompletion",
+            group = autocomplete_group,
+            callback = function()
+                lastrow, lastcol = unpack(vim.api.nvim_win_get_cursor(0))
+            end
+        })
+
+        vim.api.nvim_create_autocmd("CursorMovedI",
+        {
+            desc = "Trigger Autocompletion",
+            group = autocomplete_group,
+            callback = function()
+                local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+
+                if wasvisible and row == lastrow and col < lastcol then
+                    local char = col == 0 and " " or vim.api.nvim_buf_get_text(0, row - 1, col - 1, row - 1, col, { })[1]
+
+                    if on(char) then
+                        completion.trigger()
+                    end
+                end
+
+                lastrow = row
+                lastcol = col
+            end
+        })
+    end
+
+    if options.autosnippet then
+        vim.api.nvim_create_autocmd("CompleteDone",
+        {
+            desc = "Trigger Completion Snippet",
+            group = vim.api.nvim_create_augroup("sacrilege/autosnippet", { }),
+            pattern = "*",
+            callback = function()
+                local lsp = vim.tbl_get(vim.v.completed_item, 'user_data', 'nvim', 'lsp', 'completion_item')
+
+                if lsp and lsp.insertTextFormat == 2 then
+                    -- Remove inserted text
+                    local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+                    vim.api.nvim_buf_set_text(0, row - 1, col - #vim.v.completed_item.word, row - 1, col, { "" })
+                    vim.api.nvim_win_set_cursor(0, { row, col - vim.fn.strwidth(vim.v.completed_item.word) })
+
+                    -- Expand snippet
+                    if not snippet.expand(vim.tbl_get(lsp, "textEdit", "newText") or lsp.insertText or lsp.label) then
+                        editor.notify("Snippet expansion is not configured", vim.log.levels.WARN)
+                    end
                 end
             end
         })
@@ -204,7 +297,7 @@ function M.setup(opts)
         vim.api.nvim_create_autocmd("FileType",
         {
             desc = "Map Treesitter Commands",
-            group = vim.api.nvim_create_augroup("Sacrilege.Treesitter", { }),
+            group = vim.api.nvim_create_augroup("sacrilege/treesitter", { }),
             pattern = { "*" },
             callback = function(event)
                 if not treesitter.has_parser(treesitter.get_buf_lang(event.buf)) then
@@ -222,7 +315,7 @@ function M.setup(opts)
         vim.api.nvim_create_autocmd("LspAttach",
         {
             desc = "Map LSP Commands",
-            group = vim.api.nvim_create_augroup("Sacrilege.Lsp", { }),
+            group = vim.api.nvim_create_augroup("sacrilege/lsp", { }),
             callback = function(event)
                 local client = vim.lsp.get_client_by_id(event.data.client_id)
                 if not client then
@@ -248,7 +341,7 @@ function M.setup(opts)
         vim.api.nvim_create_autocmd({ "MenuPopup" },
         {
             desc = "Synchronize Popup Menu Mode",
-            group = vim.api.nvim_create_augroup("Sacrilege.Popup", { }),
+            group = vim.api.nvim_create_augroup("sacrilege/popup", { }),
             pattern = { "*" },
             callback = function(_)
                 update_popup(editor.mapmode())

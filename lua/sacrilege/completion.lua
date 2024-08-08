@@ -8,34 +8,27 @@ function M.setup(opts)
     engines = vim.tbl_deep_extend("force", engines, opts or { })
 end
 
-local native_modes =
-{
-    ["<C-N>"] = "keyword",
-    ["<C-L>"] = "whole_line",
-    ["<C-F>"] = "files",
-    ["<C-]>"] = "tags",
-    ["<C-D>"] = "path_defines",
-    ["<C-I>"] = "path_patterns",
-    ["<C-K>"] = "dictionary",
-    ["<C-T>"] = "thesaurus",
-    ["<C-V>"] = "cmdline",
-    ["<C-U>"] = "function",
-    ["<C-O>"] = "omni",
-    ["s"]     = "spell"
-}
-
-local native_info
+-- local native_modes =
+-- {
+--     ["<C-N>"] = "keyword",
+--     ["<C-L>"] = "whole_line",
+--     ["<C-F>"] = "files",
+--     ["<C-]>"] = "tags",
+--     ["<C-D>"] = "path_defines",
+--     ["<C-I>"] = "path_patterns",
+--     ["<C-K>"] = "dictionary",
+--     ["<C-T>"] = "thesaurus",
+--     ["<C-V>"] = "cmdline",
+--     ["<C-U>"] = "function",
+--     ["<C-O>"] = "omni",
+--     ["s"]     = "spell"
+-- }
 
 function M.native(key)
-    local mode = native_modes[key]
-
     local function visible()
-        if not native_info then
-            native_info = vim.fn.complete_info({ "mode", "pum_visible" })
-            vim.defer_fn(function() native_info = nil end, 0)
-        end
-
-        return native_info.pum_visible == 1 and native_info.mode == mode
+        -- TODO: Check for mode, but vim.fn.complete_info is not always available
+        --       i.e. vim.fn.complete_info({ "mode" }).mode == native_modes[key]
+        return vim.fn.pumvisible() == 1
     end
 
     return
@@ -109,7 +102,7 @@ function M.what()
             if key == "line" then
                 rawset(table, "line", line:match("^%s*(.-)%s*$"))
             elseif key == "keyword" then
-                rawset(table, "keyword", line:sub(vim.fn.match(line, '\\k*$', -1) + 1))
+                rawset(table, "keyword", line:sub(vim.fn.match(line, "\\k*$", -1) + 1))
             elseif key == "char" then
                 rawset(table, "char", line:sub(-1))
             end
