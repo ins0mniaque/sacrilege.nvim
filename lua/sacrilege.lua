@@ -10,16 +10,15 @@ local defaults =
     insertmode = true,
     selectmode = true,
     autocomplete = true,
-    autosnippet = true,
     completion =
     {
-        default = function(what)
+        trigger = function(what)
             if what.line:find("/") and not what.line:find("[%s%(%)%[%]]") then
-                return "path"
+                completion.native.trigger.path()
             elseif vim.bo.omnifunc ~= "" then
-                return "omni"
+                completion.native.trigger.omni()
             elseif vim.bo.completefunc ~= "" then
-                return "user"
+                completion.native.trigger.user()
             -- elseif vim.bo.thesaurus ~= "" or vim.bo.thesaurusfunc ~= "" then
             --     return "thesaurus"
             -- elseif vim.bo.dictionary ~= "" then
@@ -27,31 +26,15 @@ local defaults =
             -- elseif vim.wo.spell and vim.bo.spelllang ~= "" then
             --     return "spell"
             else
-                return "keyword"
+                completion.native.trigger.keyword()
             end
         end,
-        keyword = completion.native("<C-N>"),
-        line = completion.native("<C-L>"),
-        path = completion.native("<C-F>"),
-        tags = completion.native("<C-]>"),
-        definitions = completion.native("<C-D>"),
-        keyword_included = completion.native("<C-I>"),
-        dictionary = completion.native("<C-K>"),
-        thesaurus = completion.native("<C-T>"),
-        cmdline = completion.native("<C-V>"),
-        user = completion.native("<C-U>"),
-        omni = completion.native("<C-O>"),
-        spell = completion.native("s")
+        native = completion.native
     },
     snippet =
     {
-        native = vim.snippet and
-        {
-            active = vim.snippet.active,
-            expand = vim.snippet.expand,
-            jump = vim.snippet.jump,
-            stop = vim.snippet.stop
-        }
+        expand = vim.snippet and vim.snippet.expand,
+        native = vim.snippet
     },
     selection =
     {
@@ -217,7 +200,7 @@ function M.setup(opts)
             end
         })
 
-        vim.api.nvim_create_autocmd({"CursorMoved", "TextChangedP"},
+        vim.api.nvim_create_autocmd({ "CursorMoved", "TextChangedP" },
         {
             desc = "Trigger Autocompletion",
             group = autocomplete_group,
@@ -247,7 +230,7 @@ function M.setup(opts)
         })
     end
 
-    if options.autosnippet then
+    if options.snippet and options.snippet.expand then
         vim.api.nvim_create_autocmd("CompleteDone",
         {
             desc = "Trigger Completion Snippet",
@@ -263,9 +246,7 @@ function M.setup(opts)
                     vim.api.nvim_win_set_cursor(0, { row, col - vim.fn.strwidth(vim.v.completed_item.word) })
 
                     -- Expand snippet
-                    if not snippet.expand(vim.tbl_get(lsp, "textEdit", "newText") or lsp.insertText or lsp.label) then
-                        editor.notify("Snippet expansion is not configured", vim.log.levels.WARN)
-                    end
+                    snippet.expand(vim.tbl_get(lsp, "textEdit", "newText") or lsp.insertText or lsp.label)
                 end
             end
         })

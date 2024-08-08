@@ -3,91 +3,13 @@ local editor = require("sacrilege.editor")
 local M = { }
 
 local engines = { }
+local trigger
 
 function M.setup(opts)
     engines = vim.tbl_deep_extend("force", engines, opts or { })
-end
 
--- local native_modes =
--- {
---     ["<C-N>"] = "keyword",
---     ["<C-L>"] = "whole_line",
---     ["<C-F>"] = "files",
---     ["<C-]>"] = "tags",
---     ["<C-D>"] = "path_defines",
---     ["<C-I>"] = "path_patterns",
---     ["<C-K>"] = "dictionary",
---     ["<C-T>"] = "thesaurus",
---     ["<C-V>"] = "cmdline",
---     ["<C-U>"] = "function",
---     ["<C-O>"] = "omni",
---     ["s"]     = "spell"
--- }
-
-function M.native(key)
-    local function visible()
-        -- TODO: Check for mode, but vim.fn.complete_info is not always available
-        --       i.e. vim.fn.complete_info({ "mode" }).mode == native_modes[key]
-        return vim.fn.pumvisible() == 1
-    end
-
-    return
-    {
-        visible = visible,
-
-        abort = function()
-            if not visible() then
-                return false
-            end
-
-            editor.send("<C-E>")
-
-            return true
-        end,
-
-        trigger = function()
-            if not visible() then
-                editor.send("<C-X>" .. key)
-            end
-
-            return true
-        end,
-
-        confirm = function(opts)
-            if not visible() then
-                return false
-            end
-
-            local selected = vim.fn.complete_info({ "selected" }).selected ~= -1
-
-            if opts and opts.select and not selected then
-                editor.send("<C-N>")
-                selected = true
-            end
-
-            if selected then
-                editor.send("<C-Y>")
-            else
-                editor.send("<C-X>")
-            end
-
-            return selected
-        end,
-
-        select = function(direction)
-            if not visible() then
-                return false
-            end
-
-            if direction == -1 then
-                return editor.send("<C-P>")
-            elseif direction == 1 then
-                return editor.send("<C-N>")
-            end
-
-            return false
-        end
-    }
+    trigger = engines.trigger
+    engines.trigger = nil
 end
 
 function M.what()
@@ -97,7 +19,7 @@ function M.what()
     {
         __index = function(table, key)
 
-            line = line or string.sub(vim.fn.getline("."), 1, vim.fn.getpos(".")[3] - 1)
+            line = line or string.sub(vim.fn.getline("."), 1, vim.fn.getpos(".")[3] - 1) .. vim.v.char
 
             if key == "line" then
                 rawset(table, "line", line:match("^%s*(.-)%s*$"))
@@ -112,41 +34,17 @@ function M.what()
     })
 end
 
-function M.resolve(name)
-    local engine = engines[name]
-
-    local what
-    local loop = 0
-    while loop < 32 and type(engine) == "function" do
-        what = what or M.what()
-        engine = engines[engine(what)]
-        loop = loop + 1
+function M.trigger()
+    if trigger then
+        trigger(M.what())
+    else
+        editor.notify("Completion trigger is not configured", vim.log.levels.WARN)
     end
-
-    if loop >= 32 then
-        local looped = { name }
-        local loop_done = false
-        loop = 0
-
-        while loop < 32 and not loop_done and type(engine) == "function" do
-            local engine_name = engine(what)
-            loop_done = vim.tbl_contains(looped, engine_name)
-            table.insert(looped, engine_name)
-            engine = engines[engine_name]
-            loop = loop + 1
-        end
-
-        editor.notify("Completion loop detected for \"" .. name .. "\": " .. table.concat(looped, " => "), vim.log.levels.WARN)
-
-        return nil
-    end
-
-    return engine
 end
 
 function M.visible()
     for _, engine in pairs(engines) do
-        if type(engine) == "table" and engine.visible and engine.visible() then
+        if engine.visible and engine.visible() then
             return engine
         end
     end
@@ -156,24 +54,8 @@ end
 
 function M.abort()
     for _, engine in pairs(engines) do
-        if type(engine) == "table" and engine.abort and engine.visible and engine.visible() then
+        if engine.abort and engine.visible and engine.visible() then
             return engine.abort() ~= false
-        end
-    end
-
-    return false
-end
-
-function M.trigger()
-    local default = M.resolve("default")
-
-    if type(default) == "table" and default.trigger and default.visible and not default.visible() then
-        return default.trigger() ~= false
-    end
-
-    for _, engine in pairs(engines) do
-        if type(engine) == "table" and engine.trigger and engine.visible and not engine.visible() then
-            return engine.trigger() ~= false
         end
     end
 
@@ -182,7 +64,7 @@ end
 
 function M.confirm(opts)
     for _, engine in pairs(engines) do
-        if type(engine) == "table" and engine.confirm and engine.visible and engine.visible() then
+        if engine.confirm and engine.visible and engine.visible() then
             return engine.confirm(opts) ~= false
         end
     end
@@ -192,9 +74,79 @@ end
 
 function M.select(direction)
     for _, engine in pairs(engines) do
-        if type(engine) == "table" and engine.select and engine.visible and engine.visible() then
+        if engine.select and engine.visible and engine.visible() then
             return engine.select(direction) ~= false
         end
+    end
+
+    return false
+end
+
+M.native = { trigger = { } }
+
+local function native(key)
+    if vim.fn.pumvisible() ~= 1 then
+        editor.send("<C-X>" .. key)
+    end
+end
+
+function M.native.trigger.keyword() native("<C-N>") end
+function M.native.trigger.line() native("<C-L>") end
+function M.native.trigger.path() native("<C-F>") end
+function M.native.trigger.tags() native("<C-]>") end
+function M.native.trigger.definitions() native("<C-D>") end
+function M.native.trigger.keyword_included() native("<C-I>") end
+function M.native.trigger.dictionary() native("<C-K>") end
+function M.native.trigger.thesaurus() native("<C-T>") end
+function M.native.trigger.cmdline() native("<C-V>") end
+function M.native.trigger.user() native("<C-U>") end
+function M.native.trigger.omni() native("<C-O>") end
+function M.native.trigger.spell() native("s") end
+
+function M.native.visible()
+    return vim.fn.pumvisible() == 1
+end
+
+function M.native.abort()
+    if vim.fn.pumvisible() ~= 1 then
+        return false
+    end
+
+    editor.send("<C-E>")
+
+    return true
+end
+
+function M.native.confirm(opts)
+    if vim.fn.pumvisible() ~= 1 then
+        return false
+    end
+
+    local selected = vim.fn.complete_info({ "selected" }).selected ~= -1
+
+    if opts and opts.select and not selected then
+        editor.send("<C-N>")
+        selected = true
+    end
+
+    if selected then
+        editor.send("<C-Y>")
+    else
+        editor.send("<C-X>")
+    end
+
+    return selected
+end
+
+function M.native.select(direction)
+    if vim.fn.pumvisible() ~= 1 then
+        return false
+    end
+
+    if direction == -1 then
+        return editor.send("<C-P>")
+    elseif direction == 1 then
+        return editor.send("<C-N>")
     end
 
     return false

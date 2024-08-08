@@ -1,14 +1,28 @@
+local editor = require("sacrilege.editor")
+
 local M = { }
 
 local engines = { }
+local expand
 
 function M.setup(opts)
     engines = vim.tbl_deep_extend("force", engines, opts or { })
+
+    expand = engines.expand
+    engines.expand = nil
+end
+
+function M.expand(body)
+    if expand then
+        expand(body)
+    else
+        editor.notify("Snippet expansion is not configured", vim.log.levels.WARN)
+    end
 end
 
 function M.active(opts)
     for _, engine in pairs(engines) do
-        if engine and engine.active and engine.active(opts) then
+        if engine.active and engine.active(opts) then
             return engine
         end
     end
@@ -16,20 +30,9 @@ function M.active(opts)
     return nil
 end
 
--- TODO: Default
-function M.expand(body)
-    for _, engine in pairs(engines) do
-        if engine and engine.expand and engine.expand(body) then
-            return engine.expand(body) ~= false
-        end
-    end
-
-    return false
-end
-
 function M.jump(direction)
     for _, engine in pairs(engines) do
-        if engine and engine.jump and engine.active and engine.active({ direction = direction }) then
+        if engine.jump and engine.active and engine.active({ direction = direction }) then
             return engine.jump(direction) ~= false
         end
     end
@@ -39,7 +42,7 @@ end
 
 function M.stop()
     for _, engine in pairs(engines) do
-        if engine and engine.stop and engine.active and engine.active() then
+        if engine.stop and engine.active and engine.active() then
             return engine.stop() ~= false
         end
     end
