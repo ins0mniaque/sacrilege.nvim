@@ -14,10 +14,12 @@ end
 
 function M.expand(body)
     if expand then
-        expand(body)
-    else
-        editor.notify("Snippet expansion is not configured", vim.log.levels.WARN)
+        return expand(body) ~= false
     end
+
+    editor.notify("Snippet expansion is not configured", vim.log.levels.WARN)
+
+    return false
 end
 
 function M.active(opts)

@@ -36,10 +36,12 @@ end
 
 function M.trigger()
     if trigger then
-        trigger(M.what())
-    else
-        editor.notify("Completion trigger is not configured", vim.log.levels.WARN)
+        return trigger(M.what()) ~= false
     end
+
+    editor.notify("Completion trigger is not configured", vim.log.levels.WARN)
+
+    return false
 end
 
 function M.visible()
@@ -104,7 +106,7 @@ function M.native.trigger.omni() native("<C-O>") end
 function M.native.trigger.spell() native("s") end
 
 function M.native.visible()
-    return vim.fn.pumvisible() == 1
+    return vim.fn.pumvisible() == 1 and vim.fn.wildmenumode() ~= 1
 end
 
 function M.native.abort()
@@ -155,11 +157,20 @@ end
 M.wildmenu = { }
 
 function M.wildmenu.trigger()
-    if vim.o.wildcharm == 0 then
-        vim.o.wildcharm = 9
+    if vim.fn.wildmenumode() == 1 then
+        return
     end
 
+    local wildcharm = vim.o.wildcharm
+    vim.o.wildcharm = 255
     editor.send(string.char(vim.o.wildcharm), true)
+
+    vim.defer_fn(function()
+        vim.o.wildcharm = wildcharm
+        if vim.fn.wildmenumode() == 1 and vim.tbl_contains(vim.opt.completeopt:get(), "noselect") then
+            editor.send("<Left>")
+        end
+    end, 0)
 end
 
 function M.wildmenu.visible()
@@ -171,7 +182,7 @@ function M.wildmenu.abort()
         return false
     end
 
-    M.trigger()
+    editor.send("<C-E>")
 
     return true
 end
@@ -181,7 +192,8 @@ function M.wildmenu.confirm(opts)
         return false
     end
 
-    local selected = vim.fn.complete_info({ "selected" }).selected ~= -1
+    -- TODO: Detect wildmenu selection
+    local selected = true
 
     if opts and opts.select and not selected then
         editor.send("<C-N>")
@@ -191,7 +203,7 @@ function M.wildmenu.confirm(opts)
     if selected then
         editor.send("<C-Y>")
     else
-        editor.send("<C-X>")
+        editor.send("<C-E>")
     end
 
     return selected

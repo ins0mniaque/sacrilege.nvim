@@ -375,6 +375,8 @@ function M.tab()
         else
             editor.send("<Space><BS><Tab>")
         end
+    elseif mode == "c" then
+        completion.trigger()
     else
         editor.send("<Tab>")
     end
@@ -386,7 +388,7 @@ function M.shifttab()
     local mode = editor.mapmode()
 
     if mode == "i" then
-        editor.send("<C-d>")
+        editor.send("<C-D>")
     elseif mode == "s" or mode == "x" then
         editor.send("<C-O><lt>gv")
     else
