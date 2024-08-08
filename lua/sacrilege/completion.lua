@@ -152,4 +152,63 @@ function M.native.select(direction)
     return false
 end
 
+M.wildmenu = { }
+
+function M.wildmenu.trigger()
+    if vim.o.wildcharm == 0 then
+        vim.o.wildcharm = 9
+    end
+
+    editor.send(string.char(vim.o.wildcharm), true)
+end
+
+function M.wildmenu.visible()
+    return vim.fn.wildmenumode() == 1
+end
+
+function M.wildmenu.abort()
+    if vim.fn.wildmenumode() ~= 1 then
+        return false
+    end
+
+    M.trigger()
+
+    return true
+end
+
+function M.wildmenu.confirm(opts)
+    if vim.fn.wildmenumode() ~= 1 then
+        return false
+    end
+
+    local selected = vim.fn.complete_info({ "selected" }).selected ~= -1
+
+    if opts and opts.select and not selected then
+        editor.send("<C-N>")
+        selected = true
+    end
+
+    if selected then
+        editor.send("<C-Y>")
+    else
+        editor.send("<C-X>")
+    end
+
+    return selected
+end
+
+function M.wildmenu.select(direction)
+    if vim.fn.wildmenumode() ~= 1 then
+        return false
+    end
+
+    if direction == -1 then
+        return editor.send("<C-P>")
+    elseif direction == 1 then
+        return editor.send("<C-N>")
+    end
+
+    return false
+end
+
 return M

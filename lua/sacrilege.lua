@@ -13,7 +13,9 @@ local defaults =
     completion =
     {
         trigger = function(what)
-            if what.line:find("/") and not what.line:find("[%s%(%)%[%]]") then
+            if vim.fn.mode() == "c" then
+                completion.wildmenu.trigger()
+            elseif what.line:find("/") and not what.line:find("[%s%(%)%[%]]") then
                 completion.native.trigger.path()
             elseif vim.bo.omnifunc ~= "" then
                 completion.native.trigger.omni()
@@ -29,7 +31,8 @@ local defaults =
                 completion.native.trigger.keyword()
             end
         end,
-        native = completion.native
+        native = completion.native,
+        wildmenu = completion.wildmenu
     },
     snippet =
     {
@@ -221,6 +224,8 @@ function M.setup(opts)
 
                     if on(char) then
                         completion.trigger()
+                    else
+                        completion.abort()
                     end
                 end
 
