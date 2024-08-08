@@ -166,6 +166,7 @@ function M.setup(opts)
         })
     end
 
+    -- TODO: CmdlineChanged auto-complete
     if options.autocomplete then
         local namespace          = vim.api.nvim_create_namespace("sacrilege")
         local autocomplete_group = vim.api.nvim_create_augroup("sacrilege/autocomplete", { })
@@ -182,7 +183,6 @@ function M.setup(opts)
             wasvisible = completion.visible() ~= nil
         end, namespace)
 
-        -- TODO: CmdlineChanged/throttle + CursorMovedC
         vim.api.nvim_create_autocmd("InsertCharPre",
         {
             desc = "Trigger Autocompletion",
@@ -236,7 +236,7 @@ function M.setup(opts)
     end
 
     if options.snippet and options.snippet.expand then
-        vim.api.nvim_create_autocmd("CompleteDone",
+        vim.api.nvim_create_autocmd("CompleteDonePre",
         {
             desc = "Trigger Completion Snippet",
             group = vim.api.nvim_create_augroup("sacrilege/autosnippet", { }),
