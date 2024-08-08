@@ -113,7 +113,7 @@ function M.commands(language)
             replace_in_files  = ui.replace_in_files,
             line = ui.go_to_line,
 
-            indent = { s = "<C-O>>gv", x = "<C-G><C-O>>gv" },
+            indent = { i = "<C-T>", s = "<C-O>>gv", x = "<C-G><C-O>>gv" },
             unindent = { i = "<C-D>", s = "<C-O><lt>gv", x = "<C-G><C-O><lt>gv" },
             comment =
             {
@@ -123,6 +123,12 @@ function M.commands(language)
             },
             format = { n = "gg=G", i = "<C-\\><C-N>gg=G" },
             format_selection = { s = "<C-O>=gv", x = "<C-G><C-O>=gv" },
+
+            spellcheck = function() vim.o.spell = not vim.o.spell end,
+            spellerror_previous = "<C-\\><C-N>[s",
+            spellerror_next =  "<C-\\><C-N>]s",
+            spellsuggest =  "<Cmd>startinsert<CR><C-X>s",
+            spellrepeat = "<Cmd>spellrepall<CR>",
 
             continue = dap:try(function(dap) dap.continue() end),
             step_into = dap:try(function(dap) dap.step_into() end),
@@ -243,6 +249,12 @@ function M.keys()
         comment = "<C-_>",
         format = "<M-F>",
         format_selection = "<M-F>",
+
+        spellcheck = false,
+        spellerror_previous = false,
+        spellerror_next = false,
+        spellsuggest = false,
+        spellrepeat = false,
 
         continue = "<F5>",
         step_into = "<F11>",

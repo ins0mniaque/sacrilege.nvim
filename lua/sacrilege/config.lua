@@ -172,7 +172,7 @@ function M.build_popup(options, popup)
                 menucmd(verb .. " PopUp." .. name)
             end)
         else
-            vim.cmd.amenu((menu.position or "") .. " PopUp." .. menu[1] .. " :")
+            vim.cmd.amenu((menu.position or "") .. " PopUp." .. menu[1] .. " <Nop>")
         end
     end
 

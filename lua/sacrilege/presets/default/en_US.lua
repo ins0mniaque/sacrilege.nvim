@@ -77,6 +77,12 @@ function M.names()
         format = "Format Document",
         format_selection = "Format Selection",
 
+        spellcheck = "Toggle Spell Check",
+        spellerror_previous = "Go to Previous Spelling Error",
+        spellerror_next = "Go to Next Spelling Error",
+        spellsuggest = "Suggest Spelling Corrections",
+        spellrepeat = "Repeat Spelling Correction",
+
         continue = "Start Debugging / Continue",
         step_into = "Step Into",
         step_over = "Step Over",
