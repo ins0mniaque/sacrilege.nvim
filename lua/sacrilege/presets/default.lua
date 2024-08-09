@@ -75,7 +75,7 @@ function M.commands(language)
         global =
         {
             escape = { sacrilege.escape, n = false, c = true },
-            interrupt = { sacrilege.interrupt, n = false, v = false, c = true },
+            interrupt = { sacrilege.interrupt, v = false, c = true },
             tab = { sacrilege.tab, n = false, c = true },
             shifttab = { sacrilege.shifttab, n = false },
             up = { sacrilege.up, n = false, c = true },
@@ -110,7 +110,7 @@ function M.commands(language)
             blockselect ={ i = select_command("<C-O><C-V><Arrow><C-G>"), v = arrow_command("<C-V><Arrow><C-G>", "<Arrow>") },
             blockselectword ={ i = select_command("<C-O><C-V><C-Arrow><C-G>"), v = arrow_command("<C-V><C-Arrow><C-G>", "<C-Arrow>") },
             selectall = { n = "ggVG", i = "<C-Home><C-O>VG", v = "gg0oG$" },
-            stopselect = { s = "<Esc><Arrow>", x = "<Esc><Arrow>" },
+            stopselect = { v = function(lhs) editor.send("<Esc>") sacrilege.interrupt() editor.send(lhs) end, lhs = true },
 
             mouseselect = "<S-LeftMouse>",
             mousestartselect = "<LeftMouse>",

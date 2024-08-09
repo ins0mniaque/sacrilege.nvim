@@ -308,7 +308,9 @@ function M.escape()
 end
 
 function M.interrupt()
-    if not options.insertmode then
+    if options.insertmode then
+        editor.toggleinsert()
+    else
         editor.send("<C-c>")
     end
 end
