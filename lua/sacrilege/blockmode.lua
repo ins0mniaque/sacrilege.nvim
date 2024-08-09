@@ -51,16 +51,24 @@ function M.active()
 end
 
 function M.stop()
-    if blockmode then
-        local cursor = vim.api.nvim_win_get_cursor(0)
-
-        editor.send("<C-\\><C-N>gv\"_d<Esc>i")
-
-        -- BUG: This is too early sometimes...
-        vim.defer_fn(function() vim.api.nvim_win_set_cursor(0, cursor) end, 0)
-
-        blockmode = false
+    if not blockmode then
+        return false
     end
+
+    local cursor = vim.api.nvim_win_get_cursor(0)
+
+    editor.send("<C-\\><C-N>gv\"_d<Esc>i")
+
+    -- BUG: This is too early sometimes...
+    vim.defer_fn(function() vim.api.nvim_win_set_cursor(0, cursor) end, 0)
+
+    blockmode = false
+
+    return true
+end
+
+function M.paste(register)
+    editor.send("<C-\\><C-N>gv\"_d<Esc>gvI<C-R>" .. register .. "<Esc>")
 end
 
 -- BUG: Typing fast can exit block mode

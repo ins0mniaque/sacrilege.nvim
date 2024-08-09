@@ -6,6 +6,7 @@ function M.commands(language)
     local completion = require("sacrilege.completion")
     local snippet = require("sacrilege.snippet")
     local autopair = require("sacrilege.autopair")
+    local blockmode = require("sacrilege.blockmode")
     local ui = require("sacrilege.ui")
     local plugin = require("sacrilege.plugin")
     local methods = vim.lsp.protocol.Methods
@@ -39,6 +40,20 @@ function M.commands(language)
 
     local function popup_command(command)
         return function() if not editor.try_close_popup() then command() end end
+    end
+
+    local function paste(register)
+        return function()
+            local mode = vim.fn.mode()
+
+            if mode == "\19" or mode == "\22" then
+                blockmode.paste(register)
+            elseif mode == "s" or mode == "S" then
+                editor.send("\"_d\"" .. register .. "P")
+            else
+                editor.send("<C-G>\"_d\"" .. register .. "P")
+            end
+        end
     end
 
     return
@@ -107,7 +122,7 @@ function M.commands(language)
             redo = vim.cmd.redo,
             copy = { v = "\"+y" },
             cut = { v = "\"+x" },
-            paste = { n = "\"+gP", i = "<C-\\><C-O>\"+gP", v = "\"_d\"+P", c = "<C-R>+", o = "<C-C>\"+gP<C-\\><C-G>" },
+            paste = { n = "\"+gP", i = "<C-\\><C-O>\"+gP", v = paste("+"), c = "<C-R>+", o = "<C-C>\"+gP<C-\\><C-G>" },
             delete = { v = "\"_d" },
             deleteword = { n = "cvb", i = "<C-\\><C-N>cvb", v = "\"_d" },
 

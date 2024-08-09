@@ -283,6 +283,7 @@ function M.setup(opts)
 end
 
 function M.escape()
+    if options.blockmode and require("sacrilege.blockmode").stop() then return end
     if completion.abort() then return end
     if snippet.stop() then return end
     if editor.try_close_popup() then return end
