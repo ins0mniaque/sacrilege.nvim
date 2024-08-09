@@ -19,6 +19,19 @@ function M.commands(language)
     local dap     = plugin.new("mfussenegger/nvim-dap", "dap")
     local neotest = plugin.new("nvim-neotest/neotest", "neotest")
 
+    local function select_command(rhs)
+        return function(arrow)
+            local keys = rhs:gsub("[Aa][rR][rR][oO][wW]>", arrow .. ">")
+
+            editor.send(keys)
+
+            -- HACK: Fix cursor column for subsequent cursor moves
+            vim.defer_fn(function()
+                editor.send("<Right><Left>")
+            end, 0)
+        end
+    end
+
     local function arrow_command(rhs, block_rhs)
         return function(arrow)
             local mode = vim.fn.mode()
@@ -92,10 +105,10 @@ function M.commands(language)
             tabprevious = "<Cmd>tabprevious<CR>",
             tabnext = "<Cmd>tabnext<CR>",
 
-            select = { i = "<C-O>v<C-G><Arrow>", v = arrow_command("<Arrow>", "<C-V>gv<Arrow>v") },
-            selectword = { i = "<C-O>v<C-G><C-Arrow>", v = arrow_command("<C-Arrow>", "<C-V>gv<C-Arrow>v") },
-            blockselect ={ i = "<C-O><C-V><C-G><Arrow>", v = arrow_command("<C-V><Arrow><C-G>", "<Arrow>") },
-            blockselectword ={ i = "<C-O><C-V><C-G><C-Arrow>", v = arrow_command("<C-V><C-Arrow><C-G>", "<C-Arrow>") },
+            select = { i = select_command("<C-O>v<Arrow><C-G>"), v = arrow_command("<Arrow>", "<C-V>gv<Arrow>v") },
+            selectword = { i = select_command("<C-O>v<C-Arrow><C-G>"), v = arrow_command("<C-Arrow>", "<C-V>gv<C-Arrow>v") },
+            blockselect ={ i = select_command("<C-O><C-V><Arrow><C-G>"), v = arrow_command("<C-V><Arrow><C-G>", "<Arrow>") },
+            blockselectword ={ i = select_command("<C-O><C-V><C-Arrow><C-G>"), v = arrow_command("<C-V><C-Arrow><C-G>", "<C-Arrow>") },
             selectall = { n = "ggVG", i = "<C-Home><C-O>VG", v = "gg0oG$" },
             stopselect = { s = "<Esc><Arrow>", x = "<Esc><Arrow>" },
 
