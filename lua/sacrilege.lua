@@ -10,6 +10,7 @@ local defaults =
     insertmode = true,
     selectmode = true,
     blockmode = true,
+    breakundo = true,
     autocomplete = true,
     completion =
     {
@@ -175,6 +176,10 @@ function M.setup(opts)
 
     if options.autocomplete then
         require("sacrilege.autocomplete").setup()
+    end
+
+    if options.breakundo then
+        require("sacrilege.undo").setup()
     end
 
     if options.snippet and options.snippet.expand then

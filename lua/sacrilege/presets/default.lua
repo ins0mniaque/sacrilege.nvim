@@ -122,7 +122,7 @@ function M.commands(language)
             redo = vim.cmd.redo,
             copy = { v = "\"+y" },
             cut = { v = "\"+x" },
-            paste = { n = "\"+gP", i = "<C-\\><C-O>\"+gP", v = paste("+"), c = "<C-R>+", o = "<C-C>\"+gP<C-\\><C-G>" },
+            paste = { n = "\"+gP", i = "<C-G>u<C-\\><C-O>\"+gP", v = paste("+"), c = "<C-R>+", o = "<C-C>\"+gP<C-\\><C-G>" },
             delete = { v = "\"_d" },
             deleteword = { n = "cvb", i = "<C-\\><C-N>cvb", v = "\"_d" },
 
