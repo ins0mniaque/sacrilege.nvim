@@ -9,6 +9,7 @@ local defaults =
 {
     insertmode = true,
     selectmode = true,
+    blockmode = true,
     autocomplete = true,
     completion =
     {
@@ -126,7 +127,7 @@ function M.setup(opts)
         end
     })
 
-    vim.api.nvim_create_autocmd({ "ModeChanged" },
+    vim.api.nvim_create_autocmd("ModeChanged",
     {
         desc = "Toggle Insert Mode",
         group = insertmode_group,
@@ -140,7 +141,7 @@ function M.setup(opts)
 
     local selectmode_group = vim.api.nvim_create_augroup("sacrilege/selectmode", { })
 
-    vim.api.nvim_create_autocmd({ "ModeChanged" },
+    vim.api.nvim_create_autocmd("ModeChanged",
     {
         desc = "Stop Visual Mode",
         group = selectmode_group,
@@ -166,9 +167,13 @@ function M.setup(opts)
         })
     end
 
+    if options.blockmode then
+        require("sacrilege.blockmode").setup()
+    end
+
     -- TODO: CmdlineChanged auto-complete
     if options.autocomplete then
-        local namespace          = vim.api.nvim_create_namespace("sacrilege")
+        local namespace          = vim.api.nvim_create_namespace("sacrilege/autocomplete")
         local autocomplete_group = vim.api.nvim_create_augroup("sacrilege/autocomplete", { })
 
         -- TODO: Add option
@@ -179,7 +184,7 @@ function M.setup(opts)
         local lastrow, lastcol
         local wasvisible = false
 
-        vim.on_key(function(_)
+        vim.on_key(function(_, _)
             wasvisible = completion.visible() ~= nil
         end, namespace)
 
