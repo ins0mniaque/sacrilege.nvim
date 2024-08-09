@@ -12,6 +12,7 @@ function M.active()
     return blockmode
 end
 
+-- BUG: Typing fast can exit block mode
 function M.setup()
     local namespace = vim.api.nvim_create_namespace("sacrilege/blockmode")
     local group     = vim.api.nvim_create_augroup("sacrilege/blockmode", { })
@@ -19,7 +20,7 @@ function M.setup()
     vim.on_key(function(key, typed)
         local mode = vim.fn.mode()
 
-        if (mode == "\19" and typed == key) or (mode == "\22" and typed == bs) then
+        if (mode == "\19" and #typed == 1 and typed == key) or (mode == "\22" and typed == bs) then
             s_start = vim.fn.getpos("v")
             s_end = vim.fn.getpos(".")
             blockkey = typed
@@ -37,7 +38,7 @@ function M.setup()
                     editor.send("<C-\\><C-N>gvI <Esc>gvo<Left>o<Left>\"_dgv<C-G>")
                 end
             elseif blockkey then
-                editor.send("<BS><C-\\><C-N>gvI"..blockkey.." <Esc>gv")
+                editor.send("<BS><C-\\><C-N>gvI" .. blockkey .. " <Esc>gv")
 
                 if s_end[3] < s_start[3] then
                     editor.send("<Right>o")
