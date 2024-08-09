@@ -47,6 +47,8 @@ function M.names()
         mousedragselect = "Drag Select",
         mousestopselect = "Stop Selection",
 
+        autopair = "Insert Character Pair",
+
         completion_abort = "Abort Completion",
         completion_trigger = "Trigger Completion",
         completion_confirm = "Confirm Completion",

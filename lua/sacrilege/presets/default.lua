@@ -5,6 +5,7 @@ function M.commands(language)
     local editor = require("sacrilege.editor")
     local completion = require("sacrilege.completion")
     local snippet = require("sacrilege.snippet")
+    local autopair = require("sacrilege.autopair")
     local ui = require("sacrilege.ui")
     local plugin = require("sacrilege.plugin")
     local methods = vim.lsp.protocol.Methods
@@ -88,6 +89,8 @@ function M.commands(language)
             mousestartblockselect = "<4-LeftMouse>",
             mousedragselect = "<LeftDrag>",
             mousestopselect = "",
+
+            autopair = { i = autopair.insert, v = autopair.surround, lhs = true },
 
             completion_abort = completion_command(completion.abort),
             completion_trigger = completion_command(completion.trigger),
@@ -221,6 +224,8 @@ function M.keys()
         mousestartblockselect = "<M-LeftMouse>",
         mousedragselect = "<M-LeftDrag>",
         mousestopselect = "<M-LeftRelease>",
+
+        autopair = { "(", "[", "{", "\"", "'", "<BS>" },
 
         completion_abort = false,
         completion_trigger = "<C-Space>",
