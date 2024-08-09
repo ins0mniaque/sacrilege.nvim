@@ -38,7 +38,11 @@ function M.setup()
                     editor.send("<C-\\><C-N>gvI <Esc>gvo<Left>o<Left>\"_dgv<C-G>")
                 end
             elseif blockkey then
-                editor.send("<BS><C-\\><C-N>gvI" .. blockkey .. " <Esc>gv")
+                if not blockmode and s_end[3] == s_start[3] then
+                    editor.send("<Cmd>undo<CR><C-\\><C-N>gvI" .. blockkey .. " <Esc>gv")
+                else
+                    editor.send("<BS><C-\\><C-N>gvI" .. blockkey .. " <Esc>gv")
+                end
 
                 if s_end[3] < s_start[3] then
                     editor.send("<Right>o")
