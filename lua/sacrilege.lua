@@ -55,6 +55,8 @@ local metatable =
     __index = function(table, key)
         if key == "insertmode" or key == "selectmode" then
             return options[key]
+        elseif key == "blockmode" then
+            return require("sacrilege.blockmode").active()
         elseif key == "options" then
             return vim.tbl_deep_extend("force", { }, options)
         end
@@ -75,8 +77,8 @@ local metatable =
             if options.selectmode then
                 vim.defer_fn(editor.selectmode, 0)
             end
-        elseif key == "options" then
-            editor.notify("Cannot change options after setup", vim.log.levels.ERROR)
+        elseif key == "blockmode" or key == "options" then
+            editor.notify("sacrilege." .. key .. " is read-only", vim.log.levels.ERROR)
         else
             rawset(table, key, value)
         end

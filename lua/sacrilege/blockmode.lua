@@ -2,14 +2,65 @@ local editor = require("sacrilege.editor")
 
 local M = { }
 
-local s_start
-local s_end
-local blockkey
+local sel_start
+local sel_end
+local mode
+local blockmodekey
 local blockmode = false
-local bs = vim.api.nvim_replace_termcodes("<BS>", true, false, true)
+local backspace = vim.api.nvim_replace_termcodes("<BS>", true, false, true)
+
+local function start()
+    if blockmodekey == backspace then
+        if blockmode then
+            editor.send("<C-\\><C-N>gvI <Esc>gvo<Left>o<Left>\"_dgv<C-G>")
+        end
+    elseif blockmodekey then
+        local needed = math.abs(sel_end[3] - sel_start[3]) - 2
+
+        if not blockmode and needed < 0 then
+            editor.send("<Cmd>undo<CR><C-\\><C-N>gvI" .. blockmodekey .. " <Esc>gv")
+        else
+            editor.send("<BS><C-\\><C-N>gvI" .. blockmodekey .. " <Esc>gv")
+        end
+
+        if sel_end[3] - sel_start[3] < -1 then
+            editor.send("<Right>o")
+        else
+            editor.send("o<Right>o")
+        end
+
+        while needed > 0 do
+            editor.send("<Left>")
+            needed = needed - 1
+        end
+
+        if needed < 0 then
+            editor.send("<Right>")
+        end
+
+        editor.send("<C-G>")
+
+        blockmode = true
+    end
+
+    blockmodekey = nil
+end
 
 function M.active()
     return blockmode
+end
+
+function M.stop()
+    if blockmode then
+        local cursor = vim.api.nvim_win_get_cursor(0)
+
+        editor.send("<C-\\><C-N>gv\"_d<Esc>i")
+
+        -- BUG: This is too early sometimes...
+        vim.defer_fn(function() vim.api.nvim_win_set_cursor(0, cursor) end, 0)
+
+        blockmode = false
+    end
 end
 
 -- BUG: Typing fast can exit block mode
@@ -18,68 +69,32 @@ function M.setup()
     local group     = vim.api.nvim_create_augroup("sacrilege/blockmode", { })
 
     vim.on_key(function(key, typed)
-        local mode = vim.fn.mode()
-
-        if (mode == "\19" and #typed == 1 and typed == key) or (mode == "\22" and typed == bs) then
-            s_start = vim.fn.getpos("v")
-            s_end = vim.fn.getpos(".")
-            blockkey = typed
+        if (mode == "\19" and #typed == 1 and typed == key) or (mode == "\22" and typed == backspace) then
+            sel_start = vim.fn.getpos("v")
+            sel_end = vim.fn.getpos(".")
+            blockmodekey = typed
         end
     end, namespace)
 
     vim.api.nvim_create_autocmd("ModeChanged",
     {
-        desc = "Multi Insert",
+        desc = "Block Mode",
         group = group,
-        pattern = { "n:i" },
-        callback = function(_)
-            if blockkey == bs then
-                if blockmode then
-                    editor.send("<C-\\><C-N>gvI <Esc>gvo<Left>o<Left>\"_dgv<C-G>")
-                end
-            elseif blockkey then
-                if not blockmode and s_end[3] == s_start[3] then
-                    editor.send("<Cmd>undo<CR><C-\\><C-N>gvI" .. blockkey .. " <Esc>gv")
-                else
-                    editor.send("<BS><C-\\><C-N>gvI" .. blockkey .. " <Esc>gv")
-                end
+        callback = function(event)
+            mode = vim.fn.mode()
 
-                if s_end[3] < s_start[3] then
-                    editor.send("<Right>o")
-                else
-                    editor.send("o<Right>o")
-                end
-                local needed = math.abs(s_end[3] - s_start[3]) - 2
-                while needed > 0 do
-                    editor.send("<Left>")
-                    needed = needed - 1
-                end
-                if needed < 0 then
-                    editor.send("<Right>")
-                end
-                editor.send("<C-G>")
-
-                blockmode = true
+            if event.match == "n:i" then
+                start()
             end
-
-            blockkey = nil
         end
     })
 
     vim.api.nvim_create_autocmd("CursorHoldI",
     {
-        desc = "End Multi Insert",
+        desc = "End Block Mode",
         group = group,
-        pattern = { "*" },
         callback = function(_)
-            if blockmode then
-                local cursor = vim.api.nvim_win_get_cursor(0)
-                editor.send("<C-\\><C-N>gv\"_d<Esc>i")
-                -- TODO: This is too early sometimes... on mode changed too?
-                vim.defer_fn(function() vim.api.nvim_win_set_cursor(0, cursor) end, 0)
-
-                blockmode = false
-            end
+            M.stop()
         end
     })
 end
