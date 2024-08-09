@@ -91,6 +91,7 @@ function M.commands(language)
             mousestopselect = "",
 
             autopair = { i = autopair.insert, v = autopair.surround, lhs = true },
+            autounpair = { i = function(lhs) if not autopair.remove() then editor.send(lhs) end end, lhs = true },
 
             completion_abort = completion_command(completion.abort),
             completion_trigger = completion_command(completion.trigger),
@@ -225,7 +226,8 @@ function M.keys()
         mousedragselect = "<M-LeftDrag>",
         mousestopselect = "<M-LeftRelease>",
 
-        autopair = { "(", "[", "{", "\"", "'", "<BS>" },
+        autopair = { "(", "[", "{", "\"", "'" },
+        autounpair = "<BS>",
 
         completion_abort = false,
         completion_trigger = "<C-Space>",

@@ -17,14 +17,6 @@ local pairs =
 local nextchars = { "", " ", ".", ",", ";", ":", "=", ")", "]", "}", ">", "»" }
 
 function M.insert(char)
-    if char == "<BS>" then
-        if not M.remove() then
-            editor.send("<BS>")
-        end
-
-        return
-    end
-
     local row, col = unpack(vim.api.nvim_win_get_cursor(0))
     local nextchar = vim.api.nvim_buf_get_text(0, row - 1, col, row - 1, col + 1, { })[1]
 
