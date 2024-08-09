@@ -226,7 +226,7 @@ function M.keys()
         mousedragselect = "<M-LeftDrag>",
         mousestopselect = "<M-LeftRelease>",
 
-        autopair = { "(", "[", "{", "\"", "'" },
+        autopair = { "(", ")", "[", "]", "{", "}", "\"", "'" },
         autounpair = "<BS>",
 
         completion_abort = false,
