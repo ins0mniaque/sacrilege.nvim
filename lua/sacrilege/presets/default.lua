@@ -44,11 +44,11 @@ function M.commands(language)
     end
 
     local function completion_command(command)
-        return { function(lhs) if not command() then editor.send(lhs) end end, lhs = true, n = false, v = false, c = true }
+        return { function(lhs) if not command() then editor.send(lhs) end end, input = true, n = false, v = false, c = true }
     end
 
     local function snippet_command(command)
-        return { v = function(lhs) if not command() then editor.send(lhs) end end, lhs = true }
+        return { v = function(lhs) if not command() then editor.send(lhs) end end, input = true }
     end
 
     local function popup_command(command)
@@ -67,6 +67,14 @@ function M.commands(language)
                 editor.send("<C-G>\"_d\"" .. register .. "P")
             end
         end
+    end
+
+    local function ts_condition(method)
+        return function(context) return not editor.supports_lsp_method(context.buffer, method) end
+    end
+
+    local function lsp_condition(method)
+        return function(context) return context.client and context.client.supports_method(method) end
     end
 
     return
@@ -105,12 +113,12 @@ function M.commands(language)
             tabprevious = "<Cmd>tabprevious<CR>",
             tabnext = "<Cmd>tabnext<CR>",
 
-            select = { i = select_command("<C-O>v<Arrow><C-G>"), v = arrow_command("<Arrow>", "<C-V>gv<Arrow>v") },
-            selectword = { i = select_command("<C-O>v<C-Arrow><C-G>"), v = arrow_command("<C-Arrow>", "<C-V>gv<C-Arrow>v") },
-            blockselect ={ i = select_command("<C-O><C-V><Arrow><C-G>"), v = arrow_command("<C-V><Arrow><C-G>", "<Arrow>") },
-            blockselectword ={ i = select_command("<C-O><C-V><C-Arrow><C-G>"), v = arrow_command("<C-V><C-Arrow><C-G>", "<C-Arrow>") },
+            select = { i = select_command("<C-O>v<Arrow><C-G>"), v = arrow_command("<Arrow>", "<C-V>gv<Arrow>v"), arrow = true },
+            selectword = { i = select_command("<C-O>v<C-Arrow><C-G>"), v = arrow_command("<C-Arrow>", "<C-V>gv<C-Arrow>v"), arrow = true },
+            blockselect ={ i = select_command("<C-O><C-V><Arrow><C-G>"), v = arrow_command("<C-V><Arrow><C-G>", "<Arrow>"), arrow = true },
+            blockselectword ={ i = select_command("<C-O><C-V><C-Arrow><C-G>"), v = arrow_command("<C-V><C-Arrow><C-G>", "<C-Arrow>"), arrow = true },
             selectall = { n = "ggVG", i = "<C-Home><C-O>VG", v = "gg0oG$" },
-            stopselect = { v = function(lhs) editor.send("<Esc>") sacrilege.interrupt() editor.send(lhs) end, lhs = true },
+            stopselect = { v = function(lhs) editor.send("<Esc>") sacrilege.interrupt() editor.send(lhs) end, input = true },
 
             mouseselect = "<S-LeftMouse>",
             mousestartselect = "<LeftMouse>",
@@ -118,8 +126,8 @@ function M.commands(language)
             mousedragselect = "<LeftDrag>",
             mousestopselect = "",
 
-            autopair = { i = autopair.insert, v = autopair.surround, lhs = true },
-            autounpair = { i = function(lhs) if not autopair.remove() then editor.send(lhs) end end, lhs = true },
+            autopair = { i = autopair.insert, v = autopair.surround, input = true },
+            autounpair = { i = function(lhs) if not autopair.remove() then editor.send(lhs) end end, input = true },
 
             completion_abort = completion_command(completion.abort),
             completion_trigger = completion_command(completion.trigger),
@@ -179,30 +187,30 @@ function M.commands(language)
         },
         treesitter =
         {
-            definition = { function() require("sacrilege.treesitter").definition() end, method = methods.textDocument_definition },
-            references = { function() require("sacrilege.treesitter").references() end, method = methods.textDocument_references },
-            rename = { function() require("sacrilege.treesitter").rename() end, method = methods.textDocument_rename },
+            definition = { function() require("sacrilege.treesitter").definition() end, condition = ts_condition(methods.textDocument_definition) },
+            references = { function() require("sacrilege.treesitter").references() end, condition = ts_condition(methods.textDocument_references) },
+            rename = { function() require("sacrilege.treesitter").rename() end, condition = ts_condition(methods.textDocument_rename) },
         },
         lsp =
         {
-            format = { function() vim.lsp.buf.format({ async = true }) end, method = methods.textDocument_formatting, v = false },
-            format_selection = { function() vim.lsp.buf.format({ async = true, range = editor.get_selection_range() }) end, method = methods.textDocument_rangeFormatting, n = false, i = false },
+            format = { function() vim.lsp.buf.format({ async = true }) end, condition = lsp_condition(methods.textDocument_formatting), v = false },
+            format_selection = { function() vim.lsp.buf.format({ async = true, range = editor.get_selection_range() }) end, condition = lsp_condition(methods.textDocument_rangeFormatting), n = false, i = false },
 
             hover =
             {
-                { popup_command(vim.lsp.buf.hover), method = methods.textDocument_hover },
-                { popup_command(vim.lsp.buf.signature_help), method = methods.textDocument_signatureHelp }
+                { popup_command(vim.lsp.buf.hover), condition = lsp_condition(methods.textDocument_hover) },
+                { popup_command(vim.lsp.buf.signature_help), condition = lsp_condition(methods.textDocument_signatureHelp) }
             },
-            definition = { vim.lsp.buf.definition, method = methods.textDocument_definition },
-            references = { vim.lsp.buf.references, method = methods.textDocument_references },
-            implementation = { vim.lsp.buf.implementation, method = methods.textDocument_implementation },
-            type_definition = { vim.lsp.buf.type_definition, method = methods.textDocument_typeDefinition },
-            document_symbol = { vim.lsp.buf.document_symbol, method = methods.textDocument_documentSymbol },
-            workspace_symbol = { vim.lsp.buf.workspace_symbol, method = methods.workspace_symbol },
-            declaration = { vim.lsp.buf.declaration, method = methods.textDocument_declaration },
-            rename = { vim.lsp.buf.rename, method = methods.textDocument_rename },
-            code_action = { vim.lsp.buf.code_action, method = methods.textDocument_codeAction },
-            hint = { function() vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = 0 }, { bufnr = 0 }) end, method = methods.textDocument_inlayHint },
+            definition = { vim.lsp.buf.definition, condition = lsp_condition(methods.textDocument_definition) },
+            references = { vim.lsp.buf.references, condition = lsp_condition(methods.textDocument_references) },
+            implementation = { vim.lsp.buf.implementation, condition = lsp_condition(methods.textDocument_implementation) },
+            type_definition = { vim.lsp.buf.type_definition, condition = lsp_condition(methods.textDocument_typeDefinition) },
+            document_symbol = { vim.lsp.buf.document_symbol, condition = lsp_condition(methods.textDocument_documentSymbol) },
+            workspace_symbol = { vim.lsp.buf.workspace_symbol, condition = lsp_condition(methods.workspace_symbol) },
+            declaration = { vim.lsp.buf.declaration, condition = lsp_condition(methods.textDocument_declaration) },
+            rename = { vim.lsp.buf.rename, condition = lsp_condition(methods.textDocument_rename) },
+            code_action = { vim.lsp.buf.code_action, condition = lsp_condition(methods.textDocument_codeAction) },
+            hint = { function(buffer) vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = buffer }, { bufnr = buffer }) end, condition = lsp_condition(methods.textDocument_inlayHint), buffer = true },
         }
     }
 end

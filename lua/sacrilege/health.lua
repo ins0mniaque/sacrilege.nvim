@@ -103,7 +103,9 @@ M.check = function()
         end
     end
 
-    config.parse(check_keymap, options, options.commands.global)
+    for _, mapping in pairs(sacrilege.keymap) do
+        check_keymap(mapping.mode, mapping.lhs, mapping.rhs, mapping.opts)
+    end
 
     if not has_keymap_issue then
         ok("Keys are correctly mapped")

@@ -50,6 +50,7 @@ local defaults =
 }
 
 local options = { }
+local keymap  = { }
 
 local metatable =
 {
@@ -60,6 +61,8 @@ local metatable =
             return require("sacrilege.blockmode").active()
         elseif key == "options" then
             return vim.tbl_deep_extend("force", { }, options)
+        elseif key == "keymap" then
+            return vim.tbl_deep_extend("force", { }, keymap)
         end
 
         return rawget(table, key)
@@ -78,7 +81,7 @@ local metatable =
             if options.selectmode then
                 vim.defer_fn(editor.selectmode, 0)
             end
-        elseif key == "blockmode" or key == "options" then
+        elseif key == "blockmode" or key == "options" or key == "keymap" then
             editor.notify("sacrilege." .. key .. " is read-only", vim.log.levels.ERROR)
         else
             rawset(table, key, value)
@@ -222,7 +225,9 @@ function M.setup(opts)
         end
     end
 
-    config.map(options, options.commands.global)
+    keymap = { }
+
+    config.map(options, options.commands.global, nil, keymap)
 
     if options.commands.treesitter then
         local treesitter = require("sacrilege.treesitter")
@@ -237,9 +242,9 @@ function M.setup(opts)
                     return
                 end
 
-                config.map(options, options.commands.treesitter, event.buf, function(definition)
-                    return not definition.method or not editor.supports_lsp_method(event.buf, definition.method)
-                end)
+                local context = { buffer = event.buf }
+
+                config.map(options, options.commands.treesitter, context)
             end
         })
     end
@@ -255,9 +260,9 @@ function M.setup(opts)
                     return
                 end
 
-                config.map(options, options.commands.lsp, event.buf, function(definition)
-                    return not definition.method or client.supports_method(definition.method)
-                end)
+                local context = { buffer = event.buf, client = client }
+
+                config.map(options, options.commands.lsp, context)
             end
         })
     end

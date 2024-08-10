@@ -1,45 +1,10 @@
 local M = { }
 
-local function parse(action, mode, lhs, rhs, opts)
-    local arrow = "[Aa][rR][rR][oO][wW]>"
-    local input = "<[Ii][nN][pP][uU][tT]>"
-
-    if lhs:find(arrow) then
-        if type(rhs) == "function" then
-            parse(action, mode, lhs:gsub(arrow, "Left>"),  opts.lhs and function(lhs) rhs(lhs, "Left")  end or function() rhs("Left")  end, opts)
-            parse(action, mode, lhs:gsub(arrow, "Up>"),    opts.lhs and function(lhs) rhs(lhs, "Up")    end or function() rhs("Up")    end, opts)
-            parse(action, mode, lhs:gsub(arrow, "Right>"), opts.lhs and function(lhs) rhs(lhs, "Right") end or function() rhs("Right") end, opts)
-            parse(action, mode, lhs:gsub(arrow, "Down>"),  opts.lhs and function(lhs) rhs(lhs, "Down")  end or function() rhs("Down")  end, opts)
-        else
-            parse(action, mode, lhs:gsub(arrow, "Left>"),  rhs:gsub(arrow, "Left>"),  opts)
-            parse(action, mode, lhs:gsub(arrow, "Up>"),    rhs:gsub(arrow, "Up>"),    opts)
-            parse(action, mode, lhs:gsub(arrow, "Right>"), rhs:gsub(arrow, "Right>"), opts)
-            parse(action, mode, lhs:gsub(arrow, "Down>"),  rhs:gsub(arrow, "Down>"),  opts)
-        end
-
-        return
-    end
-
-    if type(rhs) == "function" then
-        local capture_rhs = rhs
-
-        rhs = opts.lhs and function() capture_rhs(lhs) end or rhs
-    else
-        if rhs:find(arrow) then
-            rhs = rhs:gsub(arrow, lhs:match("[-<](%a+)>") .. ">")
-        end
-
-        rhs = opts.lhs and rhs:gsub(input, lhs) or rhs
-    end
-
-    opts.lhs = nil
-
-    action(mode, lhs, rhs, opts)
-end
-
-function M.parse(action, options, definitions, buffer, predicate)
+function M.map(options, definitions, context, mappings)
     local names = options.commands.names
     local keys  = options.keys
+
+    context = context or { }
 
     for command, definition in pairs(definitions) do
         local name = names[command] or command
@@ -53,44 +18,10 @@ function M.parse(action, options, definitions, buffer, predicate)
             bound = { bound }
         end
 
-        if type(definition) == "table" then
-            if type(definition[1]) == "table" then
-                local found = nil
-                for _, subdefinition in pairs(definition) do
-                    if not found and (not predicate or predicate(subdefinition)) then
-                        found = subdefinition
-                    end
-                end
+        local cmd = require("sacrilege.command").new(name, definition)
 
-                definition = found
-            end
-
-            local function map_mode(mode, default)
-                if (definition[1] and ((default and definition[mode] ~= false) or (not default and definition[mode]))) or (not definition[1] and definition[mode]) then
-                    for _, key in pairs(bound) do
-                        parse(action, mode, key, definition[1] or definition[mode], { buffer = buffer, desc = name, lhs = definition.lhs })
-                    end
-                end
-            end
-
-            map_mode("n", true)
-            map_mode("i", true)
-            map_mode("v", true)
-            map_mode("s", false)
-            map_mode("x", false)
-            map_mode("c", false)
-            map_mode("t", false)
-            map_mode("o", false)
-        elseif definition then
-            for _, key in pairs(bound) do
-                parse(action, { "n", "i", "v" }, key, definition, { buffer = buffer, desc = name })
-            end
-        end
+        cmd:map(bound, context, mappings)
     end
-end
-
-function M.map(options, definitions, buffer, predicate)
-    M.parse(vim.keymap.set, options, definitions, buffer, predicate)
 end
 
 function M.build_popup(options, popup)
