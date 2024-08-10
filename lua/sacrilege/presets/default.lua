@@ -1,217 +1,31 @@
 local M = { }
 
-function M.commands(language)
-    local sacrilege = require("sacrilege")
-    local editor = require("sacrilege.editor")
-    local completion = require("sacrilege.completion")
-    local snippet = require("sacrilege.snippet")
-    local autopair = require("sacrilege.autopair")
-    local blockmode = require("sacrilege.blockmode")
-    local ui = require("sacrilege.ui")
-    local plugin = require("sacrilege.plugin")
-    local methods = vim.lsp.protocol.Methods
+function M.commands()
+    local commands = require("sacrilege.commands")
 
-    local ok, localized = pcall(require, "sacrilege.presets.default." .. (language or editor.detect_language() or "en_US"))
-    if not ok then
-        localized = require("sacrilege.presets.default.en_US")
-    end
+    local global     = { }
+    local treesitter = { }
+    local lsp        = { }
 
-    local dap     = plugin.new("mfussenegger/nvim-dap", "dap")
-    local neotest = plugin.new("nvim-neotest/neotest", "neotest")
-
-    local function select_command(rhs)
-        return function(arrow)
-            local keys = rhs:gsub("[Aa][rR][rR][oO][wW]>", arrow .. ">")
-
-            editor.send(keys)
-
-            -- HACK: Fix cursor column for subsequent cursor moves
-            vim.defer_fn(function()
-                editor.send("<Right><Left>")
-            end, 0)
+    for id, command in pairs(commands) do
+        if id ~= "treesitter" and id ~= "lsp" then
+            global[id] = command
         end
     end
 
-    local function arrow_command(rhs, block_rhs)
-        return function(arrow)
-            local mode = vim.fn.mode()
-            local keys = mode == "\19" or mode == "\22" and block_rhs or rhs
-
-            keys = keys:gsub("[Aa][rR][rR][oO][wW]>", arrow .. ">")
-
-            editor.send(keys)
-        end
+    for id, command in pairs(commands.treesitter) do
+        treesitter[id] = command
     end
 
-    local function completion_command(command)
-        return { function(lhs) if not command() then editor.send(lhs) end end, input = true, n = false, v = false, c = true }
-    end
-
-    local function snippet_command(command)
-        return { v = function(lhs) if not command() then editor.send(lhs) end end, input = true }
-    end
-
-    local function popup_command(command)
-        return function() if not editor.try_close_popup() then command() end end
-    end
-
-    local function paste(register)
-        return function()
-            local mode = vim.fn.mode()
-
-            if mode == "\19" or mode == "\22" then
-                blockmode.paste(register)
-            elseif mode == "s" or mode == "S" then
-                editor.send("\"_d\"" .. register .. "P")
-            else
-                editor.send("<C-G>\"_d\"" .. register .. "P")
-            end
-        end
-    end
-
-    local function ts_condition(method)
-        return function(context) return not editor.supports_lsp_method(context.buffer, method) end
-    end
-
-    local function lsp_condition(method)
-        return function(context) return context.client and context.client.supports_method(method) end
+    for id, command in pairs(commands.lsp) do
+        lsp[id] = command
     end
 
     return
     {
-        names = localized.names(),
-        global =
-        {
-            escape = { sacrilege.escape, n = false, c = true },
-            interrupt = { sacrilege.interrupt, v = false, c = true },
-            tab = { sacrilege.tab, n = false, c = true },
-            shifttab = { sacrilege.shifttab, n = false },
-            up = { sacrilege.up, n = false, c = true },
-            down = { sacrilege.down, n = false, c = true },
-            left = { c = function() editor.send(vim.fn.pumvisible() == 1 and "<C-Y><Left>" or "<Left>") end },
-            right = { c = function() editor.send(vim.fn.pumvisible() == 1 and "<C-Y><Right>" or "<Right>") end },
-            popup = { s = "<C-\\><C-G>gv<Cmd>:popup! PopUp<CR>" },
-
-            command_palette = { ui.command_palette, c = true },
-            cmdline = "<Esc>:",
-            terminal = { vim.cmd.terminal, c = true },
-            diagnostics = { vim.diagnostic.setloclist, c = true },
-            diagnostic = popup_command(function() vim.diagnostic.open_float({ scope = 'cursor', focus = false }) end),
-            messages = function() editor.send("<C-\\><C-N>:messages<CR>") end,
-            checkhealth = "<Cmd>checkhealth<CR>",
-
-            new = { vim.cmd.tabnew, c = true },
-            open = { ui.browse, c = true },
-            save = ui.save,
-            saveas = ui.saveas,
-            saveall = "<Cmd>silent! wa<CR>",
-            split = vim.cmd.split,
-            vsplit = vim.cmd.vsplit,
-            close = "<Cmd>confirm quit<CR>",
-            quit = { "<Cmd>confirm quitall<CR>", c = true },
-
-            tabprevious = "<Cmd>tabprevious<CR>",
-            tabnext = "<Cmd>tabnext<CR>",
-
-            select = { i = select_command("<C-O>v<Arrow><C-G>"), v = arrow_command("<Arrow>", "<C-V>gv<Arrow>v"), arrow = true },
-            selectword = { i = select_command("<C-O>v<C-Arrow><C-G>"), v = arrow_command("<C-Arrow>", "<C-V>gv<C-Arrow>v"), arrow = true },
-            blockselect ={ i = select_command("<C-O><C-V><Arrow><C-G>"), v = arrow_command("<C-V><Arrow><C-G>", "<Arrow>"), arrow = true },
-            blockselectword ={ i = select_command("<C-O><C-V><C-Arrow><C-G>"), v = arrow_command("<C-V><C-Arrow><C-G>", "<C-Arrow>"), arrow = true },
-            selectall = { n = "ggVG", i = "<C-Home><C-O>VG", v = "gg0oG$" },
-            stopselect = { v = function(lhs) editor.send("<Esc>") sacrilege.interrupt() editor.send(lhs) end, input = true },
-
-            mouseselect = "<S-LeftMouse>",
-            mousestartselect = "<LeftMouse>",
-            mousestartblockselect = "<4-LeftMouse>",
-            mousedragselect = "<LeftDrag>",
-            mousestopselect = "",
-
-            autopair = { i = autopair.insert, v = autopair.surround, input = true },
-            autounpair = { i = function(lhs) if not autopair.remove() then editor.send(lhs) end end, input = true },
-
-            completion_abort = completion_command(completion.abort),
-            completion_trigger = completion_command(completion.trigger),
-            completion_confirm = completion_command(function() return completion.confirm({ select = false }) end),
-            completion_selectconfirm = completion_command(function() return completion.confirm({ select = true }) end),
-            completion_select_previous = completion_command(function() return completion.select(-1) end),
-            completion_select_next = completion_command(function() return completion.select(1) end),
-
-            snippet_jump_previous = snippet_command(function() return snippet.jump(-1) end),
-            snippet_jump_next = snippet_command(function() return snippet.jump(1) end),
-
-            undo = vim.cmd.undo,
-            redo = vim.cmd.redo,
-            copy = { v = "\"+y" },
-            cut = { v = "\"+x" },
-            paste = { n = "\"+gP", i = "<C-G>u<C-\\><C-O>\"+gP", v = paste("+"), c = "<C-R>+", o = "<C-C>\"+gP<C-\\><C-G>" },
-            delete = { v = "\"_d" },
-            deleteword = { n = "cvb", i = "<C-\\><C-N>cvb", v = "\"_d" },
-
-            find = ui.find,
-            find_previous = "<C-\\><C-N><Left>gN",
-            find_next = "<C-\\><C-N>gn",
-            replace = ui.replace,
-            find_in_files = ui.find_in_files,
-            replace_in_files  = ui.replace_in_files,
-            line = ui.go_to_line,
-
-            indent = { i = "<C-T>", s = "<C-O>>gv", x = "<C-G><C-O>>gv" },
-            unindent = { i = "<C-D>", s = "<C-O><lt>gv", x = "<C-G><C-O><lt>gv" },
-            comment =
-            {
-                i = function() editor.send("<C-\\><C-N>") editor.send("gcci", true) end,
-                s = function() editor.send("<C-G>") editor.send("gc", true) editor.send("<C-\\><C-N>gv") end,
-                x = function() editor.send("gc", true) editor.send("<C-\\><C-N>gv") end
-            },
-            format = { n = "gg=G", i = "<C-\\><C-N>gg=G" },
-            format_selection = { s = "<C-O>=gv", x = "<C-G><C-O>=gv" },
-
-            spellcheck = function() vim.o.spell = not vim.o.spell end,
-            spellerror_previous = "<C-\\><C-N><Left>[s",
-            spellerror_next =  "<C-\\><C-N><Right>]s",
-            spellsuggest =  "<Cmd>startinsert<CR><Right><C-X>s",
-            spellrepeat = "<Cmd>spellrepall<CR>",
-
-            continue = dap:try(function(dap) dap.continue() end),
-            step_into = dap:try(function(dap) dap.step_into() end),
-            step_over = dap:try(function(dap) dap.step_over() end),
-            step_out = dap:try(function(dap) dap.step_out() end),
-            breakpoint = dap:try(function(dap) dap.toggle_breakpoint() end),
-            conditional_breakpoint = dap:try(function(dap) ui.input("Breakpoint condition: ", dap.set_breakpoint) end),
-
-            run_test = neotest:try(function(neotest) neotest.run.run() end),
-            run_all_tests = neotest:try(function(neotest) neotest.run.run(vim.fn.expand("%")) end),
-            debug_test = neotest:try(function(neotest) neotest.run.run({ strategy = "dap" }) end),
-            stop_test = neotest:try(function(neotest) neotest.run.stop() end),
-            attach_test = neotest:try(function(neotest) neotest.run.attach() end)
-        },
-        treesitter =
-        {
-            definition = { function() require("sacrilege.treesitter").definition() end, condition = ts_condition(methods.textDocument_definition) },
-            references = { function() require("sacrilege.treesitter").references() end, condition = ts_condition(methods.textDocument_references) },
-            rename = { function() require("sacrilege.treesitter").rename() end, condition = ts_condition(methods.textDocument_rename) },
-        },
-        lsp =
-        {
-            format = { function() vim.lsp.buf.format({ async = true }) end, condition = lsp_condition(methods.textDocument_formatting), v = false },
-            format_selection = { function() vim.lsp.buf.format({ async = true, range = editor.get_selection_range() }) end, condition = lsp_condition(methods.textDocument_rangeFormatting), n = false, i = false },
-
-            hover =
-            {
-                { popup_command(vim.lsp.buf.hover), condition = lsp_condition(methods.textDocument_hover) },
-                { popup_command(vim.lsp.buf.signature_help), condition = lsp_condition(methods.textDocument_signatureHelp) }
-            },
-            definition = { vim.lsp.buf.definition, condition = lsp_condition(methods.textDocument_definition) },
-            references = { vim.lsp.buf.references, condition = lsp_condition(methods.textDocument_references) },
-            implementation = { vim.lsp.buf.implementation, condition = lsp_condition(methods.textDocument_implementation) },
-            type_definition = { vim.lsp.buf.type_definition, condition = lsp_condition(methods.textDocument_typeDefinition) },
-            document_symbol = { vim.lsp.buf.document_symbol, condition = lsp_condition(methods.textDocument_documentSymbol) },
-            workspace_symbol = { vim.lsp.buf.workspace_symbol, condition = lsp_condition(methods.workspace_symbol) },
-            declaration = { vim.lsp.buf.declaration, condition = lsp_condition(methods.textDocument_declaration) },
-            rename = { vim.lsp.buf.rename, condition = lsp_condition(methods.textDocument_rename) },
-            code_action = { vim.lsp.buf.code_action, condition = lsp_condition(methods.textDocument_codeAction) },
-            hint = { function(buffer) vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = buffer }, { bufnr = buffer }) end, condition = lsp_condition(methods.textDocument_inlayHint), buffer = true },
-        }
+        global     = global,
+        treesitter = treesitter,
+        lsp        = lsp
     }
 end
 

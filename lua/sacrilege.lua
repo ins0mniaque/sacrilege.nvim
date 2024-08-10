@@ -227,7 +227,8 @@ function M.setup(opts)
 
     keymap = { }
 
-    config.map(options, options.commands.global, nil, keymap)
+    -- TODO: Localizer
+    config.map(options.keys, options.commands.global, nil, { keymap = keymap, localize = nil })
 
     if options.commands.treesitter then
         local treesitter = require("sacrilege.treesitter")
@@ -244,7 +245,7 @@ function M.setup(opts)
 
                 local context = { buffer = event.buf }
 
-                config.map(options, options.commands.treesitter, context)
+                config.map(options.keys, options.commands.treesitter, context, { localize = nil })
             end
         })
     end
@@ -262,7 +263,7 @@ function M.setup(opts)
 
                 local context = { buffer = event.buf, client = client }
 
-                config.map(options, options.commands.lsp, context)
+                config.map(options.keys, options.commands.lsp, context, { localize = nil })
             end
         })
     end

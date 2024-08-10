@@ -1,32 +1,26 @@
 local M = { }
 
-function M.map(options, definitions, context, mappings)
-    local names = options.commands.names
-    local keys  = options.keys
-
+function M.map(keys, commands, context, opts)
     context = context or { }
 
-    for command, definition in pairs(definitions) do
-        local name = names[command] or command
-        local bound = keys[command]
+    for id, command in pairs(commands) do
+        local keys = keys[id]
 
-        if not bound or #bound == 0 then
-            bound = { "<Plug>(" .. command .. ")" }
+        if not keys or #keys == 0 then
+            keys = { "<Plug>(" .. id .. ")" }
         end
 
-        if type(bound) == "string" then
-            bound = { bound }
+        if type(keys) == "string" then
+            keys = { keys }
         end
 
-        local cmd = require("sacrilege.command").new(name, definition)
-
-        cmd:map(bound, context, mappings)
+        command:map(keys, context, opts)
     end
 end
 
+-- TODO: Localize
 function M.build_popup(options, popup)
-    local names = options.commands.names
-    local keys  = options.keys
+    local keys = options.keys
 
     local updates = { }
 
@@ -36,7 +30,6 @@ function M.build_popup(options, popup)
         end
 
         if not menu[1]:find("^-") then
-            local name = (names[menu[1]] or menu[1]):gsub(" ", "\\ "):gsub("%.", "\\.")
             local key = keys[menu[1]]
 
             if type(key) == "table" then
@@ -50,58 +43,66 @@ function M.build_popup(options, popup)
             local c = false
             local o = false
 
-            local command = options.commands.global[menu[1]]
+            local command = options.commands.global[menu[1]] or
+                            options.commands.treesitter[menu[1]] or
+                            options.commands.lsp[menu[1]]
 
-            if type(command) == "table" then
-                if type(command[1]) == "table" then
-                    command = command[1]
+            -- TODO: Health check for invalid commands
+            if command then
+                local definition = command.definition
+                local name       = command.name:gsub(" ", "\\ "):gsub("%.", "\\.")
+
+                if type(definition) == "table" then
+                    if type(definition[1]) == "table" then
+                        definition = definition[1]
+                    end
+
+                    if not definition[1] then
+                        n = false
+                        i = false
+                        v = false
+                    end
+
+                    if definition.n then n = true end
+                    if definition.i then i = true end
+                    if definition.v then v = true end
+                    if definition.x then x = true end
+                    if definition.c then c = true end
+                    if definition.o then o = true end
                 end
 
-                if not command[1] then
-                    n = false
-                    i = false
-                    v = false
+                if menu.n == false then n = false end
+                if menu.i == false then i = false end
+                if menu.v == false then v = false end
+                if menu.x == false then x = false end
+                if menu.c == false then c = false end
+                if menu.o == false then o = false end
+
+                local menucmd
+                if n and i and (v or x) and c and o then
+                    menucmd = vim.cmd.amenu
+                elseif n and not i and (v or x) and not c and o then
+                    menucmd = vim.cmd.menu
+                elseif not n and i and not v and not x and c and not o then
+                    menucmd = function(arg) vim.cmd("menu! " .. arg) end
+                else
+                    menucmd = function(arg)
+                        if n then vim.cmd.nmenu(arg) end
+                        if i then vim.cmd.imenu(arg) end
+                        if v or x then vim.cmd.vmenu(arg) end
+                        if c then vim.cmd.cmenu(arg) end
+                        if o then vim.cmd.omenu(arg) end
+                    end
                 end
 
-                if command.n then n = true end
-                if command.i then i = true end
-                if command.v then v = true end
-                if command.x then x = true end
-                if command.c then c = true end
-                if command.o then o = true end
+                menucmd((menu.position or "") .. " PopUp." .. name .. " " .. key)
+
+                table.insert(updates, function(mode)
+                    local verb = vim.fn.maparg(key, mode) ~= "" and "enable" or "disable"
+
+                    menucmd(verb .. " PopUp." .. name)
+                end)
             end
-
-            if menu.n == false then n = false end
-            if menu.i == false then i = false end
-            if menu.v == false then v = false end
-            if menu.x == false then x = false end
-            if menu.c == false then c = false end
-            if menu.o == false then o = false end
-
-            local menucmd
-            if n and i and (v or x) and c and o then
-                menucmd = vim.cmd.amenu
-            elseif n and not i and (v or x) and not c and o then
-                menucmd = vim.cmd.menu
-            elseif not n and i and not v and not x and c and not o then
-                menucmd = function(arg) vim.cmd("menu! " .. arg) end
-            else
-                menucmd = function(arg)
-                    if n then vim.cmd.nmenu(arg) end
-                    if i then vim.cmd.imenu(arg) end
-                    if v or x then vim.cmd.vmenu(arg) end
-                    if c then vim.cmd.cmenu(arg) end
-                    if o then vim.cmd.omenu(arg) end
-                end
-            end
-
-            menucmd((menu.position or "") .. " PopUp." .. name .. " " .. key)
-
-            table.insert(updates, function(mode)
-                local verb = vim.fn.maparg(key, mode) ~= "" and "enable" or "disable"
-
-                menucmd(verb .. " PopUp." .. name)
-            end)
         else
             vim.cmd.amenu((menu.position or "") .. " PopUp." .. menu[1] .. " <Nop>")
         end

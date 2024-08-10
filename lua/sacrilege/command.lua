@@ -69,7 +69,7 @@ local function parse(action, mode, lhs, rhs, opts, definition)
     end
 end
 
-function M:map(keys, context, mappings)
+function M:map(keys, context, options)
     if type(keys) == "string" then
         keys = { keys }
     end
@@ -80,15 +80,17 @@ function M:map(keys, context, mappings)
 
     local action = vim.keymap.set
 
-    if mappings then
+    if options and options.keymap then
         action = function(mode, lhs, rhs, opts)
             vim.keymap.set(mode, lhs, rhs, opts)
 
-            table.insert(mappings, { mode = mode, lhs = lhs, rhs = rhs, opts = opts })
+            table.insert(options.keymap, { mode = mode, lhs = lhs, rhs = rhs, opts = opts })
         end
     end
 
+    local name       = options and options.localize and options.localize(self.name) or self.name
     local definition = self.definition
+    local buffer     = context and context.buffer
 
     if type(definition) == "table" then
         if type(definition[1]) == "table" then
@@ -108,7 +110,7 @@ function M:map(keys, context, mappings)
             local function map_mode(mode, default)
                 if (definition[1] and ((default and definition[mode] ~= false) or (not default and definition[mode]))) or (not definition[1] and definition[mode]) then
                     for _, key in pairs(keys) do
-                        parse(action, mode, key, definition[1] or definition[mode], { buffer = buffer, desc = self.name }, definition)
+                        parse(action, mode, key, definition[1] or definition[mode], { buffer = buffer, desc = name }, definition)
                     end
                 end
             end
@@ -124,7 +126,7 @@ function M:map(keys, context, mappings)
         end
     elseif definition then
         for _, key in pairs(keys) do
-            parse(action, { "n", "i", "v" }, key, definition, { buffer = context.buffer, desc = self.name })
+            parse(action, { "n", "i", "v" }, key, definition, { buffer = buffer, desc = name })
         end
     end
 end
