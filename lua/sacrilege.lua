@@ -228,45 +228,9 @@ function M.setup(opts)
     keymap = { }
 
     -- TODO: Localizer
-    config.map(options.keys, options.commands.global, nil, { keymap = keymap, localize = nil })
-
-    if options.commands.treesitter then
-        local treesitter = require("sacrilege.treesitter")
-
-        vim.api.nvim_create_autocmd("FileType",
-        {
-            desc = "Map Treesitter Commands",
-            group = vim.api.nvim_create_augroup("sacrilege/treesitter", { }),
-            pattern = { "*" },
-            callback = function(event)
-                if not treesitter.has_parser(treesitter.get_buf_lang(event.buf)) then
-                    return
-                end
-
-                local context = { buffer = event.buf }
-
-                config.map(options.keys, options.commands.treesitter, context, { localize = nil })
-            end
-        })
-    end
-
-    if options.commands.lsp then
-        vim.api.nvim_create_autocmd("LspAttach",
-        {
-            desc = "Map LSP Commands",
-            group = vim.api.nvim_create_augroup("sacrilege/lsp", { }),
-            callback = function(event)
-                local client = vim.lsp.get_client_by_id(event.data.client_id)
-                if not client then
-                    return
-                end
-
-                local context = { buffer = event.buf, client = client }
-
-                config.map(options.keys, options.commands.lsp, context, { localize = nil })
-            end
-        })
-    end
+    config.map(options.keys, options.commands, function(mode, lhs, rhs, opts)
+        table.insert(keymap, { mode = mode, lhs = lhs, rhs = rhs, opts = opts })
+    end)
 
     if options.popup then
         vim.opt.mouse      = "a"

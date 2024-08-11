@@ -1,18 +1,7 @@
 local M = { }
 
 function M.commands()
-    local commands = require("sacrilege.commands")
-
-    local global = { }
-
-    for id, command in pairs(commands) do
-        global[id] = command
-    end
-
-    return
-    {
-        global = global
-    }
+    return require("sacrilege.commands")
 end
 
 function M.keys()

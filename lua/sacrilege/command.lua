@@ -69,7 +69,8 @@ local function parse(action, mode, lhs, rhs, opts, definition)
     end
 end
 
-function M:map(keys, context, options)
+-- TODO: Allow specifying buffer
+function M:map(keys, callback)
     if type(keys) == "string" then
         keys = { keys }
     end
@@ -90,43 +91,27 @@ function M:map(keys, context, options)
 
     local name       = options and options.localize and options.localize(self.name) or self.name
     local definition = self.definition
-    local buffer     = context and context.buffer
 
     if type(definition) == "table" then
-        if type(definition[1]) == "table" then
-            local found = nil
-            for _, subdefinition in pairs(definition) do
-                if not found and (not subdefinition.condition or subdefinition.condition(context)) then
-                    found = subdefinition
+        local function map_mode(mode, default)
+            if (definition[1] and ((default and definition[mode] ~= false) or (not default and definition[mode]))) or (not definition[1] and definition[mode]) then
+                for _, key in pairs(keys) do
+                    parse(action, mode, key, definition[1] or definition[mode], { desc = name }, definition)
                 end
             end
-
-            definition = found
-        elseif definition.condition and not definition.condition(context) then
-            definition = nil
         end
 
-        if definition then
-            local function map_mode(mode, default)
-                if (definition[1] and ((default and definition[mode] ~= false) or (not default and definition[mode]))) or (not definition[1] and definition[mode]) then
-                    for _, key in pairs(keys) do
-                        parse(action, mode, key, definition[1] or definition[mode], { buffer = buffer, desc = name }, definition)
-                    end
-                end
-            end
-
-            map_mode("n", true)
-            map_mode("i", true)
-            map_mode("v", true)
-            map_mode("s", false)
-            map_mode("x", false)
-            map_mode("c", false)
-            map_mode("t", false)
-            map_mode("o", false)
-        end
+        map_mode("n", true)
+        map_mode("i", true)
+        map_mode("v", true)
+        map_mode("s", false)
+        map_mode("x", false)
+        map_mode("c", false)
+        map_mode("t", false)
+        map_mode("o", false)
     elseif definition then
         for _, key in pairs(keys) do
-            parse(action, { "n", "i", "v" }, key, definition, { buffer = buffer, desc = name })
+            parse(action, { "n", "i", "v" }, key, definition, { desc = name })
         end
     end
 end

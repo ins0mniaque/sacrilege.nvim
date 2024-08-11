@@ -1,6 +1,6 @@
 local M = { }
 
-function M.map(keys, commands, context, opts)
+function M.map(keys, commands, callback)
     context = context or { }
 
     for id, command in pairs(commands) do
@@ -10,11 +10,7 @@ function M.map(keys, commands, context, opts)
             keys = { "<Plug>(" .. id .. ")" }
         end
 
-        if type(keys) == "string" then
-            keys = { keys }
-        end
-
-        command:map(keys, context, opts)
+        command:map(keys, callback)
     end
 end
 
@@ -43,9 +39,7 @@ function M.build_popup(options, popup)
             local c = false
             local o = false
 
-            local command = options.commands.global[menu[1]] or
-                            options.commands.treesitter[menu[1]] or
-                            options.commands.lsp[menu[1]]
+            local command = options.commands[menu[1]]
 
             -- TODO: Health check for invalid commands
             if command then
