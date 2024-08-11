@@ -18,12 +18,12 @@ M.check = function()
 
     start("sacrilege: Setup")
 
-    if not options.commands or not options.commands.global or not options.keys then
+    if not options.commands or not options.keys then
         warn("sacrilege.setup was not called")
         return
     else
         ok("Preset: " .. options.preset)
-        ok("Commands: " .. tostring(count(options.commands.global)))
+        ok("Commands: " .. tostring(count(options.commands)))
         ok("Keys: " .. tostring(count(options.keys)))
     end
 
