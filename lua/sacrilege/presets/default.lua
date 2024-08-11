@@ -3,29 +3,15 @@ local M = { }
 function M.commands()
     local commands = require("sacrilege.commands")
 
-    local global     = { }
-    local treesitter = { }
-    local lsp        = { }
+    local global = { }
 
     for id, command in pairs(commands) do
-        if id ~= "treesitter" and id ~= "lsp" then
-            global[id] = command
-        end
-    end
-
-    for id, command in pairs(commands.treesitter) do
-        treesitter[id] = command
-    end
-
-    for id, command in pairs(commands.lsp) do
-        lsp[id] = command
+        global[id] = command
     end
 
     return
     {
-        global     = global,
-        treesitter = treesitter,
-        lsp        = lsp
+        global = global
     }
 end
 

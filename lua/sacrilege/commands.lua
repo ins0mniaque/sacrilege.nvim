@@ -6,9 +6,10 @@ local snippet = require("sacrilege.snippet")
 local autopair = require("sacrilege.autopair")
 local blockmode = require("sacrilege.blockmode")
 local ui = require("sacrilege.ui")
+local treesitter = require("sacrilege.treesitter")
 local plugin = require("sacrilege.plugin")
 
-local M = { treesitter = { }, lsp = { } }
+local M = { }
 
 local dap     = plugin.new("mfussenegger/nvim-dap", "dap")
 local neotest = plugin.new("nvim-neotest/neotest", "neotest")
@@ -63,14 +64,6 @@ local function paste(register)
             editor.send("<C-G>\"_d\"" .. register .. "P")
         end
     end
-end
-
-local function ts_condition(method)
-    return function(context) return context and context.buffer and not editor.supports_lsp_method(context.buffer, method) end
-end
-
-local function lsp_condition(method)
-    return function(context) return context and context.client and context.client.supports_method(method) end
 end
 
 M.escape = command.new("Escape", { sacrilege.escape, n = false, c = true })
@@ -154,8 +147,6 @@ M.comment = command.new("Toggle Line Comment",
     s = function() editor.send("<C-G>") editor.send("gc", true) editor.send("<C-\\><C-N>gv") end,
     x = function() editor.send("gc", true) editor.send("<C-\\><C-N>gv") end
 })
-M.format = command.new("Format Document", { n = "gg=G", i = "<C-\\><C-N>gg=G" })
-M.format_selection = command.new("Format Selection", { s = "<C-O>=gv", x = "<C-G><C-O>=gv" })
 
 M.spellcheck = command.new("Toggle Spell Check", function() vim.o.spell = not vim.o.spell end)
 M.spellerror_previous = command.new("Go to Previous Spelling Error", "<C-\\><C-N><Left>[s")
@@ -176,27 +167,172 @@ M.debug_test = command.new("Debug Test", neotest:try(function(neotest) neotest.r
 M.stop_test = command.new("Stop Test", neotest:try(function(neotest) neotest.run.stop() end))
 M.attach_test = command.new("Attach Test", neotest:try(function(neotest) neotest.run.attach() end))
 
-M.treesitter.definition = command.new("Go to Definition", { function() require("sacrilege.treesitter").definition() end, condition = ts_condition(methods.textDocument_definition) })
-M.treesitter.references = command.new("Find All References...", { function() require("sacrilege.treesitter").references() end, condition = ts_condition(methods.textDocument_references) })
-M.treesitter.rename = command.new("Rename...", { function() require("sacrilege.treesitter").rename() end, condition = ts_condition(methods.textDocument_rename) })
-
-M.lsp.format = command.new("Format Document", { function() vim.lsp.buf.format({ async = true }) end, condition = lsp_condition(methods.textDocument_formatting), v = false })
-M.lsp.format_selection = command.new("Format Selection", { function() vim.lsp.buf.format({ async = true, range = editor.get_selection_range() }) end, condition = lsp_condition(methods.textDocument_rangeFormatting), n = false, i = false })
-
-M.lsp.hover = command.new("Hover",
+M.format = command.new("Format Document",
 {
-    { popup_command(vim.lsp.buf.hover), condition = lsp_condition(methods.textDocument_hover) },
-    { popup_command(vim.lsp.buf.signature_help), condition = lsp_condition(methods.textDocument_signatureHelp) }
+    function()
+        if editor.supports_lsp_method(0, methods.textDocument_formatting) then
+            vim.lsp.buf.definition()
+        else
+            editor.send(editor.mapmode() == "i" and "<C-\\><C-N>gg=G" or "gg=G")
+        end
+    end,
+    v = false
 })
-M.lsp.definition = command.new("Go to Definition", { vim.lsp.buf.definition, condition = lsp_condition(methods.textDocument_definition) })
-M.lsp.references = command.new("Find All References...", { vim.lsp.buf.references, condition = lsp_condition(methods.textDocument_references) })
-M.lsp.implementation = command.new("Go to Implementation", { vim.lsp.buf.implementation, condition = lsp_condition(methods.textDocument_implementation) })
-M.lsp.type_definition = command.new("Go to Type Definition", { vim.lsp.buf.type_definition, condition = lsp_condition(methods.textDocument_typeDefinition) })
-M.lsp.document_symbol = command.new("Find in Document Symbols...", { vim.lsp.buf.document_symbol, condition = lsp_condition(methods.textDocument_documentSymbol) })
-M.lsp.workspace_symbol = command.new("Find in Workspace Symbols...", { vim.lsp.buf.workspace_symbol, condition = lsp_condition(methods.workspace_symbol) })
-M.lsp.declaration = command.new("Go to Declaration", { vim.lsp.buf.declaration, condition = lsp_condition(methods.textDocument_declaration) })
-M.lsp.rename = command.new("Rename...", { vim.lsp.buf.rename, condition = lsp_condition(methods.textDocument_rename) })
-M.lsp.code_action = command.new("Code Action", { vim.lsp.buf.code_action, condition = lsp_condition(methods.textDocument_codeAction) })
-M.lsp.hint = command.new("Toggle Hints", { function(buffer) vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = buffer }, { bufnr = buffer }) end, condition = lsp_condition(methods.textDocument_inlayHint), buffer = true })
+
+M.format_selection = command.new("Format Selection",
+{
+    v = function()
+        if editor.supports_lsp_method(0, methods.textDocument_rangeFormatting) then
+            vim.lsp.buf.definition()
+        else
+            editor.send(editor.mapmode() == "x" and "<C-G><C-O>=gv" or "<C-O>=gv")
+        end
+    end
+})
+
+M.definition = command.new("Go to Definition",
+{
+    function()
+        if editor.supports_lsp_method(0, methods.textDocument_definition) then
+            vim.lsp.buf.definition()
+            return true
+        elseif treesitter.has_parser(treesitter.get_buf_lang()) then
+            treesitter.definition()
+            return true
+        end
+
+        return false
+    end
+})
+
+M.references = command.new("Find All References...",
+{
+    function()
+        if editor.supports_lsp_method(0, methods.textDocument_references) then
+            vim.lsp.buf.references()
+            return true
+        elseif treesitter.has_parser(treesitter.get_buf_lang()) then
+            treesitter.references()
+            return true
+        end
+
+        return false
+    end
+})
+
+M.rename = command.new("Rename...",
+{
+    function()
+        if editor.supports_lsp_method(0, methods.textDocument_rename) then
+            vim.lsp.buf.rename()
+            return true
+        elseif treesitter.has_parser(treesitter.get_buf_lang()) then
+            treesitter.rename()
+            return true
+        end
+
+        return false
+    end
+})
+
+M.hover = command.new("Hover",
+{
+    function()
+        if editor.supports_lsp_method(0, methods.textDocument_hover) then
+            vim.lsp.buf.hover()
+            return true
+        elseif editor.supports_lsp_method(0, methods.textDocument_signatureHelp) then
+            vim.lsp.buf.signature_help()
+            return true
+        end
+
+        return false
+    end
+})
+
+M.implementation = command.new("Go to Implementation",
+{
+    function()
+        if editor.supports_lsp_method(0, methods.textDocument_implementation) then
+            vim.lsp.buf.implementation()
+            return true
+        end
+
+        return false
+    end
+})
+
+M.type_definition = command.new("Go to Type Definition",
+{
+    function()
+        if editor.supports_lsp_method(0, methods.textDocument_typeDefinition) then
+            vim.lsp.buf.type_definition()
+            return true
+        end
+
+        return false
+    end
+})
+
+M.document_symbol = command.new("Find in Document Symbols...",
+{
+    function()
+        if editor.supports_lsp_method(0, methods.textDocument_documentSymbol) then
+            vim.lsp.buf.document_symbol()
+            return true
+        end
+
+        return false
+    end
+})
+
+M.workspace_symbol = command.new("Find in Workspace Symbols...",
+{
+    function()
+        if editor.supports_lsp_method(0, methods.workspace_symbol) then
+            vim.lsp.buf.workspace_symbol()
+            return true
+        end
+
+        return false
+    end
+})
+
+M.declaration = command.new("Go to Declaration",
+{
+    function()
+        if editor.supports_lsp_method(0, methods.textDocument_declaration) then
+            vim.lsp.buf.declaration()
+            return true
+        end
+
+        return false
+    end
+})
+
+M.code_action = command.new("Code Action",
+{
+    function()
+        if editor.supports_lsp_method(0, methods.textDocument_codeAction) then
+            vim.lsp.buf.code_action()
+            return true
+        end
+
+        return false
+    end
+})
+
+M.hint = command.new("Toggle Hints",
+{
+    function()
+        local buffer = vim.api.nvim_get_current_buf()
+        if editor.supports_lsp_method(buffer, methods.textDocument_inlayHint) then
+            vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = buffer }, { bufnr = buffer })
+            return true
+        end
+
+        return false
+    end
+})
 
 return M
