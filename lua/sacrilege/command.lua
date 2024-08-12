@@ -1,3 +1,5 @@
+local editor = require("sacrilege.editor")
+
 local M = { }
 
 M.__index = M
@@ -114,6 +116,14 @@ local function parse(action, mode, lhs, rhs, opts, definition)
     end
 end
 
+local function as_func(rhs)
+    if type(rhs) == "string" then
+        return function() editor.send(rhs) end
+    end
+
+    return rhs
+end
+
 local function unwrap_modes(func)
     return function(mode, lhs, rhs, opts)
         if type(mode) == "table" then
@@ -132,42 +142,44 @@ local function map(name, definition, keys, action)
     if type(definition) == "table" then
         local ands = { }
         local ors = { }
-        local conditional = false
 
         if definition["and"] then
             map(name, definition["and"], keys, unwrap_modes(function(mode, lhs, rhs, opts)
-                ands[mode] = rhs
-                conditional = true
+                ands[mode] = as_func(rhs)
             end))
         end
 
         if definition["or"] then
             map(name, definition["or"], keys, unwrap_modes(function(mode, lhs, rhs, opts)
-                ors[mode] = rhs
-                conditional = true
+                ors[mode] = as_func(rhs)
             end))
         end
 
-        local map_mode_action = action
+        local map_mode_action = unwrap_modes(function(mode, lhs, rhs, opts)
+            local and_command = ands[mode]
+            local or_command = ors[mode]
 
-        if conditional then
-            map_mode_action = unwrap_modes(function(mode, lhs, rhs, opts)
-                local and_command = ands[mode]
-                local or_command = ors[mode]
+            if and_command then
+                local capture_rhs = as_func(rhs)
+                rhs = function() return capture_rhs() ~= false and and_command() ~= false end
+            end
 
-                if and_command then
-                    local capture_rhs = rhs
-                    rhs = function() return capture_rhs() and and_command() end
+            if or_command then
+                local capture_rhs = as_func(rhs)
+                rhs = function() return capture_rhs() ~= false or or_command() ~= false end
+            end
+
+            if type(rhs) == "function" then
+                local capture_rhs = rhs
+                rhs = function()
+                    if capture_rhs() == false then
+                        editor.notify("Command '" .. name .. "' is not available", vim.log.levels.WARN)
+                    end
                 end
+            end
 
-                if or_command then
-                    local capture_rhs = rhs
-                    rhs = function() return capture_rhs() or or_command() end
-                end
-
-                action(mode, lhs, rhs, opts)
-            end)
-        end
+            action(mode, lhs, rhs, opts)
+        end)
 
         local function map_mode(mode, default)
             if (definition[1] and ((default and definition[mode] ~= false) or (not default and definition[mode]))) or (not definition[1] and definition[mode]) then
@@ -203,6 +215,24 @@ function M:map(keys, callback)
 
     map(self.name, self.definition, keys, function(mode, lhs, rhs, opts)
         vim.keymap.set(mode, lhs, rhs, opts)
+
+        if callback then
+            callback(mode, lhs, rhs, opts)
+        end
+    end)
+end
+
+function M:unmap(keys, callback)
+    if type(keys) == "string" then
+        keys = { keys }
+    end
+
+    if not keys or #keys == 0 then
+        return
+    end
+
+    map(self.name, self.definition, keys, function(mode, lhs, rhs, opts)
+        vim.keymap.del(mode, lhs, opts)
 
         if callback then
             callback(mode, lhs, rhs, opts)
