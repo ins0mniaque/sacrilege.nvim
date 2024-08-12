@@ -188,7 +188,6 @@ local function map(name, definition, keys, action)
             end))
         end
 
-        -- TODO: Fix problem when parent/child mode don't match
         local map_mode_action = unwrap_modes(function(mode, lhs, rhs, opts)
             local and_command = ands[mode]
             local or_command = ors[mode]

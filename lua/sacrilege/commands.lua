@@ -244,13 +244,23 @@ M.lsp.rename = command.new("Rename...",
 
 M.rename = M.lsp.rename / M.treesitter.rename
 
-M.hover = command.new("Hover",
+M.lsp.hover = command.new("Hover",
 {
     function()
         if editor.supports_lsp_method(0, methods.textDocument_hover) then
             vim.lsp.buf.hover()
             return true
-        elseif editor.supports_lsp_method(0, methods.textDocument_signatureHelp) then
+        end
+
+        return false
+    end
+})
+
+
+M.lsp.signature_help = command.new("Signature Help",
+{
+    function()
+        if editor.supports_lsp_method(0, methods.textDocument_signatureHelp) then
             vim.lsp.buf.signature_help()
             return true
         end
@@ -258,6 +268,8 @@ M.hover = command.new("Hover",
         return false
     end
 })
+
+M.hover = M.close_popup / M.lsp.hover / M.lsp.signature_help
 
 M.implementation = command.new("Go to Implementation",
 {
