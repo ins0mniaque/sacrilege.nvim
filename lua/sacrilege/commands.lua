@@ -220,13 +220,10 @@ M.references = command.new("Find All References...",
     end
 })
 
-M.rename = command.new("Rename...",
+M.treesitter_rename = command.new("Rename...",
 {
     function()
-        if editor.supports_lsp_method(0, methods.textDocument_rename) then
-            vim.lsp.buf.rename()
-            return true
-        elseif treesitter.has_parser(treesitter.get_buf_lang()) then
+        if treesitter.has_parser(treesitter.get_buf_lang()) then
             treesitter.rename()
             return true
         end
@@ -234,6 +231,20 @@ M.rename = command.new("Rename...",
         return false
     end
 })
+
+M.lsp_rename = command.new("Rename...",
+{
+    function()
+        if editor.supports_lsp_method(0, methods.textDocument_rename) then
+            vim.lsp.buf.rename()
+            return true
+        end
+
+        return false
+    end
+})
+
+M.rename = M.lsp_rename / M.treesitter_rename
 
 M.hover = command.new("Hover",
 {
