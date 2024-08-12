@@ -11,6 +11,10 @@ function M.new(name, definition)
     return setmetatable(self, M)
 end
 
+function M.is(command)
+    return command.__index == M
+end
+
 function M:clone(name)
     return M.new(self.name or name, vim.tbl_deep_extend("force", { }, self.definition))
 end

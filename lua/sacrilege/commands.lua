@@ -9,7 +9,7 @@ local ui = require("sacrilege.ui")
 local treesitter = require("sacrilege.treesitter")
 local plugin = require("sacrilege.plugin")
 
-local M = { }
+local M = { treesitter = { }, lsp = { } }
 
 local dap     = plugin.new("mfussenegger/nvim-dap", "dap")
 local neotest = plugin.new("nvim-neotest/neotest", "neotest")
@@ -220,7 +220,7 @@ M.references = command.new("Find All References...",
     end
 })
 
-M.treesitter_rename = command.new("Rename...",
+M.treesitter.rename = command.new("Rename...",
 {
     function()
         if treesitter.has_parser(treesitter.get_buf_lang()) then
@@ -232,7 +232,7 @@ M.treesitter_rename = command.new("Rename...",
     end
 })
 
-M.lsp_rename = command.new("Rename...",
+M.lsp.rename = command.new("Rename...",
 {
     function()
         if editor.supports_lsp_method(0, methods.textDocument_rename) then
@@ -244,7 +244,7 @@ M.lsp_rename = command.new("Rename...",
     end
 })
 
-M.rename = M.lsp_rename / M.treesitter_rename
+M.rename = M.lsp.rename / M.treesitter.rename
 
 M.hover = command.new("Hover",
 {
