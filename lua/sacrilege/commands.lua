@@ -40,14 +40,6 @@ local function arrow_command(rhs, block_rhs)
     end
 end
 
-local function completion_command(rhs)
-    return { function(lhs) if not rhs() then editor.send(lhs) end end, input = true, n = false, v = false, c = true }
-end
-
-local function snippet_command(rhs)
-    return { v = function(lhs) if not rhs() then editor.send(lhs) end end, input = true }
-end
-
 local function popup_command(rhs)
     return function() if not editor.try_close_popup() then rhs() end end
 end
@@ -66,7 +58,12 @@ local function paste(register)
     end
 end
 
-M.escape = command.new("Escape", { sacrilege.escape, n = false, c = true })
+M.clear_highlights = command.new("Clear Highlights", { "<Cmd>nohl<CR>", c = true })
+M.clear_echo = command.new("Clear Command Line Message", { "<Cmd>echon '\\r\\r'<CR><Cmd>echon ''<CR>", c = true })
+M.stop_blockmode = command.new("Stop Block Mode", { blockmode.stop, c = true })
+M.close_popup = command.new("Close Popup", { editor.try_close_popup, c = true })
+M.escape = command.new("Escape", sacrilege.escape)
+
 M.interrupt = command.new("Interrupt", { sacrilege.interrupt, v = false, c = true })
 M.tab = command.new("Indent / Snippet Jump Next", { sacrilege.tab, n = false, c = true })
 M.shifttab = command.new("Unindent / Snippet Jump Previous", { sacrilege.shifttab, n = false })
@@ -113,15 +110,16 @@ M.mousestopselect = command.new("Stop Selection", "")
 M.autopair = command.new("Insert Character Pair", { i = autopair.insert, v = autopair.surround, input = true })
 M.autounpair = command.new("Delete Character Pair", { i = function(lhs) if not autopair.remove() then editor.send(lhs) end end, input = true })
 
-M.completion_abort = command.new("Abort Completion", completion_command(completion.abort))
-M.completion_trigger = command.new("Trigger Completion", completion_command(completion.trigger))
-M.completion_confirm = command.new("Confirm Completion", completion_command(function() return completion.confirm({ select = false }) end))
-M.completion_selectconfirm = command.new("Select and Confirm Completion", completion_command(function() return completion.confirm({ select = true }) end))
-M.completion_select_previous = command.new("Select Previous Completion", completion_command(function() return completion.select(-1) end))
-M.completion_select_next = command.new("Select Next Completion", completion_command(function() return completion.select(1) end))
+M.completion_abort = command.new("Abort Completion", { completion.abort, n = false, v = false, c = true })
+M.completion_trigger = command.new("Trigger Completion", { completion.trigger, n = false, v = false, c = true })
+M.completion_confirm = command.new("Confirm Completion", { function() return completion.confirm({ select = false }) end, n = false, v = false, c = true })
+M.completion_selectconfirm = command.new("Select and Confirm Completion", { function() return completion.confirm({ select = true }) end, n = false, v = false, c = true })
+M.completion_select_previous = command.new("Select Previous Completion", { function() return completion.select(-1) end, n = false, v = false, c = true })
+M.completion_select_next = command.new("Select Next Completion", { function() return completion.select(1) end, n = false, v = false, c = true })
 
-M.snippet_jump_previous = command.new("Snippet Jump Previous", snippet_command(function() return snippet.jump(-1) end))
-M.snippet_jump_next = command.new("Snippet Jump Next", snippet_command(function() return snippet.jump(1) end))
+M.snippet_jump_previous = command.new("Snippet Jump Previous", { v = function() return snippet.jump(-1) end })
+M.snippet_jump_next = command.new("Snippet Jump Next", { v = function() return snippet.jump(1) end })
+M.snippet_stop = command.new("Snippet Stop", { v = snippet.stop })
 
 M.undo = command.new("Undo", vim.cmd.undo)
 M.redo = command.new("Redo", vim.cmd.redo)
@@ -345,5 +343,7 @@ M.hint = command.new("Toggle Hints",
         return false
     end
 })
+
+M.cancel = (M.stop_blockmode / M.completion_abort / M.snippet_stop / M.close_popup / M.escape + M.clear_highlights + M.clear_echo):named("Cancel")
 
 return M

@@ -258,18 +258,6 @@ function M.setup(opts)
 end
 
 function M.escape()
-    if options.blockmode and require("sacrilege.blockmode").stop() then return end
-    if completion.abort() then return end
-    if snippet.stop() then return end
-    if editor.try_close_popup() then return end
-
-    -- Clear highlights
-    vim.cmd("nohl")
-
-    -- Clear command-line echo
-    vim.cmd("echon '\r\r'")
-    vim.cmd("echon ''")
-
     if vim.fn.mode() == "c" then
         editor.send("<C-U><Esc>")
     elseif not options.insertmode then

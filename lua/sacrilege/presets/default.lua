@@ -7,7 +7,8 @@ end
 function M.keys()
     return
     {
-        escape = "<Esc>",
+        cancel = "<Esc>",
+        escape = false,
         interrupt = "<C-C>",
         tab = "<Tab>",
         shifttab = "<S-Tab>",

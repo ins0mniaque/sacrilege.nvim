@@ -30,11 +30,26 @@ end
 function M:__band(other)
     local cloned = self:clone()
     local definition = cloned.definition
-    while definition["and"] do
-        definition = definition["and"]
+
+    if type(definition) ~= "table" then
+        definition = { definition }
     end
 
-    definition["and"] = vim.tbl_deep_extend("force", { }, other.definition)
+    while definition["and"] or definition["or"] do
+        local condition = definition["and"] or definition["or"]
+
+        if condition and type(condition) ~= "table" then
+            condition = { condition }
+
+            if definition["and"] then definition["and"] = condition
+            else                      definition["or"]  = condition
+            end
+        end
+
+        definition = condition
+    end
+
+    definition["and"] = type(other.definition) == "table" and vim.tbl_deep_extend("force", { }, other.definition) or other.definition
 
     return cloned
 end
@@ -45,11 +60,26 @@ M.__concat = M.__band
 function M:__bor(other)
     local cloned = self:clone()
     local definition = cloned.definition
-    while definition["or"] do
-        definition = definition["or"]
+
+    if type(definition) ~= "table" then
+        definition = { definition }
     end
 
-    definition["or"] = vim.tbl_deep_extend("force", { }, other.definition)
+    while definition["and"] or definition["or"] do
+        local condition = definition["and"] or definition["or"]
+
+        if condition and type(condition) ~= "table" then
+            condition = { condition }
+
+            if definition["and"] then definition["and"] = condition
+            else                      definition["or"]  = condition
+            end
+        end
+
+        definition = condition
+    end
+
+    definition["or"] = type(other.definition) == "table" and vim.tbl_deep_extend("force", { }, other.definition) or other.definition
 
     return cloned
 end
@@ -57,13 +87,12 @@ end
 M.__div  = M.__bor
 M.__idiv = M.__band
 
-
 local arrow_pattern = "[Aa][rR][rR][oO][wW]>"
 local input_pattern = "<[Ii][nN][pP][uU][tT]>"
 local buffer_pattern = "<[Bb][uU][fF][fF][eE][rR]>"
 
 local function wrap(lhs, rhs, opts, definition, arrow)
-    if not definition then
+    if not rhs or not definition then
         return rhs
     end
 
@@ -116,12 +145,16 @@ local function parse(action, mode, lhs, rhs, opts, definition)
     end
 end
 
+local function do_nothing()
+    return false
+end
+
 local function as_func(rhs)
     if type(rhs) == "string" then
         return function() editor.send(rhs) end
     end
 
-    return rhs
+    return rhs or do_nothing
 end
 
 local function unwrap_modes(func)
@@ -155,6 +188,7 @@ local function map(name, definition, keys, action)
             end))
         end
 
+        -- TODO: Fix problem when parent/child mode don't match
         local map_mode_action = unwrap_modes(function(mode, lhs, rhs, opts)
             local and_command = ands[mode]
             local or_command = ors[mode]
@@ -178,14 +212,17 @@ local function map(name, definition, keys, action)
                 end
             end
 
-            action(mode, lhs, rhs, opts)
+            if rhs then
+                action(mode, lhs, rhs, opts)
+            end
         end)
 
         local function map_mode(mode, default)
-            if (definition[1] and ((default and definition[mode] ~= false) or (not default and definition[mode]))) or (not definition[1] and definition[mode]) then
-                for _, key in pairs(keys) do
-                    parse(map_mode_action, mode, key, definition[1] or definition[mode], { desc = name }, definition)
-                end
+            local has_rhs = (definition[1] and ((default and definition[mode] ~= false) or (not default and definition[mode]))) or (not definition[1] and (not definition[1] and definition[mode]))
+            local rhs     = has_rhs and (definition[1] or definition[mode])
+
+            for _, key in pairs(keys) do
+                parse(map_mode_action, mode, key, rhs, { desc = name }, definition)
             end
         end
 
