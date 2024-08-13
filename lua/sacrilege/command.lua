@@ -14,7 +14,7 @@ function M.new(name, definition)
 end
 
 function M.is(command)
-    return command.__index == M
+    return type(command) == "table" and command.__index == M
 end
 
 function M:clone(name)
@@ -29,6 +29,11 @@ end
 
 function M:__band(other)
     local cloned = self:clone()
+
+    if other.name ~= cloned.name then
+        cloned.name = cloned.name .. " and " .. other.name
+    end
+
     local definition = cloned.definition
 
     if type(definition) ~= "table" then
@@ -59,6 +64,11 @@ M.__concat = M.__band
 
 function M:__bor(other)
     local cloned = self:clone()
+
+    if other.name ~= cloned.name then
+        cloned.name = cloned.name .. " or " .. other.name
+    end
+
     local definition = cloned.definition
 
     if type(definition) ~= "table" then
@@ -85,7 +95,7 @@ function M:__bor(other)
 end
 
 M.__div  = M.__bor
-M.__idiv = M.__band
+M.__idiv = M.__bor
 
 local arrow_pattern = "[Aa][rR][rR][oO][wW]>"
 local input_pattern = "<[Ii][nN][pP][uU][tT]>"
@@ -238,6 +248,19 @@ local function map(name, definition, keys, action)
             parse(action, { "n", "i", "v" }, key, definition, { desc = name })
         end
     end
+end
+
+function M:__call(key)
+    -- TODO: Optimize this
+    local mapmode = editor.mapmode()
+    map(self.name, self.definition, key or "<Nop>", function(mode, lhs, rhs, opts)
+        vim.keymap.set(mode, lhs, rhs, opts)
+        if mode == mapmode or (mode == "v" and (mapmode == "s" or mapmode == "x")) then
+            if type(rhs) == "function" then rhs()
+            else                            editor.send(rhs)
+            end
+        end
+    end)
 end
 
 function M:map(keys, callback)

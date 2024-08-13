@@ -1,4 +1,5 @@
 local config = require("sacrilege.config")
+local cmd = require("sacrilege.cmd")
 local editor = require("sacrilege.editor")
 local completion = require("sacrilege.completion")
 local snippet = require("sacrilege.snippet")
@@ -90,6 +91,22 @@ local metatable =
 }
 
 setmetatable(M, metatable)
+
+local function recurse(t, when, callback)
+    local prefixes = { }
+
+    for key, value in pairs(t) do
+        local prefixes = vim.list_slice(prefixes, 1, #prefixes)
+
+        table.insert(prefixes, key)
+
+        if type(value) == "table" and when(value) then
+            recurse(value, when, callback)
+        else
+            callback(prefixes, value)
+        end
+    end
+end
 
 function M.setup(opts)
     if vim.fn.has("nvim-0.7.0") ~= 1 then
@@ -227,10 +244,27 @@ function M.setup(opts)
 
     keymap = { }
 
-    -- TODO: Localizer
-    config.map(options.keys, options.commands, function(mode, lhs, rhs, opts)
-        table.insert(keymap, { mode = mode, lhs = lhs, rhs = rhs, opts = opts })
-    end)
+    if options.commands then
+        for id, command in pairs(options.commands) do
+            cmd[id] = command
+        end
+    end
+
+    if options.keys then
+        -- TODO: Localizer
+        recurse(options.keys, function(table) return not table[1] end, function(prefixes, keys)
+            local command = vim.tbl_get(cmd, unpack(prefixes))
+
+            -- TODO: Fix this...
+            if require("sacrilege.command").is(command) then
+                command:map(keys, function(mode, lhs, rhs, opts)
+                    table.insert(keymap, { mode = mode, lhs = lhs, rhs = rhs, opts = opts })
+                end)
+            else
+                editor.notify("Command not found: " .. table.concat(prefixes, "."), vim.log.levels.WARN)
+            end
+        end)
+    end
 
     if options.popup then
         vim.opt.mouse      = "a"

@@ -1,30 +1,4 @@
-local is_command = require("sacrilege.command").is
-
 local M = { }
-
-local function map(prefixes, keys, commands, callback)
-    for id, command in pairs(commands) do
-        local prefixes = vim.list_slice(prefixes, 1, #prefixes)
-
-        table.insert(prefixes, id)
-
-        if is_command(command) then
-            local keys = vim.tbl_get(keys, unpack(prefixes))
-
-            if not keys or #keys == 0 then
-                keys = { "<Plug>(" .. table.concat(prefixes, ".") .. ")" }
-            end
-
-            command:map(keys, callback)
-        else
-            map(prefixes, keys, command, callback)
-        end
-    end
-end
-
-function M.map(keys, commands, callback)
-    map({ }, keys, commands, callback)
-end
 
 -- TODO: Localize
 function M.build_popup(options, popup)
