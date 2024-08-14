@@ -4,6 +4,10 @@ local M = { }
 
 M.__index = M
 
+function M.is(command)
+    return type(command) == "table" and command.__index == M
+end
+
 function M.new(name, definition)
     local self = { }
 
@@ -13,8 +17,8 @@ function M.new(name, definition)
     return setmetatable(self, M)
 end
 
-function M.is(command)
-    return type(command) == "table" and command.__index == M
+function M:copy(name)
+    return M.new(self.name or name, { linked = type(self.definition) == "table" and self.definition.linked or self.definition })
 end
 
 function M:clone(name)
@@ -22,7 +26,21 @@ function M:clone(name)
 end
 
 function M:override(definition)
-    return M.new(self.name, definition)
+    if type(self.definition) == "table" then
+        for id, _ in pairs(self.definition) do
+            self.definition[id] = nil
+        end
+
+        if type(definition) ~= "table" then
+            definition = { definition }
+        end
+
+        for id, value in pairs(definition) do
+            self.definition[id] = value
+        end
+    else
+        self.definition = definition
+    end
 end
 
 function M:named(name)
@@ -32,70 +50,42 @@ function M:named(name)
 end
 
 function M:__band(other)
-    local cloned = self:clone()
+    local copy = self:copy()
 
-    if other.name ~= cloned.name then
-        cloned.name = cloned.name .. " and " .. other.name
+    if other.name ~= copy.name then
+        copy.name = copy.name .. " and " .. other.name
     end
 
-    local definition = cloned.definition
-
-    if type(definition) ~= "table" then
-        definition = { definition }
-    end
+    local definition = copy.definition
 
     while definition["and"] or definition["or"] do
-        local condition = definition["and"] or definition["or"]
-
-        if condition and type(condition) ~= "table" then
-            condition = { condition }
-
-            if definition["and"] then definition["and"] = condition
-            else                      definition["or"]  = condition
-            end
-        end
-
-        definition = condition
+        definition = definition["and"] or definition["or"]
     end
 
-    definition["and"] = type(other.definition) == "table" and vim.tbl_deep_extend("force", { }, other.definition) or other.definition
+    definition["and"] = other:copy().definition
 
-    return cloned
+    return copy
 end
 
 M.__add    = M.__band
 M.__concat = M.__band
 
 function M:__bor(other)
-    local cloned = self:clone()
+    local copy = self:copy()
 
-    if other.name ~= cloned.name then
-        cloned.name = cloned.name .. " or " .. other.name
+    if other.name ~= copy.name then
+        copy.name = copy.name .. " or " .. other.name
     end
 
-    local definition = cloned.definition
-
-    if type(definition) ~= "table" then
-        definition = { definition }
-    end
+    local definition = copy.definition
 
     while definition["and"] or definition["or"] do
-        local condition = definition["and"] or definition["or"]
-
-        if condition and type(condition) ~= "table" then
-            condition = { condition }
-
-            if definition["and"] then definition["and"] = condition
-            else                      definition["or"]  = condition
-            end
-        end
-
-        definition = condition
+        definition = definition["and"] or definition["or"]
     end
 
-    definition["or"] = type(other.definition) == "table" and vim.tbl_deep_extend("force", { }, other.definition) or other.definition
+    definition["or"] = other:copy().definition
 
-    return cloned
+    return copy
 end
 
 M.__div  = M.__bor
@@ -190,7 +180,7 @@ local function parse(name, definition, key, action)
         local modeless = false
 
         if definition["and"] then
-            modeless = type(definition["and"]) == "table" and definition["and"].modeless
+            modeless = type(definition["and"]) == "table" and (definition["and"].modeless or (definition["and"].linked and definition["and"].linked.modeless))
 
             parse(name, definition["and"], key, unwrap_modes(function(mode, lhs, rhs, opts)
                 ands[mode] = as_func(rhs)
@@ -198,7 +188,7 @@ local function parse(name, definition, key, action)
         end
 
         if definition["or"] then
-            modeless = type(definition["or"]) == "table" and definition["or"].modeless
+            modeless = type(definition["or"]) == "table" and (definition["or"].modeless or (definition["or"].linked and definition["or"].linked.modeless))
 
             parse(name, definition["or"], key, unwrap_modes(function(mode, lhs, rhs, opts)
                 ors[mode] = as_func(rhs)
@@ -232,6 +222,10 @@ local function parse(name, definition, key, action)
                 action(mode, lhs, rhs, opts)
             end
         end)
+
+        if definition.linked then
+            definition = definition.linked
+        end
 
         local function map_mode(mode, default)
             local has_rhs = (definition[1] and ((default and definition[mode] ~= false) or (not default and definition[mode]))) or

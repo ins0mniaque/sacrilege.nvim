@@ -1,6 +1,7 @@
 local M = { }
 
 function M.commands()
+    -- TODO: Clone commands
     return require("sacrilege.commands")
 end
 
