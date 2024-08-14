@@ -131,6 +131,11 @@ function M.setup(opts)
         popup = preset and preset.popup()
     })
 
+    if opts and type(opts.command) == "function" then
+        opts = vim.tbl_deep_extend("force", { }, opts or { })
+        opts.commands = opts.commands(command)
+    end
+
     options = vim.tbl_deep_extend("force", options, opts or { })
 
     completion.setup(options.completion)
@@ -255,7 +260,6 @@ function M.setup(opts)
     if options.keys then
         recurse(options.keys, function(table) return not table[1] end, function(prefixes, keys)
             local cmd = vim.tbl_get(cmd, unpack(prefixes))
-
             if command.is(cmd) then
                 cmd:map(keys, function(mode, lhs, rhs, opts)
                     table.insert(keymap, { mode = mode, lhs = lhs, rhs = rhs, opts = opts })

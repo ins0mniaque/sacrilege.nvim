@@ -3,13 +3,55 @@ local editor = require("sacrilege.editor")
 
 local M = { }
 
+local function split(key, init)
+    local start, finish, match = key:find("_([oa][rn]d?)_", init)
+
+    if     match == "and" then return key:sub(1, start - 1), key:sub(finish + 1), "__band"
+    elseif match == "or"  then return key:sub(1, start - 1), key:sub(finish + 1), "__bor"
+    elseif start          then return split(key, start + 1)
+    end
+
+    return nil, nil, nil
+end
+
+local function parse(table, key)
+    local cmd, op
+    local keypart = key
+
+    while keypart do
+        local left, right, nextop = split(keypart)
+        local cmdkey = left or (op and keypart)
+
+        if cmdkey then
+            local othercmd = rawget(table, cmdkey)
+            if command.is(othercmd) then
+                if cmd then
+                    cmd = cmd[op](cmd, othercmd)
+                else
+                    cmd = othercmd
+                end
+            end
+        end
+
+        keypart = right
+        op      = nextop
+    end
+
+    if cmd then
+        rawset(table, key, cmd)
+    end
+
+    return cmd
+end
+
 local function metatable(prefix)
     prefix = prefix or ""
 
     return
     {
         __index = function(table, key)
-            local existing = rawget(table, key)
+            local existing = rawget(table, key) or parse(table, key)
+
             if not existing then
                 existing = { }
                 setmetatable(existing, metatable(prefix .. key .. "."))

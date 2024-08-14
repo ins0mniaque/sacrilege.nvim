@@ -179,7 +179,7 @@ local function unwrap_modes(func)
     end
 end
 
-local function parse(name, definition, keys, action)
+local function parse(name, definition, key, action)
     if type(definition) == "table" then
         local ands = { }
         local ors = { }
@@ -188,7 +188,7 @@ local function parse(name, definition, keys, action)
         if definition["and"] then
             modeless = type(definition["and"]) == "table" and definition["and"].modeless
 
-            parse(name, definition["and"], keys, unwrap_modes(function(mode, lhs, rhs, opts)
+            parse(name, definition["and"], key, unwrap_modes(function(mode, lhs, rhs, opts)
                 ands[mode] = as_func(rhs)
             end))
         end
@@ -196,7 +196,7 @@ local function parse(name, definition, keys, action)
         if definition["or"] then
             modeless = type(definition["or"]) == "table" and definition["or"].modeless
 
-            parse(name, definition["or"], keys, unwrap_modes(function(mode, lhs, rhs, opts)
+            parse(name, definition["or"], key, unwrap_modes(function(mode, lhs, rhs, opts)
                 ors[mode] = as_func(rhs)
             end))
         end
@@ -235,9 +235,7 @@ local function parse(name, definition, keys, action)
 
             local rhs = has_rhs and (definition[1] or definition[mode])
 
-            for _, key in pairs(keys) do
-                expand_arrow(map_mode_action, mode, key, rhs, { desc = name }, definition)
-            end
+            expand_arrow(map_mode_action, mode, key, rhs, { desc = name }, definition)
         end
 
         map_mode("n", true)
@@ -249,16 +247,15 @@ local function parse(name, definition, keys, action)
         map_mode("t", false)
         map_mode("o", false)
     elseif definition then
-        for _, key in pairs(keys) do
-            expand_arrow(action, { "n", "i", "v" }, key, definition, { desc = name })
-        end
+        expand_arrow(action, { "n", "i", "v" }, key, definition, { desc = name })
     end
 end
 
 function M:__call(key)
     -- TODO: Optimize this
     local mapmode = editor.mapmode()
-    parse(self.name, self.definition, { key or "<Nop>" }, function(mode, lhs, rhs, opts)
+
+    parse(self.name, self.definition, key or "<Nop>", function(mode, lhs, rhs, opts)
         vim.keymap.set(mode, lhs, rhs, opts)
         if mode == mapmode or (mode == "v" and (mapmode == "s" or mapmode == "x")) then
             if type(rhs) == "function" then rhs()
@@ -278,13 +275,15 @@ function M:map(keys, callback)
         return
     end
 
-    parse(self.name, self.definition, keys, function(mode, lhs, rhs, opts)
-        vim.keymap.set(mode, lhs, rhs, opts)
+    for _, key in pairs(keys) do
+        parse(self.name, self.definition, key, function(mode, lhs, rhs, opts)
+            vim.keymap.set(mode, lhs, rhs, opts)
 
-        if callback then
-            callback(mode, lhs, rhs, opts)
-        end
-    end)
+            if callback then
+                callback(mode, lhs, rhs, opts)
+            end
+        end)
+    end
 end
 
 -- TODO: Allow specifying buffer
@@ -297,13 +296,15 @@ function M:unmap(keys, callback)
         return
     end
 
-    parse(self.name, self.definition, keys, function(mode, lhs, rhs, opts)
-        vim.keymap.del(mode, lhs, opts)
+    for _, key in pairs(keys) do
+        parse(self.name, self.definition, key, function(mode, lhs, rhs, opts)
+            vim.keymap.del(mode, lhs, opts)
 
-        if callback then
-            callback(mode, lhs, rhs, opts)
-        end
-    end)
+            if callback then
+                callback(mode, lhs, rhs, opts)
+            end
+        end)
+    end
 end
 
 function M:menu(parent, position)
@@ -317,7 +318,7 @@ function M:menu(parent, position)
     local name  = parent:gsub(" ", "\\ "):gsub("%.", "\\.") .. "." .. self.name:gsub(" ", "\\ "):gsub("%.", "\\.")
     local modes = { }
 
-    parse(self.name, self.definition, { "<Nop>" }, unwrap_modes(function(mode, lhs, rhs, opts)
+    parse(self.name, self.definition, "<Nop>", unwrap_modes(function(mode, lhs, rhs, opts)
         if mode ~= "t" then
             table.insert(modes, mode)
         end

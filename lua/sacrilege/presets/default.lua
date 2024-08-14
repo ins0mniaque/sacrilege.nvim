@@ -57,8 +57,8 @@ function M.keys()
 
         completion_abort = false,
         completion_trigger = "<C-Space>",
-        completion_confirm = { "<Space>", "<CR>" },
-        completion_selectconfirm = "<S-CR>",
+        completion_confirm_or_replayinput = { "<Space>", "<CR>" },
+        completion_selectconfirm_or_replayinput = "<S-CR>",
         completion_select_previous = false,
         completion_select_next = false,
 
