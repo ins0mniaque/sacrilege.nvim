@@ -168,7 +168,7 @@ M.debug_test = command.new("Debug Test", neotest:try(function(neotest) neotest.r
 M.stop_test = command.new("Stop Test", neotest:try(function(neotest) neotest.run.stop() end))
 M.attach_test = command.new("Attach Test", neotest:try(function(neotest) neotest.run.attach() end))
 
-M.lsp.format = command.new("Format",
+M.lsp.format = command.new("Format Document",
 {
     function()
         if editor.supports_lsp_method(0, methods.textDocument_formatting) then
@@ -193,23 +193,21 @@ M.format = M.lsp.format / M.reindent
 
 M.lsp.format_selection = command.new("Format Selection",
 {
-    function()
+    v = function()
         if editor.supports_lsp_method(0, methods.textDocument_rangeFormatting) then
             vim.lsp.buf.format({ async = true, range = editor.get_selection_range() })
             return true
         end
 
         return false
-    end,
-    v = false
+    end
 })
 
 M.reindent_selection = command.new("Reindent Selection",
 {
-    function()
+    v = function()
         editor.send(editor.mapmode() == "i" and "<C-\\><C-N>gg=G" or "gg=G")
-    end,
-    v = false
+    end
 })
 
 M.format_selection = M.lsp.format_selection / M.reindent_selection
