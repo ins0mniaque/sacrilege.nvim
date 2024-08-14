@@ -124,6 +124,7 @@ function M.setup(opts)
         preset = require(defaults.preset)
     end
 
+    -- TODO: Fix tbl_deep_extend removing metatables from commands
     options = vim.tbl_deep_extend("force", defaults,
     {
         commands = preset and preset.commands(),
@@ -133,10 +134,24 @@ function M.setup(opts)
 
     if opts and type(opts.commands) == "function" then
         opts = vim.tbl_deep_extend("force", { }, opts or { })
-        opts.commands = opts.commands(command)
+        opts.commands = opts.commands(options.commands or { })
     end
 
     options = vim.tbl_deep_extend("force", options, opts or { })
+
+    local function could_be_command(table)
+        for key, _ in pairs(table) do
+            if key ~= "name" and key ~= "definition" and key ~= "plug" then
+                return true
+            end
+        end
+
+        return false
+    end
+
+    recurse(options.commands, could_be_command, function(_, cmd)
+        setmetatable(cmd, command)
+    end)
 
     completion.setup(options.completion)
     snippet.setup(options.snippet)

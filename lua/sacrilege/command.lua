@@ -18,7 +18,11 @@ function M.is(command)
 end
 
 function M:clone(name)
-    return M.new(self.name or name, vim.tbl_deep_extend("force", { }, self.definition))
+    return M.new(self.name or name, type(self.definition) == "table" and vim.tbl_deep_extend("force", { }, self.definition) or self.definition)
+end
+
+function M:override(definition)
+    return M.new(self.name, definition)
 end
 
 function M:named(name)
