@@ -101,7 +101,7 @@ local arrow_pattern = "[Aa][rR][rR][oO][wW]>"
 local input_pattern = "<[Ii][nN][pP][uU][tT]>"
 local buffer_pattern = "<[Bb][uU][fF][fF][eE][rR]>"
 
-local function wrap(lhs, rhs, opts, definition, arrow)
+local function wrap_rhs(lhs, rhs, opts, definition, arrow)
     if not rhs or not definition then
         return rhs
     end
@@ -139,19 +139,19 @@ local function wrap(lhs, rhs, opts, definition, arrow)
     return rhs
 end
 
-local function parse(action, mode, lhs, rhs, opts, definition)
-    if definition and definition.arrow and lhs:find(arrow_pattern) then
+local function expand_arrow(action, mode, lhs, rhs, opts, definition)
+    if lhs:find(arrow_pattern) then
         local left  = lhs:gsub(arrow_pattern, "Left>")
         local up    = lhs:gsub(arrow_pattern, "Up>")
         local right = lhs:gsub(arrow_pattern, "Right>")
         local down  = lhs:gsub(arrow_pattern, "Down>")
 
-        action(mode, left,  wrap(left,  rhs, opts, definition, "Left"),  opts)
-        action(mode, up,    wrap(up,    rhs, opts, definition, "Up"),    opts)
-        action(mode, right, wrap(right, rhs, opts, definition, "Right"), opts)
-        action(mode, down,  wrap(down,  rhs, opts, definition, "Down"),  opts)
+        action(mode, left,  wrap_rhs(left,  rhs, opts, definition, "Left"),  opts)
+        action(mode, up,    wrap_rhs(up,    rhs, opts, definition, "Up"),    opts)
+        action(mode, right, wrap_rhs(right, rhs, opts, definition, "Right"), opts)
+        action(mode, down,  wrap_rhs(down,  rhs, opts, definition, "Down"),  opts)
     else
-        action(mode, lhs, wrap(lhs, rhs, opts, definition), opts)
+        action(mode, lhs, wrap_rhs(lhs, rhs, opts, definition), opts)
     end
 end
 
@@ -179,21 +179,24 @@ local function unwrap_modes(func)
     end
 end
 
--- TODO: Allow specifying buffer
--- TODO: Localizer
-local function map(name, definition, keys, action)
+local function parse(name, definition, keys, action)
     if type(definition) == "table" then
         local ands = { }
         local ors = { }
+        local modeless = false
 
         if definition["and"] then
-            map(name, definition["and"], keys, unwrap_modes(function(mode, lhs, rhs, opts)
+            modeless = type(definition["and"]) == "table" and definition["and"].modeless
+
+            parse(name, definition["and"], keys, unwrap_modes(function(mode, lhs, rhs, opts)
                 ands[mode] = as_func(rhs)
             end))
         end
 
         if definition["or"] then
-            map(name, definition["or"], keys, unwrap_modes(function(mode, lhs, rhs, opts)
+            modeless = type(definition["or"]) == "table" and definition["or"].modeless
+
+            parse(name, definition["or"], keys, unwrap_modes(function(mode, lhs, rhs, opts)
                 ors[mode] = as_func(rhs)
             end))
         end
@@ -202,12 +205,12 @@ local function map(name, definition, keys, action)
             local and_command = ands[mode]
             local or_command = ors[mode]
 
-            if and_command then
+            if and_command and (not modeless or rhs) then
                 local capture_rhs = as_func(rhs)
                 rhs = function() return capture_rhs() ~= false and and_command() ~= false end
             end
 
-            if or_command then
+            if or_command and (not modeless or rhs) then
                 local capture_rhs = as_func(rhs)
                 rhs = function() return capture_rhs() ~= false or or_command() ~= false end
             end
@@ -227,11 +230,13 @@ local function map(name, definition, keys, action)
         end)
 
         local function map_mode(mode, default)
-            local has_rhs = (definition[1] and ((default and definition[mode] ~= false) or (not default and definition[mode]))) or (not definition[1] and (not definition[1] and definition[mode]))
-            local rhs     = has_rhs and (definition[1] or definition[mode])
+            local has_rhs = (definition[1] and ((default and definition[mode] ~= false) or (not default and definition[mode]))) or
+                            (not definition[1] and (not definition[1] and definition[mode]))
+
+            local rhs = has_rhs and (definition[1] or definition[mode])
 
             for _, key in pairs(keys) do
-                parse(map_mode_action, mode, key, rhs, { desc = name }, definition)
+                expand_arrow(map_mode_action, mode, key, rhs, { desc = name }, definition)
             end
         end
 
@@ -245,7 +250,7 @@ local function map(name, definition, keys, action)
         map_mode("o", false)
     elseif definition then
         for _, key in pairs(keys) do
-            parse(action, { "n", "i", "v" }, key, definition, { desc = name })
+            expand_arrow(action, { "n", "i", "v" }, key, definition, { desc = name })
         end
     end
 end
@@ -253,7 +258,7 @@ end
 function M:__call(key)
     -- TODO: Optimize this
     local mapmode = editor.mapmode()
-    map(self.name, self.definition, { key or "<Nop>" }, function(mode, lhs, rhs, opts)
+    parse(self.name, self.definition, { key or "<Nop>" }, function(mode, lhs, rhs, opts)
         vim.keymap.set(mode, lhs, rhs, opts)
         if mode == mapmode or (mode == "v" and (mapmode == "s" or mapmode == "x")) then
             if type(rhs) == "function" then rhs()
@@ -263,6 +268,7 @@ function M:__call(key)
     end)
 end
 
+-- TODO: Allow specifying buffer
 function M:map(keys, callback)
     if type(keys) == "string" then
         keys = { keys }
@@ -272,7 +278,7 @@ function M:map(keys, callback)
         return
     end
 
-    map(self.name, self.definition, keys, function(mode, lhs, rhs, opts)
+    parse(self.name, self.definition, keys, function(mode, lhs, rhs, opts)
         vim.keymap.set(mode, lhs, rhs, opts)
 
         if callback then
@@ -281,6 +287,7 @@ function M:map(keys, callback)
     end)
 end
 
+-- TODO: Allow specifying buffer
 function M:unmap(keys, callback)
     if type(keys) == "string" then
         keys = { keys }
@@ -290,7 +297,7 @@ function M:unmap(keys, callback)
         return
     end
 
-    map(self.name, self.definition, keys, function(mode, lhs, rhs, opts)
+    parse(self.name, self.definition, keys, function(mode, lhs, rhs, opts)
         vim.keymap.del(mode, lhs, opts)
 
         if callback then
@@ -310,7 +317,7 @@ function M:menu(parent, position)
     local name  = parent:gsub(" ", "\\ "):gsub("%.", "\\.") .. "." .. self.name:gsub(" ", "\\ "):gsub("%.", "\\.")
     local modes = { }
 
-    map(self.name, self.definition, { "<Nop>" }, unwrap_modes(function(mode, lhs, rhs, opts)
+    parse(self.name, self.definition, { "<Nop>" }, unwrap_modes(function(mode, lhs, rhs, opts)
         if mode ~= "t" then
             table.insert(modes, mode)
         end

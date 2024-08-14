@@ -58,6 +58,8 @@ local function paste(register)
     end
 end
 
+M.replayinput = command.new("Replay Input", { editor.send, input = true, modeless = true, c = true, t = true, o = true })
+
 M.clear_highlights = command.new("Clear Highlights", { "<Cmd>nohl<CR>", c = true })
 M.clear_echo = command.new("Clear Command Line Message", { "<Cmd>echon '\\r\\r'<CR><Cmd>echon ''<CR>", c = true })
 M.stop_blockmode = command.new("Stop Block Mode", { blockmode.stop, c = true })
@@ -99,7 +101,8 @@ M.selectword = command.new("Select Word", { i = select_command("<C-O>v<C-Arrow><
 M.blockselect = command.new("Block Select Character", { i = select_command("<C-O><C-V><Arrow><C-G>"), v = arrow_command("<C-V><Arrow><C-G>", "<Arrow>"), arrow = true })
 M.blockselectword = command.new("Block Select Word", { i = select_command("<C-O><C-V><C-Arrow><C-G>"), v = arrow_command("<C-V><C-Arrow><C-G>", "<C-Arrow>"), arrow = true })
 M.selectall = command.new("Select All", { n = "ggVG", i = "<C-Home><C-O>VG", v = "gg0oG$" })
-M.stopselect = command.new("Stop Selection", { v = function(lhs) editor.send("<Esc>") sacrilege.interrupt() editor.send(lhs) end, input = true })
+M.stopselect = command.new("Stop Selection", { v = function() editor.send("<Esc>") sacrilege.interrupt() end })
+M.movecursor = M.stopselect + M.replayinput
 
 M.mouseselect = command.new("Set Selection End", "<S-LeftMouse>")
 M.mousestartselect = command.new("Start Selection", "<LeftMouse>")
