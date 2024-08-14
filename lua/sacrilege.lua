@@ -131,7 +131,7 @@ function M.setup(opts)
         popup = preset and preset.popup()
     })
 
-    if opts and type(opts.command) == "function" then
+    if opts and type(opts.commands) == "function" then
         opts = vim.tbl_deep_extend("force", { }, opts or { })
         opts.commands = opts.commands(command)
     end
