@@ -17,8 +17,16 @@ function M.new(name, definition)
     return setmetatable(self, M)
 end
 
+-- TODO: This is wrong...
 function M:copy(name)
-    return M.new(self.name or name, { linked = type(self.definition) == "table" and self.definition.linked or self.definition })
+    local definition = { linked = type(self.definition) == "table" and self.definition.linked or self.definition }
+
+    if type(self.definition) == "table" then
+        definition["and"] = self.definition["and"]
+        definition["or"]  = self.definition["or"]
+    end
+
+    return M.new(self.name or name, definition)
 end
 
 function M:clone(name)
@@ -129,8 +137,18 @@ function M:__band(other)
 
     local definition = copy.definition
 
-    while definition["and"] or definition["or"] do
-        definition = definition["and"] or definition["or"]
+    while type(definition) == "table" and (definition["and"] or definition["or"]) do
+        local condition = definition["and"] or definition["or"]
+
+        if type(condition) ~= "table" then
+            condition = { condition }
+
+            if     definition["and"] then definition["and"] = condition
+            elseif definition["or"]  then definition["or"]  = condition
+            end
+        end
+
+        definition = condition
     end
 
     definition["and"] = other:copy().definition
@@ -150,8 +168,18 @@ function M:__bor(other)
 
     local definition = copy.definition
 
-    while definition["and"] or definition["or"] do
-        definition = definition["and"] or definition["or"]
+    while type(definition) == "table" and (definition["and"] or definition["or"]) do
+        local condition = definition["and"] or definition["or"]
+
+        if type(condition) ~= "table" then
+            condition = { condition }
+
+            if     definition["and"] then definition["and"] = condition
+            elseif definition["or"]  then definition["or"]  = condition
+            end
+        end
+
+        definition = condition
     end
 
     definition["or"] = other:copy().definition
