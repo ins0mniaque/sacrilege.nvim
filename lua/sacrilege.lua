@@ -1,4 +1,3 @@
-local config = require("sacrilege.config")
 local cmd = require("sacrilege.cmd")
 local editor = require("sacrilege.editor")
 local completion = require("sacrilege.completion")
@@ -248,10 +247,11 @@ function M.setup(opts)
         for id, command in pairs(options.commands) do
             cmd[id] = command
         end
+
+        -- TODO: Localize all commands
     end
 
     if options.keys then
-        -- TODO: Localizer
         recurse(options.keys, function(table) return not table[1] end, function(prefixes, keys)
             local command = vim.tbl_get(cmd, unpack(prefixes))
 
@@ -261,7 +261,8 @@ function M.setup(opts)
                     table.insert(keymap, { mode = mode, lhs = lhs, rhs = rhs, opts = opts })
                 end)
             else
-                editor.notify("Command not found: " .. table.concat(prefixes, "."), vim.log.levels.WARN)
+                -- TODO: Add to health check issues instead
+                editor.notify("Key command not found: " .. table.concat(prefixes, "."), vim.log.levels.WARN)
             end
         end)
     end
@@ -273,7 +274,39 @@ function M.setup(opts)
         pcall(vim.cmd.aunmenu, "PopUp.-1-")
         pcall(vim.cmd.aunmenu, "PopUp.How-to\\ disable\\ mouse")
 
-        local update_popup = config.build_popup(options, options.popup)
+        local popup_updates = { }
+
+        for _, definition in pairs(options.popup) do
+            if type(definition) == "string" then
+                definition = { definition }
+            end
+
+            if not definition[1]:find("^-") then
+                local command = vim.tbl_get(cmd, unpack(vim.split(definition[1], "%.")))
+
+                -- TODO: Fix this...
+                if require("sacrilege.command").is(command) then
+                    -- TODO: Get plug mapping from cmd
+                    local plug = "<Plug>" .. definition[1] .. "<CR>"
+                    local menu = command:menu()
+
+                    menu.create(plug, definition.position)
+
+                    table.insert(popup_updates, function(mode)
+                        if vim.fn.maparg(plug, mode) ~= "" then
+                            menu.enable()
+                        else
+                            menu.disable()
+                        end
+                    end)
+                else
+                    -- TODO: Add to health check issues instead
+                    editor.notify("Popup command not found: " .. definition[1], vim.log.levels.WARN)
+                end
+            else
+                vim.cmd.amenu((definition.position or "") .. " PopUp." .. definition[1] .. " <Nop>")
+            end
+        end
 
         vim.api.nvim_create_autocmd({ "MenuPopup" },
         {
@@ -281,7 +314,10 @@ function M.setup(opts)
             group = vim.api.nvim_create_augroup("sacrilege/popup", { }),
             pattern = { "*" },
             callback = function(_)
-                update_popup(editor.mapmode())
+                local mapmode = editor.mapmode()
+                for _, update_popup in pairs(popup_updates) do
+                    update_popup(mapmode)
+                end
             end
         })
     end

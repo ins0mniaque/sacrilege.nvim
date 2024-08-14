@@ -41,6 +41,7 @@ local function metatable(prefix)
                     group[id] = subcommand
                 end
             elseif value then
+                -- TODO: Add to health check issues instead
                 editor.notify("Invalid value assigned to sacrilege.cmd: " .. vim.inspect(value), vim.log.levels.ERROR)
 
                 value = nil

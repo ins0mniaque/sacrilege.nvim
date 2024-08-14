@@ -253,7 +253,7 @@ end
 function M:__call(key)
     -- TODO: Optimize this
     local mapmode = editor.mapmode()
-    map(self.name, self.definition, key or "<Nop>", function(mode, lhs, rhs, opts)
+    map(self.name, self.definition, { key or "<Nop>" }, function(mode, lhs, rhs, opts)
         vim.keymap.set(mode, lhs, rhs, opts)
         if mode == mapmode or (mode == "v" and (mapmode == "s" or mapmode == "x")) then
             if type(rhs) == "function" then rhs()
@@ -297,6 +297,42 @@ function M:unmap(keys, callback)
             callback(mode, lhs, rhs, opts)
         end
     end)
+end
+
+function M:menu(menu)
+    local name  = (menu or "PopUp"):gsub(" ", "\\ "):gsub("%.", "\\.") .. "." .. self.name:gsub(" ", "\\ "):gsub("%.", "\\.")
+    local modes = { }
+
+    map(self.name, self.definition, { "<Nop>" }, unwrap_modes(function(mode, lhs, rhs, opts)
+        if mode ~= "t" then
+            table.insert(modes, mode)
+        end
+    end))
+
+    return
+    {
+        -- TODO: Find key automatically
+        create = function(key, position)
+            for _, mode in pairs(modes) do
+                vim.cmd(mode .. "menu " .. (position or "") .. " " .. name .. " " .. key)
+            end
+        end,
+        enable = function()
+            for _, mode in pairs(modes) do
+                vim.cmd(mode .. "menu enable " .. name)
+            end
+        end,
+        disable = function()
+            for _, mode in pairs(modes) do
+                vim.cmd(mode .. "menu disable " .. name)
+            end
+        end,
+        delete = function()
+            for _, mode in pairs(modes) do
+                vim.cmd(mode .. "unmenu " .. name)
+            end
+        end
+    }
 end
 
 return M
