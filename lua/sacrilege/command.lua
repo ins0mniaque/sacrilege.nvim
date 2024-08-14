@@ -43,6 +43,77 @@ function M:override(definition)
     end
 end
 
+
+local function copy_modes(definition, linked)
+    if type(linked) == "table" then
+        if linked[1] then
+            definition.n = linked.n
+            definition.i = linked.i
+            definition.v = linked.v
+            definition.s = linked.s
+            definition.x = linked.x
+            definition.c = linked.c
+            definition.t = linked.t
+            definition.o = linked.o
+        else
+            if not linked.n then definition.n = false end
+            if not linked.i then definition.i = false end
+            if not linked.v then definition.v = false end
+            if     linked.s then definition.s = true  end
+            if     linked.x then definition.x = true  end
+            if     linked.c then definition.c = true  end
+            if     linked.t then definition.t = true  end
+            if     linked.o then definition.o = true  end
+        end
+    end
+end
+
+local function when(definition, predicate)
+    if type(definition) == "string" then
+        return function(...)
+            if predicate(...) then
+                editor.send(definition)
+                return true
+            end
+
+            return false
+        end
+    else
+        return function(...)
+            if predicate(...) then
+                return definition(...) ~= false
+            end
+
+            return false
+        end
+    end
+end
+
+function M:when(predicate)
+    if type(self.definition) ~= "table" then
+        self.definition = when(self.definition, predicate)
+    elseif self.definition.linked then
+        local linked = self.definition.linked
+
+        self.definition = { function(...) return predicate(...) end, ["and"] = { linked = linked } }
+
+        copy_modes(self.definition, linked)
+    elseif self.definition[1] then
+         self.definition[1] = when(self.definition[1], predicate)
+    else
+        if self.definition.n then self.definition.n = when(self.definition.n, predicate) end
+        if self.definition.i then self.definition.i = when(self.definition.i, predicate) end
+        if self.definition.v then self.definition.v = when(self.definition.v, predicate) end
+        if self.definition.s then self.definition.s = when(self.definition.s, predicate) end
+        if self.definition.x then self.definition.x = when(self.definition.x, predicate) end
+        if self.definition.c then self.definition.c = when(self.definition.c, predicate) end
+        if self.definition.t then self.definition.t = when(self.definition.t, predicate) end
+        if self.definition.o then self.definition.o = when(self.definition.o, predicate) end
+    end
+
+    return self
+end
+
 function M:named(name)
     self.name = name
 
@@ -180,7 +251,7 @@ local function parse(name, definition, key, action)
         local modeless = false
 
         if definition["and"] then
-            modeless = type(definition["and"]) == "table" and (definition["and"].modeless or (definition["and"].linked and definition["and"].linked.modeless))
+            modeless = type(definition["and"]) == "table" and (definition["and"].modeless or (type(definition["and"].linked) == "table" and definition["and"].linked.modeless))
 
             parse(name, definition["and"], key, unwrap_modes(function(mode, lhs, rhs, opts)
                 ands[mode] = as_func(rhs)
@@ -188,7 +259,7 @@ local function parse(name, definition, key, action)
         end
 
         if definition["or"] then
-            modeless = type(definition["or"]) == "table" and (definition["or"].modeless or (definition["or"].linked and definition["or"].linked.modeless))
+            modeless = type(definition["or"]) == "table" and (definition["or"].modeless or (type(definition["or"].linked) == "table" and definition["or"].linked.modeless))
 
             parse(name, definition["or"], key, unwrap_modes(function(mode, lhs, rhs, opts)
                 ors[mode] = as_func(rhs)
@@ -225,6 +296,10 @@ local function parse(name, definition, key, action)
 
         if definition.linked then
             definition = definition.linked
+
+            if type(definition) ~= "table" then
+                definition = { definition }
+            end
         end
 
         local function map_mode(mode, default)

@@ -58,6 +58,14 @@ local function paste(register)
     end
 end
 
+local function supports_treesitter()
+    return treesitter.has_parser(treesitter.get_buf_lang())
+end
+
+local function supports_lsp(method)
+    return function() return editor.supports_lsp_method(0, method) end
+end
+
 M.replayinput = command.new("Replay Input", { editor.send, input = true, modeless = true, c = true, t = true, o = true })
 
 M.clear_highlights = command.new("Clear Highlights", { "<Cmd>nohl<CR>", c = true })
@@ -170,16 +178,8 @@ M.attach_test = command.new("Attach Test", neotest:try(function(neotest) neotest
 
 M.lsp.format = command.new("Format Document",
 {
-    function()
-        if editor.supports_lsp_method(0, methods.textDocument_formatting) then
-            vim.lsp.buf.format({ async = true })
-            return true
-        end
-
-        return false
-    end,
-    v = false
-})
+    function() vim.lsp.buf.format({ async = true }) end, v = false
+}):when(supports_lsp(methods.textDocument_formatting))
 
 M.reindent = command.new("Reindent Document",
 {
@@ -193,226 +193,58 @@ M.format = M.lsp.format / M.reindent
 
 M.lsp.format_selection = command.new("Format Selection",
 {
-    v = function()
-        if editor.supports_lsp_method(0, methods.textDocument_rangeFormatting) then
-            vim.lsp.buf.format({ async = true, range = editor.get_selection_range() })
-            return true
-        end
-
-        return false
-    end
-})
+    v = function() vim.lsp.buf.format({ async = true, range = editor.get_selection_range() }) end
+}):when(supports_lsp(methods.textDocument_rangeFormatting))
 
 M.reindent_selection = command.new("Reindent Selection",
 {
     v = function()
-        editor.send(editor.mapmode() == "i" and "<C-\\><C-N>gg=G" or "gg=G")
+        editor.send(editor.mapmode() == "x" and "<C-G><C-O>=gv" or "<C-O>=gv")
     end
 })
 
 M.format_selection = M.lsp.format_selection / M.reindent_selection
 
-M.treesitter.definition = command.new("Go to Definition",
-{
-    function()
-        if treesitter.has_parser(treesitter.get_buf_lang()) then
-            treesitter.definition()
-            return true
-        end
-
-        return false
-    end
-})
-
-M.lsp.definition = command.new("Go to Definition",
-{
-    function()
-        if editor.supports_lsp_method(0, methods.textDocument_definition) then
-            vim.lsp.buf.definition()
-            return true
-        end
-
-        return false
-    end
-})
-
+M.treesitter.definition = command.new("Go to Definition", treesitter.definition):when(supports_treesitter)
+M.lsp.definition = command.new("Go to Definition", vim.lsp.buf.definition):when(supports_lsp(methods.textDocument_definition))
 M.definition = M.lsp.definition / M.treesitter.definition
 
-M.treesitter.references = command.new("Find All References...",
-{
-    function()
-        if treesitter.has_parser(treesitter.get_buf_lang()) then
-            treesitter.references()
-            return true
-        end
-
-        return false
-    end
-})
-
-M.lsp.references = command.new("Find All References...",
-{
-    function()
-        if editor.supports_lsp_method(0, methods.textDocument_references) then
-            vim.lsp.buf.references()
-            return true
-        end
-
-        return false
-    end
-})
-
+M.treesitter.references = command.new("Find All References...", treesitter.references):when(supports_treesitter)
+M.lsp.references = command.new("Find All References...", vim.lsp.buf.references):when(supports_lsp(methods.textDocument_references))
 M.references = M.lsp.references / M.treesitter.references
 
-M.treesitter.rename = command.new("Rename...",
-{
-    function()
-        if treesitter.has_parser(treesitter.get_buf_lang()) then
-            treesitter.rename()
-            return true
-        end
-
-        return false
-    end
-})
-
-M.lsp.rename = command.new("Rename...",
-{
-    function()
-        if editor.supports_lsp_method(0, methods.textDocument_rename) then
-            vim.lsp.buf.rename()
-            return true
-        end
-
-        return false
-    end
-})
-
+M.treesitter.rename = command.new("Rename...", treesitter.rename):when(supports_treesitter)
+M.lsp.rename = command.new("Rename...", vim.lsp.buf.rename):when(supports_lsp(methods.textDocument_rename))
 M.rename = M.lsp.rename / M.treesitter.rename
 
-M.lsp.hover = command.new("Hover",
-{
-    function()
-        if editor.supports_lsp_method(0, methods.textDocument_hover) then
-            vim.lsp.buf.hover()
-            return true
-        end
+M.lsp.hover = command.new("Hover", vim.lsp.buf.hover):when(supports_lsp(methods.textDocument_hover))
+M.lsp.signature_help = command.new("Signature Help", vim.lsp.buf.signature_help):when(supports_lsp(methods.textDocument_signatureHelp))
+M.hover = (M.close_popup / M.lsp.hover / M.lsp.signature_help):named("Hover")
 
-        return false
-    end
-})
-
-M.lsp.signature_help = command.new("Signature Help",
-{
-    function()
-        if editor.supports_lsp_method(0, methods.textDocument_signatureHelp) then
-            vim.lsp.buf.signature_help()
-            return true
-        end
-
-        return false
-    end
-})
-
-M.hover = M.close_popup / M.lsp.hover / M.lsp.signature_help
-
-M.lsp.implementation = command.new("Go to Implementation",
-{
-    function()
-        if editor.supports_lsp_method(0, methods.textDocument_implementation) then
-            vim.lsp.buf.implementation()
-            return true
-        end
-
-        return false
-    end
-})
-
+M.lsp.implementation = command.new("Go to Implementation", vim.lsp.buf.implementation):when(supports_lsp(methods.textDocument_implementation))
 M.implementation = M.lsp.implementation:copy()
 
-M.lsp.type_definition = command.new("Go to Type Definition",
-{
-    function()
-        if editor.supports_lsp_method(0, methods.textDocument_typeDefinition) then
-            vim.lsp.buf.type_definition()
-            return true
-        end
-
-        return false
-    end
-})
-
+M.lsp.type_definition = command.new("Go to Type Definition", vim.lsp.buf.type_definition):when(supports_lsp(methods.textDocument_typeDefinition))
 M.type_definition = M.lsp.type_definition:copy()
 
-M.lsp.document_symbol = command.new("Find in Document Symbols...",
-{
-    function()
-        if editor.supports_lsp_method(0, methods.textDocument_documentSymbol) then
-            vim.lsp.buf.document_symbol()
-            return true
-        end
-
-        return false
-    end
-})
-
+M.lsp.document_symbol = command.new("Find in Document Symbols...", vim.lsp.buf.document_symbol):when(supports_lsp(methods.textDocument_documentSymbol))
 M.document_symbol = M.lsp.document_symbol:copy()
 
-M.lsp.workspace_symbol = command.new("Find in Workspace Symbols...",
-{
-    function()
-        if editor.supports_lsp_method(0, methods.workspace_symbol) then
-            vim.lsp.buf.workspace_symbol()
-            return true
-        end
-
-        return false
-    end
-})
-
+M.lsp.workspace_symbol = command.new("Find in Workspace Symbols...", vim.lsp.buf.workspace_symbol):when(supports_lsp(methods.workspace_symbol))
 M.workspace_symbol = M.lsp.workspace_symbol:copy()
 
-M.lsp.declaration = command.new("Go to Declaration",
-{
-    function()
-        if editor.supports_lsp_method(0, methods.textDocument_declaration) then
-            vim.lsp.buf.declaration()
-            return true
-        end
-
-        return false
-    end
-})
-
+M.lsp.declaration = command.new("Go to Declaration", vim.lsp.buf.declaration):when(supports_lsp(methods.textDocument_declaration))
 M.declaration = M.lsp.declaration:copy()
 
-M.lsp.code_action = command.new("Code Action",
-{
-    function()
-        if editor.supports_lsp_method(0, methods.textDocument_codeAction) then
-            vim.lsp.buf.code_action()
-            return true
-        end
-
-        return false
-    end
-})
-
+M.lsp.code_action = command.new("Code Action", vim.lsp.buf.code_action):when(supports_lsp(methods.textDocument_codeAction))
 M.code_action = M.lsp.code_action:copy()
 
-M.lsp.hint = command.new("Toggle Hints",
-{
-    function()
-        local buffer = vim.api.nvim_get_current_buf()
-        if editor.supports_lsp_method(buffer, methods.textDocument_inlayHint) then
-            vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = buffer }, { bufnr = buffer })
-            return true
-        end
+local function toggle_lsp_inlay_hint()
+    local buffer = vim.api.nvim_get_current_buf()
+    vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = buffer }, { bufnr = buffer })
+end
 
-        return false
-    end
-})
-
+M.lsp.hint = command.new("Toggle Hints", toggle_lsp_inlay_hint):when(supports_lsp(methods.textDocument_inlayHint))
 M.hint = M.lsp.hint:copy()
 
 M.cancel = (M.stop_blockmode / M.completion_abort / M.snippet_stop / M.close_popup / M.escape + M.clear_highlights + M.clear_echo):named("Cancel")
