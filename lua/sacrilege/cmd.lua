@@ -26,6 +26,7 @@ local function metatable(prefix)
 
             if command.is(existing) then
                 existing:unmap(plug)
+                existing.plug = nil
             elseif type(existing) == "table" then
                 local group = table[key]
                 for id, _ in pairs(existing) do
@@ -35,6 +36,7 @@ local function metatable(prefix)
 
             if command.is(value) then
                 value:map(plug)
+                value.plug = plug
             elseif type(value) == "table" then
                 local group = table[key]
                 for id, subcommand in pairs(value) do

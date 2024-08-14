@@ -1,3 +1,4 @@
+local command = require("sacrilege.command")
 local cmd = require("sacrilege.cmd")
 local editor = require("sacrilege.editor")
 local completion = require("sacrilege.completion")
@@ -253,11 +254,10 @@ function M.setup(opts)
 
     if options.keys then
         recurse(options.keys, function(table) return not table[1] end, function(prefixes, keys)
-            local command = vim.tbl_get(cmd, unpack(prefixes))
+            local cmd = vim.tbl_get(cmd, unpack(prefixes))
 
-            -- TODO: Fix this...
-            if require("sacrilege.command").is(command) then
-                command:map(keys, function(mode, lhs, rhs, opts)
+            if command.is(cmd) then
+                cmd:map(keys, function(mode, lhs, rhs, opts)
                     table.insert(keymap, { mode = mode, lhs = lhs, rhs = rhs, opts = opts })
                 end)
             else
@@ -274,7 +274,7 @@ function M.setup(opts)
         pcall(vim.cmd.aunmenu, "PopUp.-1-")
         pcall(vim.cmd.aunmenu, "PopUp.How-to\\ disable\\ mouse")
 
-        local popup_updates = { }
+        local menus = { }
 
         for _, definition in pairs(options.popup) do
             if type(definition) == "string" then
@@ -282,23 +282,10 @@ function M.setup(opts)
             end
 
             if not definition[1]:find("^-") then
-                local command = vim.tbl_get(cmd, unpack(vim.split(definition[1], "%.")))
+                local cmd = vim.tbl_get(cmd, unpack(vim.split(definition[1], "%.")))
 
-                -- TODO: Fix this...
-                if require("sacrilege.command").is(command) then
-                    -- TODO: Get plug mapping from cmd
-                    local plug = "<Plug>" .. definition[1] .. "<CR>"
-                    local menu = command:menu()
-
-                    menu.create(plug, definition.position)
-
-                    table.insert(popup_updates, function(mode)
-                        if vim.fn.maparg(plug, mode) ~= "" then
-                            menu.enable()
-                        else
-                            menu.disable()
-                        end
-                    end)
+                if command.is(cmd) then
+                    table.insert(menus, cmd:menu("PopUp", definition.position))
                 else
                     -- TODO: Add to health check issues instead
                     editor.notify("Popup command not found: " .. definition[1], vim.log.levels.WARN)
@@ -315,8 +302,8 @@ function M.setup(opts)
             pattern = { "*" },
             callback = function(_)
                 local mapmode = editor.mapmode()
-                for _, update_popup in pairs(popup_updates) do
-                    update_popup(mapmode)
+                for _, menu in pairs(menus) do
+                    menu.update(mapmode)
                 end
             end
         })

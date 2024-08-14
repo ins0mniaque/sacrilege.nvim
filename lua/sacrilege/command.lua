@@ -299,8 +299,15 @@ function M:unmap(keys, callback)
     end)
 end
 
-function M:menu(menu)
-    local name  = (menu or "PopUp"):gsub(" ", "\\ "):gsub("%.", "\\.") .. "." .. self.name:gsub(" ", "\\ "):gsub("%.", "\\.")
+function M:menu(parent, position)
+    if not self.plug then
+        -- TODO: Add to health check issues instead
+        editor.notify("Menu command '" .. self.name .. "' was not registered with sacrilege.cmd", vim.log.levels.WARN)
+
+        return { enable = do_nothing, disable = do_nothing, update = do_nothing, delete = do_nothing }
+    end
+
+    local name  = parent:gsub(" ", "\\ "):gsub("%.", "\\.") .. "." .. self.name:gsub(" ", "\\ "):gsub("%.", "\\.")
     local modes = { }
 
     map(self.name, self.definition, { "<Nop>" }, unwrap_modes(function(mode, lhs, rhs, opts)
@@ -309,12 +316,11 @@ function M:menu(menu)
         end
     end))
 
-    return
+    local menu =
     {
-        -- TODO: Find key automatically
-        create = function(key, position)
+        create = function()
             for _, mode in pairs(modes) do
-                vim.cmd(mode .. "menu " .. (position or "") .. " " .. name .. " " .. key)
+                vim.cmd(mode .. "menu " .. (position or "") .. " " .. name .. " " .. self.plug)
             end
         end,
         enable = function()
@@ -327,12 +333,29 @@ function M:menu(menu)
                 vim.cmd(mode .. "menu disable " .. name)
             end
         end,
+        update = function(mode)
+            if mode == "s" or mode == "x" and vim.tbl_contains(modes, "v") then
+                mode = "v"
+            elseif not vim.tbl_contains(modes, mode) then
+                return
+            end
+
+            if vim.fn.maparg(self.plug, mode) ~= "" then
+                vim.cmd(mode .. "menu enable " .. name)
+            else
+                vim.cmd(mode .. "menu disable " .. name)
+            end
+        end,
         delete = function()
             for _, mode in pairs(modes) do
                 vim.cmd(mode .. "unmenu " .. name)
             end
         end
     }
+
+    menu.create()
+
+    return menu
 end
 
 return M
