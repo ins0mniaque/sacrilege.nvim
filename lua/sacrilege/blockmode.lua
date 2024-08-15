@@ -4,41 +4,93 @@ local M = { }
 
 local sel_start
 local sel_end
-local mode
 local blockmodekey
+local exitblockmode = false
 local blockmode = false
+local delayed = false
+local skipnextcursorhold = false
 local backspace = vim.api.nvim_replace_termcodes("<BS>", true, false, true)
 
+local function reorder_selection()
+    if sel_start[2] > sel_end[2] or (sel_start[2] == sel_end[2] and sel_start[3] > sel_end[3]) then
+        local temp = sel_start
+        sel_start = sel_end
+        sel_end = temp
+    end
+
+    if sel_start[3] == sel_end[3] then
+        sel_end[3] = sel_end[3] + 1
+    end
+end
+
 local function start()
-    if blockmodekey == backspace then
-        if blockmode then
-            editor.send("<C-\\><C-N>gvI <Esc>gvo<Left>o<Left>\"_dgv<C-G>")
-        end
-    elseif blockmodekey then
-        local needed = math.abs(sel_end[3] - sel_start[3]) - 2
+    if blockmodekey then
+        reorder_selection()
 
-        if not blockmode and needed < 0 then
-            editor.send("<Cmd>undo<CR><C-\\><C-N>gvI" .. blockmodekey .. " <Esc>gv")
-        else
-            editor.send("<BS><C-\\><C-N>gvI" .. blockmodekey .. " <Esc>gv")
-        end
+        local key = blockmodekey
+        local offset = 0
+        local space = " "
+        if key == backspace then
+            key = ""
 
-        if sel_end[3] - sel_start[3] < -1 then
-            editor.send("<Right>o")
-        else
-            editor.send("o<Right>o")
+            if blockmode then
+                space = ""
+                offset = -1
+            end
         end
 
-        while needed > 0 do
-            editor.send("<Left>")
-            needed = needed - 1
+        local sel_delete = (not blockmode and sel_end[3] - sel_start[3] == 1) and 0 or 1
+
+        local backspace_delete = 0
+        if vim.fn.mode() == "\19" then backspace_delete = delayed and 0 or 1
+        elseif delayed then backspace_delete = 1
         end
 
-        if needed < 0 then
-            editor.send("<Right>")
+        if sel_delete == 0 then
+            vim.cmd.undo()
         end
 
+        local lines = vim.api.nvim_buf_get_lines(0, sel_start[2] - 1, sel_end[2], true)
+        for index, line in ipairs(lines) do
+            if index == 1 and key ~= "" then
+                lines[index] = line:sub(1, sel_start[3] - 1 + offset) .. key .. space .. line:sub(sel_start[3] + sel_delete)
+            elseif key == "" and index == #lines then
+                lines[index] = line:sub(1, sel_start[3] - 1 + offset) .. key .. " " .. line:sub(sel_start[3] + backspace_delete)
+            elseif delayed and index == #lines then
+                lines[index] = line:sub(1, sel_start[3] - 1 + offset) .. key .. space .. line:sub(sel_start[3] + 1 + sel_delete + offset)
+            elseif blockmode then
+                lines[index] = line:sub(1, sel_start[3] - 1 + offset) .. key .. line:sub(sel_start[3])
+            else
+                lines[index] = line:sub(1, sel_start[3] - 1 + offset) .. key .. space .. line:sub(sel_start[3])
+            end
+        end
+        vim.api.nvim_buf_set_lines(0, sel_start[2] - 1, sel_end[2], true, lines)
+        sel_start[3] = sel_start[3] + 1
+        sel_end[3] = sel_start[3] + 1
+
+        if key == "" then
+            sel_start[3] = sel_start[3] - 1 + offset
+            sel_end[3] = sel_end[3] - 1 + offset
+        end
+
+        vim.fn.setpos('.', sel_start)
+        vim.cmd("normal! \22")
+        vim.fn.setpos('.', sel_end)
         editor.send("<C-G>")
+
+        delayed = false
+
+        vim.schedule(function()
+            if vim.fn.mode() == "i" then
+                vim.fn.setpos('.', sel_start)
+                vim.cmd("normal! \22")
+                vim.fn.setpos('.', sel_end)
+                editor.send("<C-G>")
+
+                delayed = true
+                skipnextcursorhold = true
+            end
+        end)
 
         blockmode = true
     end
@@ -55,12 +107,13 @@ function M.stop()
         return false
     end
 
-    local cursor = vim.api.nvim_win_get_cursor(0)
+    reorder_selection()
 
-    editor.send("<C-\\><C-N>gv\"_d<Esc>")
-
-    -- BUG: This is too early sometimes...
-    vim.defer_fn(function() vim.api.nvim_win_set_cursor(0, cursor) end, 0)
+    local lines = vim.api.nvim_buf_get_lines(0, sel_start[2] - 1, sel_end[2], true)
+    for index, line in ipairs(lines) do
+        lines[index] = line:sub(1, sel_start[3] - 1) .. line:sub(sel_start[3] + 1)
+    end
+    vim.api.nvim_buf_set_lines(0, sel_start[2] - 1, sel_end[2], true, lines)
 
     blockmode = false
 
@@ -68,43 +121,77 @@ function M.stop()
 end
 
 function M.paste(register)
-    editor.send("<C-\\><C-N>gv\"_d<Esc>gvI<C-R>" .. register .. "<Esc>")
+    sel_start = vim.fn.getpos("v")
+    sel_end = vim.fn.getpos(".")
+
+    reorder_selection()
+
+    local sel_delete = (not blockmode and sel_end[3] - sel_start[3] == 1) and 0 or sel_end[3] - sel_start[3]
+    local contents = vim.split(vim.fn.getreg(register), "\n")
+
+    if #contents == 1 then
+        contents = contents[1]
+
+        local lines = vim.api.nvim_buf_get_lines(0, sel_start[2] - 1, sel_end[2], true)
+        for index, line in ipairs(lines) do
+            lines[index] = line:sub(1, sel_start[3] - 1) .. contents .. line:sub(sel_start[3] + sel_delete)
+        end
+        vim.api.nvim_buf_set_lines(0, sel_start[2] - 1, sel_end[2], true, lines)
+    else
+        local lines = vim.api.nvim_buf_get_lines(0, sel_start[2] - 1, sel_end[2], true)
+        for index, line in ipairs(lines) do
+            lines[index] = line:sub(1, sel_start[3] - 1) .. (contents[index] or "") .. line:sub(sel_start[3] + sel_delete)
+        end
+        vim.api.nvim_buf_set_lines(0, sel_start[2] - 1, sel_end[2], true, lines)
+    end
+
+    sel_start[3] = sel_end[3] + 1
+    sel_end[3] = sel_start[3] + 1
+
+    vim.fn.setpos('.', sel_start)
+    vim.cmd("normal! \22")
+    vim.fn.setpos('.', sel_end)
+    editor.send("<C-G>")
+
+    -- TODO: Fix selection
+    -- TODO: Start blockmode if setup
 end
 
--- BUG: Typing fast can exit block mode
+-- BUG: Typing fast can mess up the blockmode selection
+-- BUG: Typing space can mess up the blockmode selection
 function M.setup()
     local namespace = vim.api.nvim_create_namespace("sacrilege/blockmode")
     local group     = vim.api.nvim_create_augroup("sacrilege/blockmode", { })
 
     vim.on_key(function(key, typed)
-        if mode == "\19" and #typed == 1 and (typed == key or typed == backspace) and typed ~= "\7" then
+        if vim.fn.mode() ~= "\19" then return end
+
+        if ((#typed == 1 and typed == key) or typed == backspace) and vim.fn.char2nr(typed) >= 32 then
             sel_start = vim.fn.getpos("v")
             sel_end = vim.fn.getpos(".")
             blockmodekey = typed
+            exitblockmode = false
 
             vim.schedule(start)
+        elseif typed ~= "" then
+            exitblockmode = true
         end
     end, namespace)
-
-    vim.api.nvim_create_autocmd("ModeChanged",
-    {
-        desc = "Block Mode",
-        group = group,
-        callback = function(event)
-            mode = vim.fn.mode()
-
-            if blockmode and event.match == "\22:n" then
-                editor.send("gv<C-G>")
-            end
-        end
-    })
 
     vim.api.nvim_create_autocmd("CursorHoldI",
     {
         desc = "End Block Mode",
         group = group,
         callback = function(_)
-            M.stop()
+            if vim.fn.mode() == "\19" and exitblockmode then
+                editor.send("<Esc><Esc>")
+            end
+
+            if not skipnextcursorhold then
+                M.stop()
+            end
+
+            skipnextcursorhold = false
         end
     })
 end
