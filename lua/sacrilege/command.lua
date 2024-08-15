@@ -17,7 +17,6 @@ function M.new(name, definition)
     return setmetatable(self, M)
 end
 
--- TODO: This is wrong...
 function M:copy(name)
     local definition = { linked = type(self.definition) == "table" and self.definition.linked or self.definition }
 
@@ -124,6 +123,374 @@ end
 
 function M:named(name)
     self.name = name
+
+    return self
+end
+
+local function try_convert_to_default(definition)
+    if type(definition) == "table" and not definition[1] and not definition.linked then
+        local any = definition.n or definition.i or definition.v or definition.s or definition.x or definition.c or definition.t or definition.o
+        local all_any = (not definition.n or definition.n == any) and
+                        (not definition.i or definition.i == any) and
+                        (not definition.v or definition.v == any) and
+                        (not definition.s or definition.s == any) and
+                        (not definition.x or definition.x == any) and
+                        (not definition.c or definition.c == any) and
+                        (not definition.t or definition.t == any) and
+                        (not definition.o or definition.o == any)
+
+        if all_any then
+            definition[1] = any
+
+            if definition.n then definition.n = nil  else definition.n = false end
+            if definition.i then definition.i = nil  else definition.i = false end
+            if definition.v then definition.v = nil  else definition.v = false end
+            if definition.s then definition.s = true else definition.s = nil   end
+            if definition.x then definition.x = true else definition.x = nil   end
+            if definition.c then definition.c = true else definition.c = nil   end
+            if definition.t then definition.t = true else definition.t = nil   end
+            if definition.o then definition.o = true else definition.o = nil   end
+        end
+    end
+
+    return definition
+end
+
+-- TODO: Convert table form to non-table form when possible
+local function try_convert_to_smallest_form(definition)
+    if type(definition) == "table" and not definition[1] and not definition.linked then
+        local count = (definition.n and 1 or 0) +
+                      (definition.i and 1 or 0) +
+                      (definition.v and 1 or 0) +
+                      (definition.s and 1 or 0) +
+                      (definition.x and 1 or 0) +
+                      (definition.c and 1 or 0) +
+                      (definition.t and 1 or 0) +
+                      (definition.o and 1 or 0)
+
+        if count == 1 then
+            return definition
+        end
+
+        return try_convert_to_default(definition)
+    end
+
+    return definition
+end
+
+local function convert_to_nondefault(definition)
+    if type(definition) ~= "table" then
+        definition = { definition }
+    end
+
+    if definition.linked then
+        local cloned = vim.tbl_deep_extend("force", { }, definition.linked)
+
+        cloned["and"] = definition["and"]
+        cloned["or"]  = definition["or"]
+
+        definition = cloned
+    end
+
+    if definition[1] then
+        definition.n = definition.n ~= false and definition[1]
+        definition.i = definition.i ~= false and definition[1]
+        if definition.v ~= false then
+            if definition.x == true and definition.s ~= true then
+                definition.x = definition[1]
+            elseif definition.x ~= true and definition.s == true then
+                definition.s = definition[1]
+            else
+                definition.v = definition[1]
+            end
+        end
+        definition.s = definition.s == true and definition[1]
+        definition.x = definition.x == true and definition[1]
+        definition.c = definition.c == true and definition[1]
+        definition.t = definition.t == true and definition[1]
+        definition.o = definition.o == true and definition[1]
+
+        definition[1] = nil
+    end
+
+    return definition
+end
+
+function M:requires(options)
+    if type(self.definition) ~= "table" then
+        self.definition = { self.definition }
+    end
+
+    if self.definition.linked then
+        local cloned = vim.tbl_deep_extend("force", { }, self.definition.linked)
+
+        cloned["and"] = self.definition["and"]
+        cloned["or"]  = self.definition["or"]
+
+        self.definition = cloned
+    end
+
+    for option, value in pairs(options) do
+        self.definition[option] = value
+    end
+
+    return self
+end
+
+function M:default(rhs)
+    if rhs ~= true and rhs ~= false then
+        self.definition = convert_to_nondefault(self.definition)
+        self.definition.n = rhs
+        self.definition.i = rhs
+        self.definition.v = rhs
+        self.definition = try_convert_to_smallest_form(self.definition)
+    else
+        self.definition = try_convert_to_default(self.definition)
+        if type(self.definition) ~= "table" then
+            self.definition = { self.definition }
+        end
+
+        if self.definition[1] then
+            self.definition.n = rhs == false and false
+            self.definition.i = rhs == false and false
+            self.definition.v = rhs == false and false
+        elseif rhs == false then
+            self.definition.n = nil
+            self.definition.i = nil
+            self.definition.v = nil
+        else
+            editor.notify("Could not enable Normal/Insert/Visual Mode for \"" .. self.name .. "\" because it does not have a single definition", vim.log.levels.ERROR)
+        end
+    end
+
+    return self
+end
+
+function M:normal(rhs)
+    if rhs ~= true and rhs ~= false then
+        self.definition = convert_to_nondefault(self.definition)
+        self.definition.n = rhs
+        self.definition = try_convert_to_smallest_form(self.definition)
+    else
+        self.definition = try_convert_to_default(self.definition)
+        if type(self.definition) ~= "table" then
+            self.definition = { self.definition }
+        end
+
+        if self.definition[1] then
+            self.definition.n = rhs == false and false
+        elseif rhs == false then
+            self.definition.n = nil
+        else
+            editor.notify("Could not enable Normal Mode for \"" .. self.name .. "\" because it does not have a single definition", vim.log.levels.ERROR)
+        end
+    end
+
+    return self
+end
+
+function M:insert(rhs)
+    if rhs ~= true and rhs ~= false then
+        self.definition = convert_to_nondefault(self.definition)
+        self.definition.i = rhs
+        self.definition = try_convert_to_smallest_form(self.definition)
+    else
+        self.definition = try_convert_to_default(self.definition)
+        if type(self.definition) ~= "table" then
+            self.definition = { self.definition }
+        end
+
+        if self.definition[1] then
+            self.definition.i = rhs == false and false
+        elseif rhs == false then
+            self.definition.i = nil
+        else
+            editor.notify("Could not enable Insert Mode for \"" .. self.name .. "\" because it does not have a single definition", vim.log.levels.ERROR)
+        end
+    end
+
+    return self
+end
+
+function M:visual(rhs)
+    if rhs ~= true and rhs ~= false then
+        self.definition = convert_to_nondefault(self.definition)
+        if self.definition.s then
+            self.definition.x = rhs
+        else
+            self.definition.v = rhs
+        end
+        self.definition = try_convert_to_smallest_form(self.definition)
+    else
+        self.definition = try_convert_to_default(self.definition)
+        if type(self.definition) ~= "table" then
+            self.definition = { self.definition }
+        end
+
+        if self.definition[1] then
+            if self.definition.s then
+                self.definition.x = rhs == true and true
+            else
+                self.definition.v = rhs == false and false
+            end
+        elseif rhs == false then
+            if self.definition.s then
+                self.definition.x = nil
+            else
+                self.definition.v = nil
+            end
+        else
+            editor.notify("Could not enable Visual Mode for \"" .. self.name .. "\" because it does not have a single definition", vim.log.levels.ERROR)
+        end
+    end
+
+    return self
+end
+
+function M:select(rhs)
+    if rhs ~= true and rhs ~= false then
+        self.definition = convert_to_nondefault(self.definition)
+        self.definition.s = rhs
+        if self.definition.v then
+            self.definition.x = self.definition.v
+            self.definition.v = nil
+        end
+        self.definition = try_convert_to_smallest_form(self.definition)
+    else
+        self.definition = try_convert_to_default(self.definition)
+        if type(self.definition) ~= "table" then
+            self.definition = { self.definition }
+        end
+
+        if self.definition[1] then
+            self.definition.s = rhs == true and true
+            if self.definition.v then
+                self.definition.x = self.definition.v
+                self.definition.v = nil
+            end
+        elseif rhs == false then
+            self.definition.s = nil
+            if self.definition.v then
+                self.definition.x = self.definition.v
+                self.definition.v = nil
+            end
+        else
+            editor.notify("Could not enable Select Mode for \"" .. self.name .. "\" because it does not have a single definition", vim.log.levels.ERROR)
+        end
+    end
+
+    return self
+end
+
+function M:cmdline(rhs)
+    if rhs ~= true and rhs ~= false then
+        self.definition = convert_to_nondefault(self.definition)
+        self.definition.c = rhs
+        self.definition = try_convert_to_smallest_form(self.definition)
+    else
+        self.definition = try_convert_to_default(self.definition)
+        if type(self.definition) ~= "table" then
+            self.definition = { self.definition }
+        end
+
+        if self.definition[1] then
+            self.definition.c = rhs == true and true
+        elseif rhs == false then
+            self.definition.c = nil
+        else
+            editor.notify("Could not enable Command Line Mode for \"" .. self.name .. "\" because it does not have a single definition", vim.log.levels.ERROR)
+        end
+    end
+
+    return self
+end
+
+function M:terminal(rhs)
+    if rhs ~= true and rhs ~= false then
+        self.definition = convert_to_nondefault(self.definition)
+        self.definition.t = rhs
+        self.definition = try_convert_to_smallest_form(self.definition)
+    else
+        self.definition = try_convert_to_default(self.definition)
+        if type(self.definition) ~= "table" then
+            self.definition = { self.definition }
+        end
+
+        if self.definition[1] then
+            self.definition.t = rhs == true and true
+        elseif rhs == false then
+            self.definition.t = nil
+        else
+            editor.notify("Could not enable Terminal Mode for \"" .. self.name .. "\" because it does not have a single definition", vim.log.levels.ERROR)
+        end
+    end
+
+    return self
+end
+
+function M:pending(rhs)
+    if rhs ~= true and rhs ~= false then
+        self.definition = convert_to_nondefault(self.definition)
+        self.definition.o = rhs
+        self.definition = try_convert_to_smallest_form(self.definition)
+    else
+        self.definition = try_convert_to_default(self.definition)
+        if type(self.definition) ~= "table" then
+            self.definition = { self.definition }
+        end
+
+        if self.definition[1] then
+            self.definition.o = rhs == true and true
+        elseif rhs == false then
+            self.definition.o = nil
+        else
+            editor.notify("Could not enable Operator-Pending Mode for \"" .. self.name .. "\" because it does not have a single definition", vim.log.levels.ERROR)
+        end
+    end
+
+    return self
+end
+
+function M:all(rhs)
+    if rhs ~= true and rhs ~= false then
+        self.definition = convert_to_nondefault(self.definition)
+        self.definition.n = rhs
+        self.definition.i = rhs
+        self.definition.v = rhs
+        self.definition.s = nil
+        self.definition.x = nil
+        self.definition.c = rhs
+        self.definition.t = rhs
+        self.definition.o = rhs
+        self.definition = try_convert_to_smallest_form(self.definition)
+    else
+        self.definition = try_convert_to_default(self.definition)
+        if type(self.definition) ~= "table" then
+            self.definition = { self.definition }
+        end
+
+        if self.definition[1] then
+            self.definition.n = rhs == false and false
+            self.definition.i = rhs == false and false
+            self.definition.v = rhs == false and false
+            self.definition.s = nil
+            self.definition.x = nil
+            self.definition.c = rhs == true and true
+            self.definition.t = rhs == true and true
+            self.definition.o = rhs == true and true
+        elseif rhs == false then
+            self.definition.n = nil
+            self.definition.i = nil
+            self.definition.v = nil
+            self.definition.s = nil
+            self.definition.x = nil
+            self.definition.c = nil
+            self.definition.t = nil
+            self.definition.o = nil
+        else
+            editor.notify("Could not enable All Modes for \"" .. self.name .. "\" because it does not have a single definition", vim.log.levels.ERROR)
+        end
+    end
 
     return self
 end

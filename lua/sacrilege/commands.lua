@@ -40,10 +40,6 @@ local function arrow_command(rhs, block_rhs)
     end
 end
 
-local function popup_command(rhs)
-    return function() if not editor.try_close_popup() then rhs() end end
-end
-
 local function paste(register)
     return function()
         local mode = vim.fn.mode()
@@ -66,50 +62,50 @@ local function supports_lsp(method)
     return function() return editor.supports_lsp_method(0, method) end
 end
 
-M.replayinput = command.new("Replay Input", { editor.send, input = true, modeless = true, c = true, t = true, o = true })
+M.replayinput = command.new("Replay Input", editor.send):requires({ input = true, modeless = true }):all(true)
 
-M.clear_highlights = command.new("Clear Highlights", { "<Cmd>nohl<CR>", c = true })
-M.clear_echo = command.new("Clear Command Line Message", { "<Cmd>echon '\\r\\r'<CR><Cmd>echon ''<CR>", c = true })
-M.stop_blockmode = command.new("Stop Block Mode", { blockmode.stop, c = true })
-M.close_popup = command.new("Close Popup", { editor.try_close_popup, c = true })
+M.clear_highlights = command.new("Clear Highlights", "<Cmd>nohl<CR>"):cmdline(true)
+M.clear_echo = command.new("Clear Command Line Message", "<Cmd>echon '\\r\\r'<CR><Cmd>echon ''<CR>"):cmdline(true)
+M.stop_blockmode = command.new("Stop Block Mode", blockmode.stop):cmdline(true)
+M.close_popup = command.new("Close Popup", editor.try_close_popup):cmdline(true)
 M.escape = command.new("Escape", sacrilege.escape)
 
-M.interrupt = command.new("Interrupt", { sacrilege.interrupt, v = false, c = true })
-M.tab = command.new("Indent / Snippet Jump Next", { sacrilege.tab, n = false, c = true })
-M.shifttab = command.new("Unindent / Snippet Jump Previous", { sacrilege.shifttab, n = false })
-M.up = command.new("Up / Select Previous Completion", { sacrilege.up, n = false, c = true })
-M.down = command.new("Down / Select Next Completion", { sacrilege.down, n = false, c = true })
-M.left = command.new("Left / Wild Menu Left", { c = function() editor.send(vim.fn.pumvisible() == 1 and "<C-Y><Left>" or "<Left>") end })
-M.right = command.new("Right / Wild Menu Right", { c = function() editor.send(vim.fn.pumvisible() == 1 and "<C-Y><Right>" or "<Right>") end })
-M.popup = command.new("Popup Menu", { s = "<C-\\><C-G>gv<Cmd>:popup! PopUp<CR>" })
+M.interrupt = command.new("Interrupt", sacrilege.interrupt):visual(false):cmdline(true)
+M.tab = command.new("Indent / Snippet Jump Next", sacrilege.tab):normal(false):cmdline(true)
+M.shifttab = command.new("Unindent / Snippet Jump Previous", sacrilege.shifttab):normal(false)
+M.up = command.new("Up / Select Previous Completion", sacrilege.up):normal(false):cmdline(true)
+M.down = command.new("Down / Select Next Completion", sacrilege.down):normal(false):cmdline(true)
+M.left = command.new("Left / Wild Menu Left"):cmdline(function() editor.send(vim.fn.pumvisible() == 1 and "<C-Y><Left>" or "<Left>") end)
+M.right = command.new("Right / Wild Menu Right"):cmdline(function() editor.send(vim.fn.pumvisible() == 1 and "<C-Y><Right>" or "<Right>") end)
+M.popup = command.new("Popup Menu"):select("<C-\\><C-G>gv<Cmd>:popup! PopUp<CR>")
 
-M.command_palette = command.new("Command Palette...", { ui.command_palette, c = true })
+M.command_palette = command.new("Command Palette...", ui.command_palette):cmdline(true)
 M.cmdline = command.new("Command Line Mode", "<Esc>:")
-M.terminal = command.new("Terminal", { vim.cmd.terminal, c = true })
-M.diagnostics = command.new("Toggle Diagnostics", { vim.diagnostic.setloclist, c = true })
-M.diagnostic = command.new("Toggle Diagnostic Popup", popup_command(function() vim.diagnostic.open_float({ scope = 'cursor', focus = false }) end))
+M.terminal = command.new("Terminal", vim.cmd.terminal):cmdline(true)
+M.diagnostics = command.new("Toggle Diagnostics", vim.diagnostic.setloclist):cmdline(true)
+M.diagnostic = (M.close_popup / command.new("Open Diagnostic Popup", function() vim.diagnostic.open_float({ scope = 'cursor', focus = false }) end)):named("Toggle Diagnostic Popup")
 M.messages = command.new("Toggle Message Log", function() editor.send("<C-\\><C-N>:messages<CR>") end)
 M.checkhealth = command.new("Check Health", "<Cmd>checkhealth<CR>")
 
-M.new = command.new("New Tab", { vim.cmd.tabnew, c = true })
-M.open = command.new("Open...", { ui.browse, c = true })
+M.new = command.new("New Tab", vim.cmd.tabnew):cmdline(true)
+M.open = command.new("Open...", ui.browse):cmdline(true)
 M.save = command.new("Save", ui.save)
 M.saveas = command.new("Save As...", ui.saveas)
 M.saveall = command.new("Save All", "<Cmd>silent! wa<CR>")
 M.split = command.new("Split Down", vim.cmd.split)
 M.vsplit = command.new("Split Right", vim.cmd.vsplit)
 M.close = command.new("Close", "<Cmd>confirm quit<CR>")
-M.quit = command.new("Quit", { "<Cmd>confirm quitall<CR>", c = true })
+M.quit = command.new("Quit", "<Cmd>confirm quitall<CR>"):cmdline(true)
 
 M.tabprevious = command.new("Previous Tab", "<Cmd>tabprevious<CR>")
 M.tabnext = command.new("Next Tab", "<Cmd>tabnext<CR>")
 
-M.select = command.new("Select Character", { i = select_command("<C-O>v<Arrow><C-G>"), v = arrow_command("<Arrow>", "<C-V>gv<Arrow>v"), arrow = true })
-M.selectword = command.new("Select Word", { i = select_command("<C-O>v<C-Arrow><C-G>"), v = arrow_command("<C-Arrow>", "<C-V>gv<C-Arrow>v"), arrow = true })
-M.blockselect = command.new("Block Select Character", { i = select_command("<C-O><C-V><Arrow><C-G>"), v = arrow_command("<C-V><Arrow><C-G>", "<Arrow>"), arrow = true })
-M.blockselectword = command.new("Block Select Word", { i = select_command("<C-O><C-V><C-Arrow><C-G>"), v = arrow_command("<C-V><C-Arrow><C-G>", "<C-Arrow>"), arrow = true })
-M.selectall = command.new("Select All", { n = "ggVG", i = "<C-Home><C-O>VG", v = "gg0oG$" })
-M.stopselect = command.new("Stop Selection", { v = function() editor.send("<Esc>") sacrilege.interrupt() end })
+M.select = command.new("Select Character"):insert(select_command("<C-O>v<Arrow><C-G>")):visual(arrow_command("<Arrow>", "<C-V>gv<Arrow>v")):requires({ arrow = true })
+M.selectword = command.new("Select Word"):insert(select_command("<C-O>v<C-Arrow><C-G>")):visual(arrow_command("<C-Arrow>", "<C-V>gv<C-Arrow>v")):requires({ arrow = true })
+M.blockselect = command.new("Block Select Character"):insert(select_command("<C-O><C-V><Arrow><C-G>")):visual(arrow_command("<C-V><Arrow><C-G>", "<Arrow>")):requires({ arrow = true })
+M.blockselectword = command.new("Block Select Word"):insert(select_command("<C-O><C-V><C-Arrow><C-G>")):visual(arrow_command("<C-V><C-Arrow><C-G>", "<C-Arrow>")):requires({ arrow = true })
+M.selectall = command.new("Select All"):normal("ggVG"):insert("<C-Home><C-O>VG"):visual("gg0oG$")
+M.stopselect = command.new("Stop Selection"):visual(function() editor.send("<Esc>") sacrilege.interrupt() end)
 M.movecursor = M.stopselect + M.replayinput
 
 M.mouseselect = command.new("Set Selection End", "<S-LeftMouse>")
@@ -118,27 +114,27 @@ M.mousestartblockselect = command.new("Start Block Selection", "<4-LeftMouse>")
 M.mousedragselect = command.new("Drag Select", "<LeftDrag>")
 M.mousestopselect = command.new("Stop Selection", "")
 
-M.autopair = command.new("Insert Character Pair", { i = autopair.insert, v = autopair.surround, input = true })
-M.autounpair = command.new("Delete Character Pair", { i = function(lhs) if not autopair.remove() then editor.send(lhs) end end, input = true })
+M.autopair = command.new("Insert Character Pair"):insert(autopair.insert):visual(autopair.surround):requires({ input = true })
+M.autounpair = command.new("Delete Character Pair"):insert(function(lhs) if not autopair.remove() then editor.send(lhs) end end):requires({ input = true })
 
-M.completion_abort = command.new("Abort Completion", { completion.abort, n = false, v = false, c = true })
-M.completion_trigger = command.new("Trigger Completion", { completion.trigger, n = false, v = false, c = true })
-M.completion_confirm = command.new("Confirm Completion", { function() return completion.confirm({ select = false }) end, n = false, v = false, c = true })
-M.completion_selectconfirm = command.new("Select and Confirm Completion", { function() return completion.confirm({ select = true }) end, n = false, v = false, c = true })
-M.completion_select_previous = command.new("Select Previous Completion", { function() return completion.select(-1) end, n = false, v = false, c = true })
-M.completion_select_next = command.new("Select Next Completion", { function() return completion.select(1) end, n = false, v = false, c = true })
+M.completion_abort = command.new("Abort Completion"):insert(completion.abort):cmdline(true)
+M.completion_trigger = command.new("Trigger Completion"):insert(completion.trigger):cmdline(true)
+M.completion_confirm = command.new("Confirm Completion"):insert(function() return completion.confirm({ select = false }) end):cmdline(true)
+M.completion_selectconfirm = command.new("Select and Confirm Completion"):insert(function() return completion.confirm({ select = true }) end):cmdline(true)
+M.completion_select_previous = command.new("Select Previous Completion"):insert(function() return completion.select(-1) end):cmdline(true)
+M.completion_select_next = command.new("Select Next Completion"):insert(function() return completion.select(1) end):cmdline(true)
 
-M.snippet_jump_previous = command.new("Snippet Jump Previous", { v = function() return snippet.jump(-1) end })
-M.snippet_jump_next = command.new("Snippet Jump Next", { v = function() return snippet.jump(1) end })
-M.snippet_stop = command.new("Snippet Stop", { v = snippet.stop })
+M.snippet_jump_previous = command.new("Snippet Jump Previous"):visual(function() return snippet.jump(-1) end)
+M.snippet_jump_next = command.new("Snippet Jump Next"):visual(function() return snippet.jump(1) end)
+M.snippet_stop = command.new("Snippet Stop"):visual(snippet.stop)
 
 M.undo = command.new("Undo", vim.cmd.undo)
 M.redo = command.new("Redo", vim.cmd.redo)
-M.copy = command.new("Copy", { v = "\"+y" })
-M.cut = command.new("Cut", { v = "\"+x" })
-M.paste = command.new("Paste", { n = "\"+gP", i = "<C-G>u<C-\\><C-O>\"+gP", v = paste("+"), c = "<C-R>+", o = "<C-C>\"+gP<C-\\><C-G>" })
-M.delete = command.new("Delete", { v = "\"_d" })
-M.deleteword = command.new("Delete Word", { n = "cvb", i = "<C-\\><C-N>cvb", v = "\"_d" })
+M.copy = command.new("Copy"):visual("\"+y")
+M.cut = command.new("Cut"):visual("\"+x")
+M.paste = command.new("Paste"):normal("\"+gP"):insert("<C-G>u<C-\\><C-O>\"+gP"):visual(paste("+")):cmdline("<C-R>+"):pending("<C-C>\"+gP<C-\\><C-G>")
+M.delete = command.new("Delete"):visual("\"_d")
+M.deleteword = command.new("Delete Word"):normal("cvb"):insert("<C-\\><C-N>cvb"):visual("\"_d")
 
 M.find = command.new("Find...", ui.find)
 M.find_previous = command.new("Find Previous", "<C-\\><C-N><Left>gN")
@@ -148,14 +144,12 @@ M.find_in_files = command.new("Find in Files...", ui.find_in_files)
 M.replace_in_files  = command.new("Replace in Files...", ui.replace_in_files)
 M.line = command.new("Go to Line...", ui.go_to_line)
 
-M.indent = command.new("Indent", { i = "<C-T>", s = "<C-O>>gv", x = "<C-G><C-O>>gv" })
-M.unindent = command.new("Unindent", { i = "<C-D>", s = "<C-O><lt>gv", x = "<C-G><C-O><lt>gv" })
-M.comment = command.new("Toggle Line Comment",
-{
-    i = function() editor.send("<C-\\><C-N>") editor.send("gcci", true) end,
-    s = function() editor.send("<C-G>") editor.send("gc", true) editor.send("<C-\\><C-N>gv") end,
-    x = function() editor.send("gc", true) editor.send("<C-\\><C-N>gv") end
-})
+M.indent = command.new("Indent"):insert("<C-T>"):visual("<C-G><C-O>>gv"):select("<C-O>>gv")
+M.unindent = command.new("Unindent"):insert("<C-D>"):visual("<C-G><C-O><lt>gv"):select("<C-O><lt>gv")
+M.comment = command.new("Toggle Line Comment")
+                   :insert(function() editor.send("<C-\\><C-N>") editor.send("gcci", true) end)
+                   :visual(function() editor.send("gc", true) editor.send("<C-\\><C-N>gv") end)
+                   :select(function() editor.send("<C-G>") editor.send("gc", true) editor.send("<C-\\><C-N>gv") end)
 
 M.spellcheck = command.new("Toggle Spell Check", function() vim.o.spell = not vim.o.spell end)
 M.spellerror_previous = command.new("Go to Previous Spelling Error", "<C-\\><C-N><Left>[s")
@@ -176,32 +170,19 @@ M.debug_test = command.new("Debug Test", neotest:try(function(neotest) neotest.r
 M.stop_test = command.new("Stop Test", neotest:try(function(neotest) neotest.run.stop() end))
 M.attach_test = command.new("Attach Test", neotest:try(function(neotest) neotest.run.attach() end))
 
-M.lsp.format = command.new("Format Document",
-{
-    function() vim.lsp.buf.format({ async = true }) end, v = false
-}):when(supports_lsp(methods.textDocument_formatting))
+M.lsp.format = command.new("Format Document", function() vim.lsp.buf.format({ async = true }) end):visual(false)
+                      :when(supports_lsp(methods.textDocument_formatting))
 
-M.reindent = command.new("Reindent Document",
-{
-    function()
-        editor.send(editor.mapmode() == "i" and "<C-\\><C-N>gg=G" or "gg=G")
-    end,
-    v = false
-})
+M.reindent = command.new("Reindent Document", function() editor.send(editor.mapmode() == "i" and "<C-\\><C-N>gg=G" or "gg=G") end):visual(false)
 
 M.format = M.lsp.format / M.reindent
 
-M.lsp.format_selection = command.new("Format Selection",
-{
-    v = function() vim.lsp.buf.format({ async = true, range = editor.get_selection_range() }) end
-}):when(supports_lsp(methods.textDocument_rangeFormatting))
+M.lsp.format_selection = command.new("Format Selection")
+                                :visual(function() vim.lsp.buf.format({ async = true, range = editor.get_selection_range() }) end)
+                                :when(supports_lsp(methods.textDocument_rangeFormatting))
 
-M.reindent_selection = command.new("Reindent Selection",
-{
-    v = function()
-        editor.send(editor.mapmode() == "x" and "<C-G><C-O>=gv" or "<C-O>=gv")
-    end
-})
+M.reindent_selection = command.new("Reindent Selection")
+                              :visual(function() editor.send(editor.mapmode() == "x" and "<C-G><C-O>=gv" or "<C-O>=gv") end)
 
 M.format_selection = M.lsp.format_selection / M.reindent_selection
 
