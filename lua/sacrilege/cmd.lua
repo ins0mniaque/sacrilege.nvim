@@ -24,12 +24,21 @@ local function parse(table, key)
 
         if cmdkey then
             local othercmd = rawget(table, cmdkey)
+
             if command.is(othercmd) then
                 if cmd then
                     cmd = cmd[op](cmd, othercmd)
                 else
                     cmd = othercmd
                 end
+            else
+                if cmd or right then
+                    -- TODO: Add to health check issues instead
+                    editor.notify("Missing command \"" .. cmdkey .. "\" of composite command \"" .. key .. "\"", vim.log.levels.WARN)
+                end
+
+                cmd   = nil
+                right = nil
             end
         end
 

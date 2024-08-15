@@ -13,10 +13,10 @@ function M.keys()
         interrupt = "<C-C>",
         tab = "<Tab>",
         shifttab = "<S-Tab>",
-        up = "<Up>",
-        down = "<Down>",
-        left = "<Left>",
-        right = "<Right>",
+        completion_select_previous_or_replayinput = "<Up>",
+        completion_select_next_or_replayinput = "<Down>",
+        stopselect_and_replayinput = { "<Up>", "<Down>" },
+        wildmenu_confirm_or_replayinput = { "<Left>", "<Right>" },
         popup = "<RightMouse>",
 
         command_palette = "<C-P>",
@@ -54,7 +54,7 @@ function M.keys()
         mousestopselect = "<M-LeftRelease>",
 
         autopair = { "(", ")", "[", "]", "{", "}", "\"", "'" },
-        autounpair = "<BS>",
+        autounpair_or_replayinput = "<BS>",
 
         completion_abort = false,
         completion_trigger = "<C-Space>",

@@ -69,14 +69,11 @@ M.clear_echo = command.new("Clear Command Line Message", "<Cmd>echon '\\r\\r'<CR
 M.stop_blockmode = command.new("Stop Block Mode", blockmode.stop):cmdline(true)
 M.close_popup = command.new("Close Popup", editor.try_close_popup):cmdline(true)
 M.escape = command.new("Escape", sacrilege.escape)
+M.wildmenu_confirm = command.new("Confirm Wild Menu"):cmdline(completion.confirm(opts)):when(function() return vim.fn.wildmenumode() and vim.fn.pumvisible() == 1 end)
 
 M.interrupt = command.new("Interrupt", sacrilege.interrupt):visual(false):cmdline(true)
 M.tab = command.new("Indent / Snippet Jump Next", sacrilege.tab):normal(false):cmdline(true)
 M.shifttab = command.new("Unindent / Snippet Jump Previous", sacrilege.shifttab):normal(false)
-M.up = command.new("Up / Select Previous Completion", sacrilege.up):normal(false):cmdline(true)
-M.down = command.new("Down / Select Next Completion", sacrilege.down):normal(false):cmdline(true)
-M.left = command.new("Left / Wild Menu Left"):cmdline(function() editor.send(vim.fn.pumvisible() == 1 and "<C-Y><Left>" or "<Left>") end)
-M.right = command.new("Right / Wild Menu Right"):cmdline(function() editor.send(vim.fn.pumvisible() == 1 and "<C-Y><Right>" or "<Right>") end)
 M.popup = command.new("Popup Menu"):select("<C-\\><C-G>gv<Cmd>:popup! PopUp<CR>")
 
 M.command_palette = command.new("Command Palette...", ui.command_palette):cmdline(true)
@@ -115,7 +112,7 @@ M.mousedragselect = command.new("Drag Select", "<LeftDrag>")
 M.mousestopselect = command.new("Stop Selection", "")
 
 M.autopair = command.new("Insert Character Pair"):insert(autopair.insert):visual(autopair.surround):requires({ input = true })
-M.autounpair = command.new("Delete Character Pair"):insert(function(lhs) if not autopair.remove() then editor.send(lhs) end end):requires({ input = true })
+M.autounpair = command.new("Delete Character Pair"):insert(autopair.remove):requires({ input = true })
 
 M.completion_abort = command.new("Abort Completion"):insert(completion.abort):cmdline(true)
 M.completion_trigger = command.new("Trigger Completion"):insert(completion.trigger):cmdline(true)

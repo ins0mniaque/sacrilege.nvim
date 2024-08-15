@@ -382,28 +382,4 @@ function M.shifttab()
     end
 end
 
-function M.up()
-    if completion.select(-1) then return end
-
-    local mode = editor.mapmode()
-
-    if mode == "s" or mode == "x" then
-        editor.send("<Esc><Up>")
-    else
-        editor.send("<Up>")
-    end
-end
-
-function M.down()
-    if completion.select(1) then return end
-
-    local mode = editor.mapmode()
-
-    if mode == "s" or mode == "x" then
-        editor.send("<Esc><Down>")
-    else
-        editor.send("<Down>")
-    end
-end
-
 return M
