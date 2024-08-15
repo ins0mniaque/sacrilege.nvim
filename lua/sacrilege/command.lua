@@ -48,6 +48,8 @@ function M:override(definition)
     else
         self.definition = definition
     end
+
+    return self
 end
 
 
@@ -251,9 +253,9 @@ function M:default(rhs)
         end
 
         if self.definition[1] then
-            self.definition.n = rhs == false and false
-            self.definition.i = rhs == false and false
-            self.definition.v = rhs == false and false
+            self.definition.n = rhs == false and false or nil
+            self.definition.i = rhs == false and false or nil
+            self.definition.v = rhs == false and false or nil
         elseif rhs == false then
             self.definition.n = nil
             self.definition.i = nil
@@ -278,7 +280,7 @@ function M:normal(rhs)
         end
 
         if self.definition[1] then
-            self.definition.n = rhs == false and false
+            self.definition.n = rhs == false and false or nil
         elseif rhs == false then
             self.definition.n = nil
         else
@@ -301,7 +303,7 @@ function M:insert(rhs)
         end
 
         if self.definition[1] then
-            self.definition.i = rhs == false and false
+            self.definition.i = rhs == false and false or nil
         elseif rhs == false then
             self.definition.i = nil
         else
@@ -329,9 +331,9 @@ function M:visual(rhs)
 
         if self.definition[1] then
             if self.definition.s then
-                self.definition.x = rhs == true and true
+                self.definition.x = rhs == true and true or nil
             else
-                self.definition.v = rhs == false and false
+                self.definition.v = rhs == false and false or nil
             end
         elseif rhs == false then
             if self.definition.s then
@@ -363,7 +365,7 @@ function M:select(rhs)
         end
 
         if self.definition[1] then
-            self.definition.s = rhs == true and true
+            self.definition.s = rhs == true and true or nil
             if self.definition.v then
                 self.definition.x = self.definition.v
                 self.definition.v = nil
@@ -394,7 +396,7 @@ function M:cmdline(rhs)
         end
 
         if self.definition[1] then
-            self.definition.c = rhs == true and true
+            self.definition.c = rhs == true and true or nil
         elseif rhs == false then
             self.definition.c = nil
         else
@@ -417,7 +419,7 @@ function M:terminal(rhs)
         end
 
         if self.definition[1] then
-            self.definition.t = rhs == true and true
+            self.definition.t = rhs == true and true or nil
         elseif rhs == false then
             self.definition.t = nil
         else
@@ -440,7 +442,7 @@ function M:pending(rhs)
         end
 
         if self.definition[1] then
-            self.definition.o = rhs == true and true
+            self.definition.o = rhs == true and true or nil
         elseif rhs == false then
             self.definition.o = nil
         else
@@ -470,14 +472,14 @@ function M:all(rhs)
         end
 
         if self.definition[1] then
-            self.definition.n = rhs == false and false
-            self.definition.i = rhs == false and false
-            self.definition.v = rhs == false and false
+            self.definition.n = rhs == false and false or nil
+            self.definition.i = rhs == false and false or nil
+            self.definition.v = rhs == false and false or nil
             self.definition.s = nil
             self.definition.x = nil
-            self.definition.c = rhs == true and true
-            self.definition.t = rhs == true and true
-            self.definition.o = rhs == true and true
+            self.definition.c = rhs == true and true or nil
+            self.definition.t = rhs == true and true or nil
+            self.definition.o = rhs == true and true or nil
         elseif rhs == false then
             self.definition.n = nil
             self.definition.i = nil
