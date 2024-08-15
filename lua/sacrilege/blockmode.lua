@@ -57,7 +57,7 @@ function M.stop()
 
     local cursor = vim.api.nvim_win_get_cursor(0)
 
-    editor.send("<C-\\><C-N>gv\"_d<Esc>i")
+    editor.send("<C-\\><C-N>gv\"_d<Esc>")
 
     -- BUG: This is too early sometimes...
     vim.defer_fn(function() vim.api.nvim_win_set_cursor(0, cursor) end, 0)
@@ -77,10 +77,12 @@ function M.setup()
     local group     = vim.api.nvim_create_augroup("sacrilege/blockmode", { })
 
     vim.on_key(function(key, typed)
-        if (mode == "\19" and #typed == 1 and typed == key) or (mode == "\22" and typed == backspace) then
+        if mode == "\19" and #typed == 1 and (typed == key or typed == backspace) and typed ~= "\7" then
             sel_start = vim.fn.getpos("v")
             sel_end = vim.fn.getpos(".")
             blockmodekey = typed
+
+            vim.schedule(start)
         end
     end, namespace)
 
@@ -91,8 +93,8 @@ function M.setup()
         callback = function(event)
             mode = vim.fn.mode()
 
-            if event.match == "n:i" then
-                start()
+            if blockmode and event.match == "\22:n" then
+                editor.send("gv<C-G>")
             end
         end
     })
