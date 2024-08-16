@@ -67,6 +67,16 @@ function M.supports_lsp_method(bufnr, method)
     return false
 end
 
+function M.get_selection()
+    return vim.fn.getpos("v"), vim.fn.getpos(".")
+end
+
+function M.set_selection(start, cursor)
+    vim.fn.setpos('.', start)
+    vim.cmd("normal! \22")
+    vim.fn.setpos('.', cursor)
+end
+
 function M.get_selected_text()
     local s_start = vim.fn.getpos("v")
     local s_end = vim.fn.getpos(".")

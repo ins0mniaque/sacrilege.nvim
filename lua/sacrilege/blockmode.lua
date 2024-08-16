@@ -73,18 +73,14 @@ local function start()
             sel_end[3] = sel_end[3] - 1 + offset
         end
 
-        vim.fn.setpos('.', sel_start)
-        vim.cmd("normal! \22")
-        vim.fn.setpos('.', sel_end)
+        editor.set_selection(sel_start, sel_end)
         editor.send("<C-G>")
 
         delayed = false
 
         vim.schedule(function()
             if vim.fn.mode() == "i" then
-                vim.fn.setpos('.', sel_start)
-                vim.cmd("normal! \22")
-                vim.fn.setpos('.', sel_end)
+                editor.set_selection(sel_start, sel_end)
                 editor.send("<C-G>")
 
                 delayed = true
@@ -121,8 +117,7 @@ function M.stop()
 end
 
 function M.paste(register)
-    sel_start = vim.fn.getpos("v")
-    sel_end = vim.fn.getpos(".")
+    sel_start, sel_end = editor.get_selection()
 
     reorder_selection()
 
@@ -148,9 +143,7 @@ function M.paste(register)
     sel_start[3] = sel_end[3] + 1
     sel_end[3] = sel_start[3] + 1
 
-    vim.fn.setpos('.', sel_start)
-    vim.cmd("normal! \22")
-    vim.fn.setpos('.', sel_end)
+    editor.set_selection(sel_start, sel_end)
     editor.send("<C-G>")
 
     -- TODO: Fix selection
@@ -167,8 +160,7 @@ function M.setup()
         if vim.fn.mode() ~= "\19" then return end
 
         if ((#typed == 1 and typed == key) or typed == backspace) and vim.fn.char2nr(typed) >= 32 then
-            sel_start = vim.fn.getpos("v")
-            sel_end = vim.fn.getpos(".")
+            sel_start, sel_end = editor.get_selection()
             blockmodekey = typed
             exitblockmode = false
 
