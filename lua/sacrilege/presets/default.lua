@@ -12,7 +12,7 @@ function M.keys()
         escape = false,
         interrupt = "<C-C>",
         tab = "<Tab>",
-        shifttab = "<S-Tab>",
+        snippet_jump_previous_or_unindent = "<S-Tab>",
         completion_select_previous_or_replayinput = "<Up>",
         completion_select_next_or_replayinput = "<Down>",
         stopselect_and_replayinput = { "<Up>", "<Down>" },

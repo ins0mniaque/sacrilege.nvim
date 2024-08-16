@@ -368,18 +368,4 @@ function M.tab()
     end
 end
 
-function M.shifttab()
-    if snippet.jump(-1) then return end
-
-    local mode = editor.mapmode()
-
-    if mode == "i" then
-        editor.send("<C-D>")
-    elseif mode == "s" or mode == "x" then
-        editor.send("<C-O><lt>gv")
-    else
-        editor.send("<S-Tab>")
-    end
-end
-
 return M

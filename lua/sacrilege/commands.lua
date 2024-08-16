@@ -73,7 +73,6 @@ M.escape = command.new("Escape", sacrilege.escape)
 M.interrupt = command.new("Interrupt", sacrilege.interrupt):visual(false):cmdline(true)
 
 M.tab = command.new("Indent / Snippet Jump Next", sacrilege.tab):normal(false):cmdline(true)
-M.shifttab = command.new("Unindent / Snippet Jump Previous", sacrilege.shifttab):normal(false)
 M.popup = command.new("Popup Menu"):select("<C-\\><C-G>gv<Cmd>:popup! PopUp<CR>")
 
 M.command_palette = command.new("Command Palette...", ui.command_palette):cmdline(true)
