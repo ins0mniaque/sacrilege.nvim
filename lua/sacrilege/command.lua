@@ -675,46 +675,6 @@ local function parse(name, definition, key, action, context)
             local and_command = ands[mode]
             local or_command  = ors[mode]
 
-            -- TODO: Allow v mode to chain to x/s modes and vice versa
-            -- BUG:  This is mapping both s/x and v, messing things up...
-            -- if not and_command and not or_command then
-            --     if mode == "v" then
-            --         if ands["x"] or ands["s"] then
-            --             local x = ands["x"]
-            --             local s = ands["s"]
-            --             and_command = function()
-            --                 if editor.mapmode() == "x" then
-            --                     if x then return x() ~= false end
-            --                 else
-            --                     if s then return s() ~= false end
-            --                 end
-            --
-            --                 return false
-            --             end
-            --         end
-            --
-            --         if ors["x"] or ors["s"] then
-            --             local x = ors["x"]
-            --             local s = ors["s"]
-            --             or_command = function()
-            --                 if editor.mapmode() == "x" then
-            --                     if x then return x() ~= false end
-            --                 else
-            --                     if s then return s() ~= false end
-            --                 end
-            --
-            --                 return false
-            --             end
-            --         end
-            --     elseif mode == "s" then
-            --         and_command = ands["v"]
-            --         or_command  = ors["v"]
-            --     elseif mode == "x" then
-            --         and_command = ands["v"]
-            --         or_command  = ors["v"]
-            --     end
-            -- end
-
             if and_command then
                 local modeless = (modeless and not rhs) or (context.modeless and context.modeless[mode] or false)
 
@@ -770,6 +730,45 @@ local function parse(name, definition, key, action, context)
                             (not definition[1] and (not definition[1] and definition[mode]))
 
             local rhs = has_rhs and (definition[1] or definition[mode])
+
+            if not has_rhs then
+                if mode == "v" then
+                    local has_x_rhs = (definition[1] and definition["x"]) or
+                                      (not definition[1] and (not definition[1] and definition["x"]))
+                    local has_s_rhs = (definition[1] and definition["s"]) or
+                                      (not definition[1] and (not definition[1] and definition["s"]))
+                    if has_x_rhs or has_s_rhs then
+                        local rhs_x = has_x_rhs and as_func(definition[1] or definition["x"])
+                        local rhs_s = has_s_rhs and as_func(definition[1] or definition["s"])
+
+                        rhs = function()
+                            if editor.mapmode() == "x" then
+                                if rhs_x then return rhs_x() ~= false end
+                            else
+                                if rhs_s then return rhs_s() ~= false end
+                            end
+
+                            return false
+                        end
+                    end
+                elseif mode == "s" then
+                    local has_v_rhs = (definition[1] and definition["v"] ~= false) or
+                                      (not definition[1] and (not definition[1] and definition["v"]))
+                    if has_v_rhs then
+                        rhs = has_v_rhs and as_func(definition[1] or definition["v"])
+                    elseif contextless then
+                        return
+                    end
+                elseif mode == "x" then
+                    local has_v_rhs = (definition[1] and definition["v"] ~= false) or
+                                      (not definition[1] and (not definition[1] and definition["v"]))
+                    if has_v_rhs then
+                        rhs = has_v_rhs and as_func(definition[1] or definition["v"])
+                    elseif contextless then
+                        return
+                    end
+                end
+            end
 
             expand_arrow(map_mode_action, mode, key, rhs, { desc = name }, definition)
         end

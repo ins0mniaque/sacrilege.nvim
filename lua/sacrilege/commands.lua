@@ -71,8 +71,6 @@ M.close_popup = command.new("Close Popup", editor.try_close_popup):cmdline(true)
 M.escape = command.new("Escape", sacrilege.escape)
 M.interrupt = command.new("Interrupt", sacrilege.interrupt):visual(false):cmdline(true)
 M.inserttab = command.new("Insert Tab"):visual("<Space><BS><Tab>")
-
-M.tab = command.new("Indent / Snippet Jump Next", sacrilege.tab):normal(false):cmdline(true)
 M.popup = command.new("Popup Menu"):select("<C-\\><C-G>gv<Cmd>:popup! PopUp<CR>")
 
 M.command_palette = command.new("Command Palette...", ui.command_palette):cmdline(true)

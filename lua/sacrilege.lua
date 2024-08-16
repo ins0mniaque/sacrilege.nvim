@@ -349,23 +349,4 @@ function M.interrupt()
     end
 end
 
-function M.tab()
-    if completion.confirm({ select = true }) then return end
-    if snippet.jump(1) then return end
-
-    local mode = editor.mapmode()
-
-    if mode == "s" or mode == "x" then
-        if vim.fn.getpos("v")[2] ~= vim.fn.getpos(".")[2] then
-            editor.send("<C-O>>gv")
-        else
-            editor.send("<Space><BS><Tab>")
-        end
-    elseif mode == "c" then
-        completion.trigger()
-    else
-        editor.send("<Tab>")
-    end
-end
-
 return M

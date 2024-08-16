@@ -11,9 +11,8 @@ function M.keys()
         cancel = "<Esc>",
         escape = false,
         interrupt = "<C-C>",
-        tab = "<Tab>",
-        -- snippet_jump_next_or_multilineindent_or_inserttab = "<Tab>", -- NOTE: Requires fixing command v <=> s/x support
-        -- cmdline_completion_trigger_or_replayinput = "<Tab>", -- NOTE: Requires fixing snippet_jump_next_or_multilineindent_or_inserttab
+        snippet_jump_next_or_multilineindent_or_inserttab = "<Tab>",
+        cmdline_completion_trigger_or_replayinput = "<Tab>",
         snippet_jump_previous_or_unindent = "<S-Tab>",
         completion_select_previous_or_replayinput = "<Up>",
         completion_select_next_or_replayinput = "<Down>",
@@ -61,8 +60,7 @@ function M.keys()
         completion_abort = false,
         completion_trigger = "<C-Space>",
         completion_confirm_or_replayinput = { "<Space>", "<CR>" },
-        completion_selectconfirm_or_replayinput = "<S-CR>",
-        -- completion_selectconfirm_or_replayinput = { "<S-CR>", "<Tab>" }, -- NOTE: Requires fixing snippet_jump_next_or_multilineindent_or_inserttab
+        completion_selectconfirm_or_replayinput = { "<S-CR>", "<Tab>" },
         completion_select_previous = false,
         completion_select_next = false,
 
