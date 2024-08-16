@@ -68,10 +68,10 @@ M.clear_highlights = command.new("Clear Highlights", "<Cmd>nohl<CR>"):cmdline(tr
 M.clear_echo = command.new("Clear Command Line Message", "<Cmd>echon '\\r\\r'<CR><Cmd>echon ''<CR>"):cmdline(true)
 M.stop_blockmode = command.new("Stop Block Mode", blockmode.stop):cmdline(true)
 M.close_popup = command.new("Close Popup", editor.try_close_popup):cmdline(true)
-M.escape = command.new("Escape", sacrilege.escape)
 M.wildmenu_confirm = command.new("Confirm Wild Menu"):cmdline(completion.confirm(opts)):when(function() return vim.fn.wildmenumode() and vim.fn.pumvisible() == 1 end)
-
+M.escape = command.new("Escape", sacrilege.escape)
 M.interrupt = command.new("Interrupt", sacrilege.interrupt):visual(false):cmdline(true)
+
 M.tab = command.new("Indent / Snippet Jump Next", sacrilege.tab):normal(false):cmdline(true)
 M.shifttab = command.new("Unindent / Snippet Jump Previous", sacrilege.shifttab):normal(false)
 M.popup = command.new("Popup Menu"):select("<C-\\><C-G>gv<Cmd>:popup! PopUp<CR>")
@@ -92,7 +92,7 @@ M.saveall = command.new("Save All", "<Cmd>silent! wa<CR>")
 M.split = command.new("Split Down", vim.cmd.split)
 M.vsplit = command.new("Split Right", vim.cmd.vsplit)
 M.close = command.new("Close", "<Cmd>confirm quit<CR>")
-M.quit = command.new("Quit", "<Cmd>confirm quitall<CR>"):cmdline(true)
+M.quit = command.new("Quit", "<Cmd>confirm quitall<CR>"):all(true)
 
 M.tabprevious = command.new("Previous Tab", "<Cmd>tabprevious<CR>")
 M.tabnext = command.new("Next Tab", "<Cmd>tabnext<CR>")
