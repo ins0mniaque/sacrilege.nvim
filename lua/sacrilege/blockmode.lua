@@ -73,14 +73,14 @@ local function start()
             sel_end[3] = sel_end[3] - 1 + offset
         end
 
-        editor.set_selection(sel_start, sel_end)
+        editor.set_selection(sel_start, sel_end, "\22")
         editor.send("<C-G>")
 
         delayed = false
 
         vim.schedule(function()
             if vim.fn.mode() == "i" then
-                editor.set_selection(sel_start, sel_end)
+                editor.set_selection(sel_start, sel_end, "\22")
                 editor.send("<C-G>")
 
                 delayed = true
@@ -143,7 +143,7 @@ function M.paste(register)
     sel_start[3] = sel_end[3] + 1
     sel_end[3] = sel_start[3] + 1
 
-    editor.set_selection(sel_start, sel_end)
+    editor.set_selection(sel_start, sel_end, "\22")
     editor.send("<C-G>")
 
     -- TODO: Fix selection
