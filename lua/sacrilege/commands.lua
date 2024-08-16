@@ -68,9 +68,9 @@ M.clear_highlights = command.new("Clear Highlights", "<Cmd>nohl<CR>"):cmdline(tr
 M.clear_echo = command.new("Clear Command Line Message", "<Cmd>echon '\\r\\r'<CR><Cmd>echon ''<CR>"):cmdline(true)
 M.stop_blockmode = command.new("Stop Block Mode", blockmode.stop):cmdline(true)
 M.close_popup = command.new("Close Popup", editor.try_close_popup):cmdline(true)
-M.wildmenu_confirm = command.new("Confirm Wild Menu"):cmdline(completion.confirm(opts)):when(function() return vim.fn.wildmenumode() and vim.fn.pumvisible() == 1 end)
 M.escape = command.new("Escape", sacrilege.escape)
 M.interrupt = command.new("Interrupt", sacrilege.interrupt):visual(false):cmdline(true)
+M.inserttab = command.new("Insert Tab"):visual("<Space><BS><Tab>")
 
 M.tab = command.new("Indent / Snippet Jump Next", sacrilege.tab):normal(false):cmdline(true)
 M.popup = command.new("Popup Menu"):select("<C-\\><C-G>gv<Cmd>:popup! PopUp<CR>")
@@ -119,6 +119,8 @@ M.completion_confirm = command.new("Confirm Completion"):insert(function() retur
 M.completion_selectconfirm = command.new("Select and Confirm Completion"):insert(function() return completion.confirm({ select = true }) end):cmdline(true)
 M.completion_select_previous = command.new("Select Previous Completion"):insert(function() return completion.select(-1) end):cmdline(true)
 M.completion_select_next = command.new("Select Next Completion"):insert(function() return completion.select(1) end):cmdline(true)
+M.cmdline_completion_trigger = M.completion_trigger:clone():insert(false):named("Trigger Command Line Completion")
+M.wildmenu_confirm = M.completion_confirm:clone():when(function() return vim.fn.wildmenumode() and vim.fn.pumvisible() == 1 end):named("Confirm Wild Menu")
 
 M.snippet_jump_previous = command.new("Snippet Jump Previous"):visual(function() return snippet.jump(-1) end)
 M.snippet_jump_next = command.new("Snippet Jump Next"):visual(function() return snippet.jump(1) end)
@@ -141,6 +143,7 @@ M.replace_in_files  = command.new("Replace in Files...", ui.replace_in_files)
 M.line = command.new("Go to Line...", ui.go_to_line)
 
 M.indent = command.new("Indent"):insert("<C-T>"):visual("<C-G><C-O>>gv"):select("<C-O>>gv<C-G>")
+M.multilineindent = M.indent:clone():insert(false):when(function() return vim.fn.getpos("v")[2] ~= vim.fn.getpos(".")[2] end):named("Multi-Line Indent")
 M.unindent = command.new("Unindent"):insert("<C-D>"):visual("<C-G><C-O><lt>gv"):select("<C-O><lt>gv<C-G>")
 M.comment = command.new("Toggle Line Comment")
                    :insert(function() editor.send("<C-\\><C-N>") editor.send("gcci", true) end)

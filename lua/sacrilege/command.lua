@@ -643,7 +643,9 @@ local function unwrap_modes(func)
     end
 end
 
-local function parse(name, definition, key, action)
+local function parse(name, definition, key, action, context)
+    local contextless = context == nil
+
     if type(definition) == "table" then
         local ands = { }
         local ors = { }
@@ -652,31 +654,93 @@ local function parse(name, definition, key, action)
         if definition["and"] then
             modeless = type(definition["and"]) == "table" and (definition["and"].modeless or (type(definition["and"].linked) == "table" and definition["and"].linked.modeless))
 
+            context = context or { }
+
             parse(name, definition["and"], key, unwrap_modes(function(mode, lhs, rhs, opts)
                 ands[mode] = as_func(rhs)
-            end))
+            end), context)
         end
 
         if definition["or"] then
             modeless = type(definition["or"]) == "table" and (definition["or"].modeless or (type(definition["or"].linked) == "table" and definition["or"].linked.modeless))
 
+            context = context or { }
+
             parse(name, definition["or"], key, unwrap_modes(function(mode, lhs, rhs, opts)
                 ors[mode] = as_func(rhs)
-            end))
+            end), context)
         end
 
         local map_mode_action = unwrap_modes(function(mode, lhs, rhs, opts)
             local and_command = ands[mode]
-            local or_command = ors[mode]
+            local or_command  = ors[mode]
 
-            if and_command and (not modeless or rhs) then
-                local capture_rhs = as_func(rhs)
-                rhs = function() return capture_rhs() ~= false and and_command() ~= false end
+            -- TODO: Allow v mode to chain to x/s modes and vice versa
+            -- BUG:  This is mapping both s/x and v, messing things up...
+            -- if not and_command and not or_command then
+            --     if mode == "v" then
+            --         if ands["x"] or ands["s"] then
+            --             local x = ands["x"]
+            --             local s = ands["s"]
+            --             and_command = function()
+            --                 if editor.mapmode() == "x" then
+            --                     if x then return x() ~= false end
+            --                 else
+            --                     if s then return s() ~= false end
+            --                 end
+            --
+            --                 return false
+            --             end
+            --         end
+            --
+            --         if ors["x"] or ors["s"] then
+            --             local x = ors["x"]
+            --             local s = ors["s"]
+            --             or_command = function()
+            --                 if editor.mapmode() == "x" then
+            --                     if x then return x() ~= false end
+            --                 else
+            --                     if s then return s() ~= false end
+            --                 end
+            --
+            --                 return false
+            --             end
+            --         end
+            --     elseif mode == "s" then
+            --         and_command = ands["v"]
+            --         or_command  = ors["v"]
+            --     elseif mode == "x" then
+            --         and_command = ands["v"]
+            --         or_command  = ors["v"]
+            --     end
+            -- end
+
+            if and_command then
+                local modeless = (modeless and not rhs) or (context.modeless and context.modeless[mode] or false)
+
+                context.modeless = context.modeless or { }
+                context.modeless[mode] = modeless
+
+                if rhs then
+                    local capture_rhs = as_func(rhs)
+                    rhs = function() return capture_rhs() ~= false and and_command() ~= false end
+                elseif not contextless or not (context.modeless and context.modeless[mode]) then
+                    rhs = and_command
+                end
             end
 
-            if or_command and (not modeless or rhs) then
-                local capture_rhs = as_func(rhs)
-                rhs = function() return capture_rhs() ~= false or or_command() ~= false end
+            if or_command then
+                local modeless = (modeless and not rhs) or (context.modeless and context.modeless[mode] or false)
+
+                context.modeless = context.modeless or { }
+                context.modeless[mode] = modeless
+
+                if rhs then
+                    local capture_rhs = as_func(rhs)
+                    rhs = function() return capture_rhs() ~= false or or_command() ~= false end
+                elseif not contextless or not (context.modeless and context.modeless[mode]) then
+                    rhs = or_command
+                end
             end
 
             if type(rhs) == "function" then
