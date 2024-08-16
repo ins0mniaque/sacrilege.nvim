@@ -52,7 +52,6 @@ function M:override(definition)
     return self
 end
 
-
 local function copy_modes(definition, linked)
     if type(linked) == "table" then
         if linked[1] then
@@ -128,6 +127,9 @@ function M:named(name)
 
     return self
 end
+
+M.__mul = M.named
+M.__mod = M.named
 
 local function try_convert_to_default(definition)
     if type(definition) == "table" and not definition[1] and not definition.linked then

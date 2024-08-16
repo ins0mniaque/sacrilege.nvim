@@ -79,7 +79,7 @@ M.command_palette = command.new("Command Palette...", ui.command_palette):cmdlin
 M.cmdline = command.new("Command Line Mode", "<Esc>:")
 M.terminal = command.new("Terminal", vim.cmd.terminal):cmdline(true)
 M.diagnostics = command.new("Toggle Diagnostics", vim.diagnostic.setloclist):cmdline(true)
-M.diagnostic = (M.close_popup / command.new("Open Diagnostic Popup", function() vim.diagnostic.open_float({ scope = 'cursor', focus = false }) end)):named("Toggle Diagnostic Popup")
+M.diagnostic = M.close_popup / command.new("Open Diagnostic Popup", function() vim.diagnostic.open_float({ scope = 'cursor', focus = false }) end) % "Toggle Diagnostic Popup"
 M.messages = command.new("Toggle Message Log", function() editor.send("<C-\\><C-N>:messages<CR>") end)
 M.checkhealth = command.new("Check Health", "<Cmd>checkhealth<CR>")
 
@@ -196,7 +196,7 @@ M.rename = M.lsp.rename / M.treesitter.rename
 
 M.lsp.hover = command.new("Hover", vim.lsp.buf.hover):when(supports_lsp(methods.textDocument_hover))
 M.lsp.signature_help = command.new("Signature Help", vim.lsp.buf.signature_help):when(supports_lsp(methods.textDocument_signatureHelp))
-M.hover = (M.close_popup / M.lsp.hover / M.lsp.signature_help):named("Hover")
+M.hover = M.close_popup / M.lsp.hover / M.lsp.signature_help % "Hover"
 
 M.lsp.implementation = command.new("Go to Implementation", vim.lsp.buf.implementation):when(supports_lsp(methods.textDocument_implementation))
 M.implementation = M.lsp.implementation:copy()
@@ -224,6 +224,6 @@ end
 M.lsp.hint = command.new("Toggle Hints", toggle_lsp_inlay_hint):when(supports_lsp(methods.textDocument_inlayHint))
 M.hint = M.lsp.hint:copy()
 
-M.cancel = (M.stop_blockmode / M.completion_abort / M.snippet_stop / M.close_popup / M.escape + M.clear_highlights + M.clear_echo):named("Cancel")
+M.cancel = M.stop_blockmode / M.completion_abort / M.snippet_stop / M.close_popup / M.escape + M.clear_highlights + M.clear_echo % "Cancel"
 
 return M
