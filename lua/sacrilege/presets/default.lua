@@ -12,7 +12,7 @@ function M.keys()
         escape = false,
         interrupt = "<C-C>",
         snippet_jump_next_or_multilineindent_or_inserttab = "<Tab>",
-        cmdline_completion_trigger_or_replayinput = "<Tab>",
+        completion_selectconfirm_or_cmdline_completion_trigger_or_replayinput = "<Tab>",
         snippet_jump_previous_or_unindent = "<S-Tab>",
         completion_select_previous_or_replayinput = "<Up>",
         completion_select_next_or_replayinput = "<Down>",
@@ -60,7 +60,7 @@ function M.keys()
         completion_abort = false,
         completion_trigger = "<C-Space>",
         completion_confirm_or_replayinput = { "<Space>", "<CR>" },
-        completion_selectconfirm_or_replayinput = { "<S-CR>", "<Tab>" },
+        completion_selectconfirm_or_replayinput = "<S-CR>",
         completion_select_previous = false,
         completion_select_next = false,
 
