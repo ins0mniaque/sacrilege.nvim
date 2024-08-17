@@ -24,7 +24,7 @@ function M.new(plugin, root)
                 local module = self.load(modname)
 
                 if module then
-                    func(module, ...)
+                    return func(module, ...)
                 end
             end
         end
