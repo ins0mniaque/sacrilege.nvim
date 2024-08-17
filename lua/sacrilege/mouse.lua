@@ -7,7 +7,7 @@ local possible_scroll = false
 
 function M.setup()
     -- Fix delayed mouse word selection
-    vim.keymap.set("i", "<2-LeftMouse>", "<2-LeftMouse><2-LeftRelease>")
+    vim.keymap.set("i", "<2-LeftMouse>", "<2-LeftMouse><2-LeftRelease>", { desc = "Select Word" })
 
     -- Fix multi-screen mouse selection
     vim.keymap.set({ "n", "i" }, "<S-LeftMouse>", function()
@@ -19,7 +19,7 @@ function M.setup()
         else
             editor.send("<S-LeftMouse>")
         end
-    end)
+    end, { desc = "Set Selection End" })
 
     local group = vim.api.nvim_create_augroup("sacrilege/mouse", { })
 
