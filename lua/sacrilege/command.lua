@@ -746,11 +746,8 @@ local function parse(name, definition, key, action, context)
                         local rhs_s = has_s_rhs and as_func(definition[1] or definition["s"])
 
                         rhs = function()
-                            if editor.mapmode() == "x" then
-                                if rhs_x then return rhs_x() ~= false end
-                            else
-                                if rhs_s then return rhs_s() ~= false end
-                            end
+                            if rhs_s then return rhs_s() ~= false end
+                            if rhs_x then return rhs_x() ~= false end
 
                             return false
                         end
@@ -760,6 +757,11 @@ local function parse(name, definition, key, action, context)
                                       (not definition[1] and (not definition[1] and definition["v"]))
                     if has_v_rhs and not contextless then
                         rhs = has_v_rhs and as_func(definition[1] or definition["v"])
+
+                        if rhs then
+                            local capture_rhs = as_func(rhs)
+                            rhs = function() editor.send("<C-G>") return capture_rhs() ~= false end
+                        end
                     elseif contextless then
                         return
                     end
