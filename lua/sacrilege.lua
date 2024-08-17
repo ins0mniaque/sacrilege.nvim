@@ -9,44 +9,6 @@ local M = { }
 
 local defaults =
 {
-    insertmode = true,
-    blockmode = true,
-    autobreakundo = true,
-    autocomplete = true,
-    completion =
-    {
-        trigger = function(what)
-            if vim.fn.mode() == "c" then
-                completion.wildmenu.trigger()
-            elseif what.line:find("/") and not what.line:find("[%s%(%)%[%]]") then
-                completion.native.trigger.path()
-            elseif vim.bo.omnifunc ~= "" then
-                completion.native.trigger.omni()
-            elseif vim.bo.completefunc ~= "" then
-                completion.native.trigger.user()
-            -- elseif vim.bo.thesaurus ~= "" or vim.bo.thesaurusfunc ~= "" then
-            --     return "thesaurus"
-            -- elseif vim.bo.dictionary ~= "" then
-            --     return "dictionary"
-            -- elseif vim.wo.spell and vim.bo.spelllang ~= "" then
-            --     return "spell"
-            else
-                completion.native.trigger.keyword()
-            end
-        end,
-        native = completion.native,
-        wildmenu = completion.wildmenu
-    },
-    snippet =
-    {
-        expand = vim.snippet and vim.snippet.expand,
-        native = vim.snippet
-    },
-    selection =
-    {
-        mouse = true,
-        virtual = true
-    },
     presets = { "default" }
 }
 
@@ -125,7 +87,7 @@ function M.setup(opts)
         for _, preset in pairs(presets) do
             local ok, result = pcall(require, "sacrilege.presets." .. preset)
             if ok then
-                result.apply(options)
+                options = result.apply(options) or options
             else
                 editor.notify("Preset \"" .. preset .. "\" not found", vim.log.levels.WARN)
             end
