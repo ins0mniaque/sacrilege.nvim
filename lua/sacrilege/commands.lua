@@ -77,7 +77,7 @@ M.command_palette = command.new("Command Palette...", ui.command_palette):cmdlin
 M.cmdline = command.new("Command Line Mode", "<Esc>:")
 M.terminal = command.new("Terminal", vim.cmd.terminal):cmdline(true)
 M.diagnostics = command.new("Toggle Diagnostics", vim.diagnostic.setloclist):cmdline(true)
-M.diagnostic = M.close_popup / command.new("Open Diagnostic Popup", function() vim.diagnostic.open_float({ scope = 'cursor', focus = false }) end) % "Toggle Diagnostic Popup"
+M.diagnostic = "Toggle Diagnostic Popup" .. M.close_popup / command.new("Open Diagnostic Popup", function() vim.diagnostic.open_float({ scope = 'cursor', focus = false }) end)
 M.messages = command.new("Toggle Message Log", function() editor.send("<C-\\><C-N>:messages<CR>") end)
 M.checkhealth = command.new("Check Health", "<Cmd>checkhealth<CR>")
 
@@ -117,8 +117,8 @@ M.completion_confirm = command.new("Confirm Completion"):insert(function() retur
 M.completion_selectconfirm = command.new("Select and Confirm Completion"):insert(function() return completion.confirm({ select = true }) end):cmdline(true)
 M.completion_select_previous = command.new("Select Previous Completion"):insert(function() return completion.select(-1) end):cmdline(true)
 M.completion_select_next = command.new("Select Next Completion"):insert(function() return completion.select(1) end):cmdline(true)
-M.cmdline_completion_trigger = M.completion_trigger:clone():insert(false):named("Trigger Command Line Completion")
-M.wildmenu_confirm = M.completion_confirm:clone():when(function() return vim.fn.wildmenumode() and vim.fn.pumvisible() == 1 end):named("Confirm Wild Menu")
+M.cmdline_completion_trigger = "Trigger Command Line Completion" .. M.completion_trigger:clone():insert(false)
+M.wildmenu_confirm = "Confirm Wild Menu" .. M.completion_confirm:clone():when(function() return vim.fn.wildmenumode() and vim.fn.pumvisible() == 1 end)
 
 M.snippet_jump_previous = command.new("Snippet Jump Previous"):visual(function() return snippet.jump(-1) end)
 M.snippet_jump_next = command.new("Snippet Jump Next"):visual(function() return snippet.jump(1) end)
@@ -141,7 +141,7 @@ M.replace_in_files  = command.new("Replace in Files...", ui.replace_in_files)
 M.line = command.new("Go to Line...", ui.go_to_line)
 
 M.indent = command.new("Indent"):insert("<C-T>"):visual("<C-G><C-O>>gv"):select("<C-O>>gv<C-G>")
-M.multilineindent = M.indent:clone():insert(false):when(function() return vim.fn.getpos("v")[2] ~= vim.fn.getpos(".")[2] end):named("Multi-Line Indent")
+M.multilineindent = "Multi-Line Indent" .. M.indent:clone():insert(false):when(function() return vim.fn.getpos("v")[2] ~= vim.fn.getpos(".")[2] end)
 M.unindent = command.new("Unindent"):insert("<C-D>"):visual("<C-G><C-O><lt>gv"):select("<C-O><lt>gv<C-G>")
 M.comment = command.new("Toggle Line Comment")
                    :insert(function() editor.send("<C-\\><C-N>") editor.send("gcci", true) end)
@@ -201,7 +201,7 @@ M.rename = M.lsp.rename / M.treesitter.rename
 
 M.lsp.hover = command.new("Hover", vim.lsp.buf.hover):when(supports_lsp(methods.textDocument_hover))
 M.lsp.signature_help = command.new("Signature Help", vim.lsp.buf.signature_help):when(supports_lsp(methods.textDocument_signatureHelp))
-M.hover = M.close_popup / M.lsp.hover / M.lsp.signature_help % "Hover"
+M.hover = "Hover" .. M.close_popup / M.lsp.hover / M.lsp.signature_help
 
 M.lsp.implementation = command.new("Go to Implementation", vim.lsp.buf.implementation):when(supports_lsp(methods.textDocument_implementation))
 M.implementation = M.lsp.implementation:copy()
@@ -229,6 +229,6 @@ end
 M.lsp.hint = command.new("Toggle Hints", toggle_lsp_inlay_hint):when(supports_lsp(methods.textDocument_inlayHint))
 M.hint = M.lsp.hint:copy()
 
-M.cancel = M.stop_blockmode / M.completion_abort / M.snippet_stop / M.close_popup / M.escape + M.clear_highlights + M.clear_echo % "Cancel"
+M.cancel = "Cancel" .. M.stop_blockmode / M.completion_abort / M.snippet_stop / M.close_popup / M.escape + M.clear_highlights + M.clear_echo
 
 return M

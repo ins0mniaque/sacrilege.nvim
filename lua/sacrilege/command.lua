@@ -128,8 +128,9 @@ function M:named(name)
     return self
 end
 
-M.__mul = M.named
-M.__mod = M.named
+M.__concat = function(name, self)
+    return self:named(name)
+end
 
 local function try_convert_to_default(definition)
     if type(definition) == "table" and not definition[1] and not definition.linked then
@@ -527,8 +528,7 @@ function M:__band(other)
     return copy
 end
 
-M.__add    = M.__band
-M.__concat = M.__band
+M.__add = M.__band
 
 function M:__bor(other)
     local copy = self:copy()
