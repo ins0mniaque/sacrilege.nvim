@@ -22,7 +22,11 @@ function M.new(name, definition)
 end
 
 function M:copy(name)
-    local definition = { linked = type(self.definition) == "table" and self.definition.linked or self.definition }
+    if type(self.definition) ~= "table" then
+        self.definition = { self.definition }
+    end
+
+    local definition = { linked = self.definition.linked or self.definition }
 
     if type(self.definition) == "table" then
         definition["and"] = self.definition["and"]
