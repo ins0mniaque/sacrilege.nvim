@@ -1,3 +1,4 @@
+local localize = require("sacrilege.localizer").localize
 local editor = require("sacrilege.editor")
 
 local M = { }
@@ -71,7 +72,7 @@ function M.command_palette()
     parse(vim.api.nvim_get_keymap(mode))
     parse(vim.api.nvim_buf_get_keymap(0, mode))
 
-    M.select("Commands", commands, function(l, r) return l:lower() < r:lower() end)
+    M.select(localize("Commands"), commands, function(l, r) return l:lower() < r:lower() end)
 end
 
 function M.browse(directory)
@@ -95,17 +96,17 @@ function M.browse(directory)
         end
     end
 
-    M.select("Open", entries, function(l, r) return l:lower() < r:lower() end)
+    M.select(localize("Open"), entries, function(l, r) return l:lower() < r:lower() end)
 end
 
 function M.find()
-    M.input("Find: ", editor.get_selected_text():gsub("\n", "\\n"), function(text)
+    M.input(localize("Find: "), editor.get_selected_text():gsub("\n", "\\n"), function(text)
         vim.cmd("/" .. text)
     end)
 end
 
 function M.replace()
-    M.input("Replace: ", editor.get_selected_text():gsub("\n", "\\n"), function(old_text)
+    M.input(localize("Replace: "), editor.get_selected_text():gsub("\n", "\\n"), function(old_text)
         vim.cmd("/" .. old_text)
 
         M.input("Replace with: ", old_text, function(new_text)
@@ -115,7 +116,7 @@ function M.replace()
 end
 
 function M.find_in_files()
-    M.input("Find in files: ", editor.get_selected_text():gsub("\n", "\\n"), function(text)
+    M.input(localize("Find in files: "), editor.get_selected_text():gsub("\n", "\\n"), function(text)
         vim.cmd("silent vimgrep " .. text .. " **/*")
         vim.cmd.cwindow()
         vim.cmd.wincmd("p")
@@ -123,7 +124,7 @@ function M.find_in_files()
 end
 
 function M.replace_in_files()
-    M.input("Replace in files: ", editor.get_selected_text():gsub("\n", "\\n"), function(old_text)
+    M.input(localize("Replace in files: "), editor.get_selected_text():gsub("\n", "\\n"), function(old_text)
         vim.cmd("silent vimgrep " .. old_text .. " **/*")
         vim.cmd.cwindow()
         vim.cmd.wincmd("p")
@@ -137,21 +138,21 @@ function M.replace_in_files()
 end
 
 function M.go_to_line()
-    M.input("Line Number: ", function(line)
+    M.input(localize("Line Number: "), function(line)
         vim.api.nvim_win_set_cursor(0, { tonumber(line), 0 })
     end)
 end
 
 function M.save()
     if vim.fn.expand("%") == "" then
-        M.input("Save to: ", vim.cmd.write)
+        M.input(localize("Save to: "), vim.cmd.write)
     else
         vim.cmd.write()
     end
 end
 
 function M.saveas()
-    M.input("Save as: ", vim.cmd.saveas)
+    M.input(localize("Save as: "), vim.cmd.saveas)
 end
 
 return M

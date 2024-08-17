@@ -1,3 +1,4 @@
+local localize = require("sacrilege.localizer").localize
 local editor = require("sacrilege.editor")
 
 local M = { }
@@ -14,7 +15,7 @@ function M.setup(opts)
     if expand then
         vim.api.nvim_create_autocmd("CompleteDonePre",
         {
-            desc = "Expand Snippets",
+            desc = localize("Expand Snippets"),
             group = vim.api.nvim_create_augroup("sacrilege/snippet", { }),
             pattern = "*",
             callback = function()

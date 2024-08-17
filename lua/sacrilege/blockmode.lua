@@ -1,3 +1,4 @@
+local localize = require("sacrilege.localizer").localize
 local editor = require("sacrilege.editor")
 
 local M = { }
@@ -172,7 +173,7 @@ function M.setup()
 
     vim.api.nvim_create_autocmd("CursorHoldI",
     {
-        desc = "End Block Mode",
+        desc = localize("End Block Mode"),
         group = group,
         callback = function(_)
             if vim.fn.mode() == "\19" and exitblockmode then

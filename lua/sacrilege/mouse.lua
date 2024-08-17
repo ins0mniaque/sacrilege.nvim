@@ -1,3 +1,4 @@
+local localize = require("sacrilege.localizer").localize
 local editor = require("sacrilege.editor")
 
 local M = { }
@@ -7,7 +8,7 @@ local possible_scroll = false
 
 function M.setup()
     -- Fix delayed mouse word selection
-    vim.keymap.set("i", "<2-LeftMouse>", "<2-LeftMouse><2-LeftRelease>", { desc = "Select Word" })
+    vim.keymap.set("i", "<2-LeftMouse>", "<2-LeftMouse><2-LeftRelease>", { desc = localize("Select Word") })
 
     -- Fix multi-screen mouse selection
     vim.keymap.set({ "n", "i" }, "<S-LeftMouse>", function()
@@ -19,13 +20,13 @@ function M.setup()
         else
             editor.send("<S-LeftMouse>")
         end
-    end, { desc = "Set Selection End" })
+    end, { desc = localize("Set Selection End") })
 
     local group = vim.api.nvim_create_augroup("sacrilege/mouse", { })
 
     vim.api.nvim_create_autocmd("WinScrolled",
     {
-        desc = "Fix Multi-Screen Mouse Selection",
+        desc = localize("Fix Multi-Screen Mouse Selection"),
         group = group,
         callback = function(_)
             if possible_scroll then
@@ -37,7 +38,7 @@ function M.setup()
 
     vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" },
     {
-        desc = "Fix Multi-Screen Mouse Selection",
+        desc = localize("Fix Multi-Screen Mouse Selection"),
         group = group,
         callback = function(_)
             local last_topline = wininfo and wininfo.topline

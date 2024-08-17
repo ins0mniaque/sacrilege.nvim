@@ -1,3 +1,4 @@
+local localize = require("sacrilege.localizer").localize
 local completion = require("sacrilege.completion")
 
 local M = { }
@@ -21,7 +22,7 @@ function M.setup()
 
     vim.api.nvim_create_autocmd("InsertCharPre",
     {
-        desc = "Trigger Autocompletion",
+        desc = localize("Trigger Autocompletion"),
         group = group,
         callback = function()
             if vim.fn.state("m") == "m" or completion.visible() then
@@ -41,7 +42,7 @@ function M.setup()
 
     vim.api.nvim_create_autocmd({ "CursorMoved", "TextChangedP" },
     {
-        desc = "Trigger Autocompletion",
+        desc = localize("Trigger Autocompletion"),
         group = group,
         callback = function()
             lastrow, lastcol = unpack(vim.api.nvim_win_get_cursor(0))
@@ -50,7 +51,7 @@ function M.setup()
 
     vim.api.nvim_create_autocmd("CursorMovedI",
     {
-        desc = "Trigger Autocompletion",
+        desc = localize("Trigger Autocompletion"),
         group = group,
         callback = function()
             local row, col = unpack(vim.api.nvim_win_get_cursor(0))

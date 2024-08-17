@@ -1,3 +1,4 @@
+local localize = require("sacrilege.localizer").localize
 local editor = require("sacrilege.editor")
 local snippet = require("sacrilege.snippet")
 
@@ -29,7 +30,7 @@ function M.setup(opts)
 
     vim.api.nvim_create_autocmd({ "BufEnter", "InsertLeave", "TermLeave" },
     {
-        desc = "Toggle Insert Mode",
+        desc = localize("Toggle Insert Mode"),
         group = group,
         callback = function(_)
             if options.insertmode then
@@ -40,7 +41,7 @@ function M.setup(opts)
 
     vim.api.nvim_create_autocmd("ModeChanged",
     {
-        desc = "Toggle Insert Mode",
+        desc = localize("Toggle Insert Mode"),
         group = group,
         pattern = { "*:n" },
         callback = function(_)
@@ -52,7 +53,7 @@ function M.setup(opts)
 
     vim.api.nvim_create_autocmd("ModeChanged",
     {
-        desc = "Stop Visual Mode",
+        desc = localize("Stop Visual Mode"),
         group = group,
         pattern = { "*:v", "*:V", "*:\22" },
         callback = function(_)
@@ -65,7 +66,7 @@ function M.setup(opts)
     if options.selection then
         vim.api.nvim_create_autocmd("ModeChanged",
         {
-            desc = "Fix Active Snippet Exclusive Selection",
+            desc = localize("Fix Active Snippet Exclusive Selection"),
             group = group,
             pattern = { "*:s" },
             callback = function(_)

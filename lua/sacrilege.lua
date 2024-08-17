@@ -1,3 +1,4 @@
+local localizer = require("sacrilege.localizer")
 local command = require("sacrilege.command")
 local cmd = require("sacrilege.cmd")
 local editor = require("sacrilege.editor")
@@ -72,6 +73,8 @@ local function recurse(t, when, callback)
 end
 
 function M.setup(opts)
+    localizer.setup(opts and opts.language)
+
     if vim.fn.has("nvim-0.7.0") ~= 1 then
         return editor.notify("sacrilege.nvim requires Neovim >= 0.7.0", vim.log.levels.ERROR)
     end
@@ -123,8 +126,6 @@ function M.setup(opts)
         for id, command in pairs(options.commands) do
             cmd[id] = command
         end
-
-        -- TODO: Localize all commands
     end
 
     if options.keys then
@@ -171,7 +172,7 @@ function M.setup(opts)
 
         vim.api.nvim_create_autocmd("MenuPopup",
         {
-            desc = "Synchronize Popup Menu Mode",
+            desc = localizer.localize("Synchronize Popup Menu Mode"),
             group = vim.api.nvim_create_augroup("sacrilege/popup", { }),
             callback = function(_)
                 local mapmode = editor.mapmode()

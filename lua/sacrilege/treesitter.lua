@@ -1,3 +1,5 @@
+local localize = require("sacrilege.localizer").localize
+
 local M = { }
 
 local parser_files
@@ -157,7 +159,7 @@ function M.rename(new_name, opts)
 
     if not new_name or #new_name < 1 then
         local text = vim.treesitter.get_node_text(node_at_cursor, bufnr)
-        local input = { prompt = "New name: ", default = text or "" }
+        local input = { prompt = localize("New name: "), default = text or "" }
 
         vim.ui.input(input, complete_rename)
     else

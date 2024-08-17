@@ -1,3 +1,5 @@
+local localize = require("sacrilege.localizer").localize
+
 local M = { }
 
 function M.send(keys, remap)
@@ -5,9 +7,9 @@ function M.send(keys, remap)
 end
 
 function M.notify(msg, log_level, opts)
-    local defaults = { title = "nvim-treesitter" }
+    local defaults = { title = localize("sacrilege.nvim") }
 
-    vim.notify(msg, log_level or vim.log.levels.INFO, vim.tbl_extend("force", defaults, opts or { }))
+    vim.notify(localize(msg), log_level or vim.log.levels.INFO, vim.tbl_extend("force", defaults, opts or { }))
 end
 
 function M.mapmode(mode)
@@ -36,24 +38,6 @@ function M.stopvisual()
     if M.mapmode() == "x" then
         M.send("<C-\\><C-N>gv")
     end
-end
-
-function M.detect_language()
-    local language = vim.o.langmenu
-
-    if not language or #language == 0 then
-        language = os.getenv("LANGUAGE")
-    end
-
-    if not language or #language == 0 then
-        language = os.getenv("LANG")
-
-        if language and #language > 0 then
-            language = vim.split(language, ".", { plain = true })[1]
-        end
-    end
-
-    return language and #language > 0 and language
 end
 
 function M.supports_lsp_method(bufnr, method)

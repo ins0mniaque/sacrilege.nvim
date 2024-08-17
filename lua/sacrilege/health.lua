@@ -13,6 +13,7 @@ end
 
 M.check = function()
     local sacrilege = require("sacrilege")
+    local localizer = require("sacrilege.localizer")
     local options   = sacrilege.options
 
     start("sacrilege: Setup")
@@ -21,7 +22,19 @@ M.check = function()
         warn("sacrilege.setup was not called")
         return
     else
-        ok("Preset: " .. options.preset)
+        local language = options.language or localizer.detect()
+        if language == localizer.language() then
+            ok("Language: " .. language)
+        else
+            warn("Language: " .. language .. " not found (defaulted to " .. localizer.language() .. ")")
+        end
+
+        local presets = options.presets or options.preset or "None"
+        if type(presets) == "string" then
+            presets = { presets }
+        end
+
+        ok("Presets: " .. table.concat(presets, ", "))
         ok("Commands: " .. tostring(count(options.commands)))
         ok("Keys: " .. tostring(count(options.keys)))
     end

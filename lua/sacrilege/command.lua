@@ -1,3 +1,4 @@
+local localize = require("sacrilege.localizer").localize
 local editor = require("sacrilege.editor")
 local treesitter = require("sacrilege.treesitter")
 
@@ -304,7 +305,7 @@ function M:default(rhs)
             self.definition.i = nil
             self.definition.v = nil
         else
-            editor.notify("Could not enable Normal/Insert/Visual Mode for \"" .. self.name .. "\" because it does not have a single definition", vim.log.levels.ERROR)
+            editor.notify("Could not enable Normal/Insert/Visual Mode for \"" .. localize(self.name) .. "\" because it does not have a single definition", vim.log.levels.ERROR)
         end
     end
 
@@ -327,7 +328,7 @@ function M:normal(rhs)
         elseif rhs == false then
             self.definition.n = nil
         else
-            editor.notify("Could not enable Normal Mode for \"" .. self.name .. "\" because it does not have a single definition", vim.log.levels.ERROR)
+            editor.notify("Could not enable Normal Mode for \"" .. localize(self.name) .. "\" because it does not have a single definition", vim.log.levels.ERROR)
         end
     end
 
@@ -350,7 +351,7 @@ function M:insert(rhs)
         elseif rhs == false then
             self.definition.i = nil
         else
-            editor.notify("Could not enable Insert Mode for \"" .. self.name .. "\" because it does not have a single definition", vim.log.levels.ERROR)
+            editor.notify("Could not enable Insert Mode for \"" .. localize(self.name) .. "\" because it does not have a single definition", vim.log.levels.ERROR)
         end
     end
 
@@ -385,7 +386,7 @@ function M:visual(rhs)
                 self.definition.v = false
             end
         else
-            editor.notify("Could not enable Visual Mode for \"" .. self.name .. "\" because it does not have a single definition", vim.log.levels.ERROR)
+            editor.notify("Could not enable Visual Mode for \"" .. localize(self.name) .. "\" because it does not have a single definition", vim.log.levels.ERROR)
         end
     end
 
@@ -420,7 +421,7 @@ function M:select(rhs)
                 self.definition.v = nil
             end
         else
-            editor.notify("Could not enable Select Mode for \"" .. self.name .. "\" because it does not have a single definition", vim.log.levels.ERROR)
+            editor.notify("Could not enable Select Mode for \"" .. localize(self.name) .. "\" because it does not have a single definition", vim.log.levels.ERROR)
         end
     end
 
@@ -443,7 +444,7 @@ function M:cmdline(rhs)
         elseif rhs == false then
             self.definition.c = nil
         else
-            editor.notify("Could not enable Command Line Mode for \"" .. self.name .. "\" because it does not have a single definition", vim.log.levels.ERROR)
+            editor.notify("Could not enable Command Line Mode for \"" .. localize(self.name) .. "\" because it does not have a single definition", vim.log.levels.ERROR)
         end
     end
 
@@ -466,7 +467,7 @@ function M:terminal(rhs)
         elseif rhs == false then
             self.definition.t = nil
         else
-            editor.notify("Could not enable Terminal Mode for \"" .. self.name .. "\" because it does not have a single definition", vim.log.levels.ERROR)
+            editor.notify("Could not enable Terminal Mode for \"" .. localize(self.name) .. "\" because it does not have a single definition", vim.log.levels.ERROR)
         end
     end
 
@@ -489,7 +490,7 @@ function M:pending(rhs)
         elseif rhs == false then
             self.definition.o = nil
         else
-            editor.notify("Could not enable Operator-Pending Mode for \"" .. self.name .. "\" because it does not have a single definition", vim.log.levels.ERROR)
+            editor.notify("Could not enable Operator-Pending Mode for \"" .. localize(self.name) .. "\" because it does not have a single definition", vim.log.levels.ERROR)
         end
     end
 
@@ -533,7 +534,7 @@ function M:all(rhs)
             self.definition.t = nil
             self.definition.o = nil
         else
-            editor.notify("Could not enable All Modes for \"" .. self.name .. "\" because it does not have a single definition", vim.log.levels.ERROR)
+            editor.notify("Could not enable All Modes for \"" .. localize(self.name) .. "\" because it does not have a single definition", vim.log.levels.ERROR)
         end
     end
 
@@ -832,7 +833,7 @@ function M:__call(key)
     -- TODO: Optimize this
     local mapmode = editor.mapmode()
 
-    parse(self.name, self.definition, key or "<Nop>", function(mode, lhs, rhs, opts)
+    parse(localize(self.name), self.definition, key or "<Nop>", function(mode, lhs, rhs, opts)
         vim.keymap.set(mode, lhs, rhs, opts)
         if mode == mapmode or (mode == "v" and (mapmode == "s" or mapmode == "x")) then
             if type(rhs) == "function" then rhs()
@@ -853,7 +854,7 @@ function M:map(keys, callback)
     end
 
     for _, key in pairs(keys) do
-        parse(self.name, self.definition, key, function(mode, lhs, rhs, opts)
+        parse(localize(self.name), self.definition, key, function(mode, lhs, rhs, opts)
             vim.keymap.set(mode, lhs, rhs, opts)
 
             if callback then
@@ -874,7 +875,7 @@ function M:unmap(keys, callback)
     end
 
     for _, key in pairs(keys) do
-        parse(self.name, self.definition, key, function(mode, lhs, rhs, opts)
+        parse(localize(self.name), self.definition, key, function(mode, lhs, rhs, opts)
             vim.keymap.del(mode, lhs, opts)
 
             if callback then
@@ -887,15 +888,15 @@ end
 function M:menu(parent, position)
     if not self.plug then
         -- TODO: Add to health check issues instead
-        editor.notify("Menu command '" .. self.name .. "' was not registered with sacrilege.cmd", vim.log.levels.WARN)
+        editor.notify("Menu command '" .. localize(self.name) .. "' was not registered with sacrilege.cmd", vim.log.levels.WARN)
 
         return { enable = do_nothing, disable = do_nothing, update = do_nothing, delete = do_nothing }
     end
 
-    local name  = parent:gsub(" ", "\\ "):gsub("%.", "\\.") .. "." .. self.name:gsub(" ", "\\ "):gsub("%.", "\\.")
+    local name  = parent:gsub(" ", "\\ "):gsub("%.", "\\.") .. "." .. localize(self.name):gsub(" ", "\\ "):gsub("%.", "\\.")
     local modes = { }
 
-    parse(self.name, self.definition, "<Nop>", unwrap_modes(function(mode, lhs, rhs, opts)
+    parse(localize(self.name), self.definition, "<Nop>", unwrap_modes(function(mode, lhs, rhs, opts)
         if mode ~= "t" then
             table.insert(modes, mode)
         end
