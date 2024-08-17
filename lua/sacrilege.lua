@@ -47,7 +47,7 @@ local defaults =
         mouse = true,
         virtual = true
     },
-    preset = "sacrilege.presets.default"
+    presets = { "default" }
 }
 
 local options = { }
@@ -114,21 +114,23 @@ function M.setup(opts)
         return editor.notify("sacrilege.nvim requires Neovim >= 0.7.0", vim.log.levels.ERROR)
     end
 
-    local preset
+    options = vim.deepcopy(defaults)
 
-    if opts and opts.preset and opts.preset ~= false and opts.preset ~= "" then
-        local ok, result = pcall(require, opts.preset)
-        if ok then
-            preset = result
-        end
-    else
-        preset = require(defaults.preset)
+    local presets = opts and (opts.presets or opts.preset) or options.presets or options.preset
+    if type(presets) == "string" then
+        presets = { presets }
     end
 
-    options = vim.deepcopy(defaults)
-    options.commands = preset and preset.commands()
-    options.keys     = preset and preset.keys()
-    options.popup    = preset and preset.popup()
+    if type(presets) == "table" then
+        for _, preset in pairs(presets) do
+            local ok, result = pcall(require, "sacrilege.presets." .. preset)
+            if ok then
+                result.apply(options)
+            else
+                editor.notify("Preset \"" .. preset .. "\" not found", vim.log.levels.WARN)
+            end
+        end
+    end
 
     if opts and type(opts.commands) == "function" then
         opts = vim.deepcopy(opts)
