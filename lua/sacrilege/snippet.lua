@@ -10,6 +10,30 @@ function M.setup(opts)
 
     expand = engines.expand
     engines.expand = nil
+
+    if expand then
+        vim.api.nvim_create_autocmd("CompleteDonePre",
+        {
+            desc = "Expand Snippets",
+            group = vim.api.nvim_create_augroup("sacrilege/snippet", { }),
+            pattern = "*",
+            callback = function()
+                local lsp = vim.tbl_get(vim.v.completed_item, 'user_data', 'nvim', 'lsp', 'completion_item')
+
+                if lsp and lsp.insertTextFormat == 2 then
+                    -- Remove inserted text
+                    local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+                    vim.api.nvim_buf_set_text(0, row - 1, col - #vim.v.completed_item.word, row - 1, col, { "" })
+                    vim.api.nvim_win_set_cursor(0, { row, col - vim.fn.strwidth(vim.v.completed_item.word) })
+
+                    -- Expand snippet
+                    M.expand(vim.tbl_get(lsp, "textEdit", "newText") or lsp.insertText or lsp.label)
+                end
+            end
+        })
+    else
+        vim.api.nvim_del_augroup_by_id(vim.api.nvim_create_augroup("sacrilege/snippet", { }))
+    end
 end
 
 function M.expand(body)

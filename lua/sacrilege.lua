@@ -1,6 +1,7 @@
 local command = require("sacrilege.command")
 local cmd = require("sacrilege.cmd")
 local editor = require("sacrilege.editor")
+local insertmode = require("sacrilege.insertmode")
 local completion = require("sacrilege.completion")
 local snippet = require("sacrilege.snippet")
 
@@ -9,7 +10,6 @@ local M = { }
 local defaults =
 {
     insertmode = true,
-    selectmode = true,
     blockmode = true,
     autobreakundo = true,
     autocomplete = true,
@@ -56,7 +56,7 @@ local keymap  = { }
 local metatable =
 {
     __index = function(table, key)
-        if key == "insertmode" or key == "selectmode" then
+        if key == "insertmode" then
             return options[key]
         elseif key == "blockmode" then
             return require("sacrilege.blockmode").active()
@@ -71,17 +71,7 @@ local metatable =
 
     __newindex = function(table, key, value)
         if key == "insertmode" then
-            options.insertmode = value
-
-            if options.insertmode then
-                vim.defer_fn(editor.toggleinsert, 0)
-            end
-        elseif key == "selectmode" then
-            options.selectmode = value
-
-            if options.selectmode then
-                vim.defer_fn(editor.selectmode, 0)
-            end
+            insertmode.enable(value)
         elseif key == "blockmode" or key == "options" or key == "keymap" then
             editor.notify("sacrilege." .. key .. " is read-only", vim.log.levels.ERROR)
         else
@@ -155,111 +145,18 @@ function M.setup(opts)
 
     completion.setup(options.completion)
     snippet.setup(options.snippet)
+    insertmode.setup(options)
 
-    local insertmode_group = vim.api.nvim_create_augroup("sacrilege/insertmode", { })
-
-    vim.api.nvim_create_autocmd({ "BufEnter", "InsertLeave", "TermLeave" },
-    {
-        desc = "Toggle Insert Mode",
-        group = insertmode_group,
-        pattern = { "*" },
-        callback = function(_)
-            if options.insertmode then
-                vim.defer_fn(editor.toggleinsert, 0)
-            end
-        end
-    })
-
-    vim.api.nvim_create_autocmd("ModeChanged",
-    {
-        desc = "Toggle Insert Mode",
-        group = insertmode_group,
-        pattern = { "*:n" },
-        callback = function(_)
-            if options.insertmode then
-                vim.defer_fn(editor.toggleinsert, 0)
-            end
-        end
-    })
-
-    local selectmode_group = vim.api.nvim_create_augroup("sacrilege/selectmode", { })
-
-    vim.api.nvim_create_autocmd("ModeChanged",
-    {
-        desc = "Stop Visual Mode",
-        group = selectmode_group,
-        pattern = { "*:v", "*:V", "*:\22" },
-        callback = function(_)
-            if options.selectmode then
-                vim.defer_fn(editor.stopvisual, 0)
-            end
-        end
-    })
-
-    if options.selection and options.snippet then
-        vim.api.nvim_create_autocmd({ "ModeChanged" },
-        {
-            desc = "Fix Active Snippet Exclusive Selection",
-            group = selectmode_group,
-            pattern = { "*:s" },
-            callback = function(_)
-                if options.selectmode then
-                    vim.opt.selection = snippet.active() and "inclusive" or "exclusive"
-                end
-            end
-        })
-    end
-
-    if options.blockmode then
-        require("sacrilege.blockmode").setup()
+    if options.autobreakundo then
+        require("sacrilege.undo").setup()
     end
 
     if options.autocomplete then
         require("sacrilege.autocomplete").setup()
     end
 
-    if options.autobreakundo then
-        require("sacrilege.undo").setup()
-    end
-
-    if options.snippet and options.snippet.expand then
-        vim.api.nvim_create_autocmd("CompleteDonePre",
-        {
-            desc = "Trigger Completion Snippet",
-            group = vim.api.nvim_create_augroup("sacrilege/autosnippet", { }),
-            pattern = "*",
-            callback = function()
-                local lsp = vim.tbl_get(vim.v.completed_item, 'user_data', 'nvim', 'lsp', 'completion_item')
-
-                if lsp and lsp.insertTextFormat == 2 then
-                    -- Remove inserted text
-                    local row, col = unpack(vim.api.nvim_win_get_cursor(0))
-                    vim.api.nvim_buf_set_text(0, row - 1, col - #vim.v.completed_item.word, row - 1, col, { "" })
-                    vim.api.nvim_win_set_cursor(0, { row, col - vim.fn.strwidth(vim.v.completed_item.word) })
-
-                    -- Expand snippet
-                    snippet.expand(vim.tbl_get(lsp, "textEdit", "newText") or lsp.insertText or lsp.label)
-                end
-            end
-        })
-    end
-
-    if options.selection then
-        vim.opt.keymodel = { }
-        vim.opt.selection = "exclusive"
-        vim.opt.virtualedit = "onemore"
-
-        if options.selection.mouse then
-            vim.opt.mouse = "a"
-            vim.opt.selectmode = { "mouse", "key", "cmd" }
-
-            -- Fix delayed mouse word selection
-            vim.keymap.set("i", "<2-LeftMouse>", "<2-LeftMouse><2-LeftRelease>")
-        end
-
-        if options.selection.virtual then
-            vim.opt.virtualedit = "block,onemore"
-        end
+    if options.blockmode then
+        require("sacrilege.blockmode").setup()
     end
 
     keymap = { }

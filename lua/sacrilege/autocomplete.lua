@@ -4,8 +4,8 @@ local M = { }
 
 -- TODO: CmdlineChanged auto-complete
 function M.setup()
-    local namespace          = vim.api.nvim_create_namespace("sacrilege/autocomplete")
-    local autocomplete_group = vim.api.nvim_create_augroup("sacrilege/autocomplete", { })
+    local namespace = vim.api.nvim_create_namespace("sacrilege/autocomplete")
+    local group     = vim.api.nvim_create_augroup("sacrilege/autocomplete", { })
 
     -- TODO: Add option
     local function on(char)
@@ -22,7 +22,7 @@ function M.setup()
     vim.api.nvim_create_autocmd("InsertCharPre",
     {
         desc = "Trigger Autocompletion",
-        group = autocomplete_group,
+        group = group,
         callback = function()
             if vim.fn.state("m") == "m" or completion.visible() then
                 return
@@ -42,7 +42,7 @@ function M.setup()
     vim.api.nvim_create_autocmd({ "CursorMoved", "TextChangedP" },
     {
         desc = "Trigger Autocompletion",
-        group = autocomplete_group,
+        group = group,
         callback = function()
             lastrow, lastcol = unpack(vim.api.nvim_win_get_cursor(0))
         end
@@ -51,7 +51,7 @@ function M.setup()
     vim.api.nvim_create_autocmd("CursorMovedI",
     {
         desc = "Trigger Autocompletion",
-        group = autocomplete_group,
+        group = group,
         callback = function()
             local row, col = unpack(vim.api.nvim_win_get_cursor(0))
 
