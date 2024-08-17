@@ -15,6 +15,7 @@ function M.setup()
             local mouse = vim.fn.getmousepos()
             editor.set_selection({ 0, cursor[1], cursor[2] + 1 }, { 0, mouse.line, mouse.column })
             vim.fn.winrestview({ topline = wininfo.topline })
+            editor.send("<S-LeftMouse>")
         else
             editor.send("<S-LeftMouse>")
         end
