@@ -754,7 +754,7 @@ local function parse(name, definition, key, action, context)
                 elseif mode == "s" then
                     local has_v_rhs = (definition[1] and definition["v"] ~= false) or
                                       (not definition[1] and (not definition[1] and definition["v"]))
-                    if has_v_rhs then
+                    if has_v_rhs and not contextless then
                         rhs = has_v_rhs and as_func(definition[1] or definition["v"])
                     elseif contextless then
                         return
@@ -762,7 +762,7 @@ local function parse(name, definition, key, action, context)
                 elseif mode == "x" then
                     local has_v_rhs = (definition[1] and definition["v"] ~= false) or
                                       (not definition[1] and (not definition[1] and definition["v"]))
-                    if has_v_rhs then
+                    if has_v_rhs and not contextless then
                         rhs = has_v_rhs and as_func(definition[1] or definition["v"])
                     elseif contextless then
                         return
