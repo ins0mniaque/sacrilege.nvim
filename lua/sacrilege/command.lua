@@ -1,4 +1,5 @@
 local editor = require("sacrilege.editor")
+local treesitter = require("sacrilege.treesitter")
 
 local M = { }
 
@@ -105,7 +106,38 @@ local function when(definition, predicate)
     end
 end
 
+-- TODO: Support lists
+local function build_when_predicate(condition)
+    return function()
+        if condition.buftype and condition.buftype ~= vim.bo.buftype then
+            return false
+        end
+
+        if condition.filetype and condition.filetype ~= vim.bo.filetype then
+            return false
+        end
+
+        if condition.language and condition.language ~= treesitter.get_buf_lang() then
+            return false
+        end
+
+        if condition.treesitter and not treesitter.has_parser(treesitter.get_buf_lang()) then
+            return false
+        end
+
+        if condition.lsp and not editor.supports_lsp_method(0, condition.lsp) then
+            return false
+        end
+
+        return true
+    end
+end
+
 function M:when(predicate)
+    if type(predicate) == "table" then
+        predicate = build_when_predicate(predicate)
+    end
+
     if type(self.definition) ~= "table" then
         self.definition = when(self.definition, predicate)
     elseif self.definition.linked then
