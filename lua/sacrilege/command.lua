@@ -8,6 +8,10 @@ function M.is(command)
     return type(command) == "table" and command.__index == M
 end
 
+function M.isnot(command)
+    return not M.is(command)
+end
+
 function M.new(name, definition)
     local self = { }
 

@@ -82,6 +82,17 @@ local metatable =
 
 setmetatable(M, metatable)
 
+local function extend(dst, src, predicate)
+    for key, value in pairs(src) do
+        if type(value) == "table" and predicate(value) then
+            dst[key] = dst[key] or { }
+            extend(dst[key], value, predicate)
+        else
+            dst[key] = value
+        end
+    end
+end
+
 local function recurse(t, when, callback)
     local prefixes = { }
 
@@ -114,34 +125,17 @@ function M.setup(opts)
         preset = require(defaults.preset)
     end
 
-    -- TODO: Fix tbl_deep_extend removing metatables from commands
-    options = vim.tbl_deep_extend("force", defaults,
-    {
-        commands = preset and preset.commands(),
-        keys = preset and preset.keys(),
-        popup = preset and preset.popup()
-    })
+    options = vim.deepcopy(defaults)
+    options.commands = preset and preset.commands()
+    options.keys     = preset and preset.keys()
+    options.popup    = preset and preset.popup()
 
     if opts and type(opts.commands) == "function" then
-        opts = vim.tbl_deep_extend("force", { }, opts or { })
+        opts = vim.deepcopy(opts)
         opts.commands = opts.commands(options.commands or { })
     end
 
-    options = vim.tbl_deep_extend("force", options, opts or { })
-
-    local function could_be_command(table)
-        for key, _ in pairs(table) do
-            if key ~= "name" and key ~= "definition" and key ~= "plug" then
-                return true
-            end
-        end
-
-        return false
-    end
-
-    recurse(options.commands, could_be_command, function(_, cmd)
-        setmetatable(cmd, command)
-    end)
+    extend(options, opts, command.isnot)
 
     completion.setup(options.completion)
     snippet.setup(options.snippet)
@@ -211,11 +205,10 @@ function M.setup(opts)
             end
         end
 
-        vim.api.nvim_create_autocmd({ "MenuPopup" },
+        vim.api.nvim_create_autocmd("MenuPopup",
         {
             desc = "Synchronize Popup Menu Mode",
             group = vim.api.nvim_create_augroup("sacrilege/popup", { }),
-            pattern = { "*" },
             callback = function(_)
                 local mapmode = editor.mapmode()
                 for _, menu in pairs(menus) do
@@ -223,10 +216,6 @@ function M.setup(opts)
                 end
             end
         })
-    end
-
-    if options.insertmode then
-        vim.defer_fn(editor.toggleinsert, 0)
     end
 end
 
