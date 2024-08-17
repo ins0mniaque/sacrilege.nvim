@@ -13,7 +13,6 @@ end
 
 M.check = function()
     local sacrilege = require("sacrilege")
-    local config    = require("sacrilege.config")
     local options   = sacrilege.options
 
     start("sacrilege: Setup")
@@ -35,10 +34,22 @@ M.check = function()
         warn("insertmode not enabled")
     end
 
-    if sacrilege.selectmode then
-        ok("selectmode active")
+    if options.blockmode then
+        ok("blockmode enabled")
     else
-        warn("selectmode not enabled")
+        warn("blockmode not enabled")
+    end
+
+    if options.autocomplete then
+        ok("autocomplete enabled")
+    else
+        warn("autocomplete not enabled")
+    end
+
+    if options.autobreakundo then
+        ok("autobreakundo enabled")
+    else
+        warn("autobreakundo not enabled")
     end
 
     start("sacrilege: Keymap")

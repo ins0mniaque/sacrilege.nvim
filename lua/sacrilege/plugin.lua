@@ -20,11 +20,11 @@ function M.new(plugin, root)
                 modname = nil
             end
 
-            return function()
+            return function(...)
                 local module = self.load(modname)
 
                 if module then
-                    func(module)
+                    func(module, ...)
                 end
             end
         end
