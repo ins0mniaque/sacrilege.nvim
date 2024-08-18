@@ -67,7 +67,7 @@ function M.setup(opts)
 
     vim.api.nvim_create_autocmd("InsertEnter",
     {
-        desc = localize("Disable Yank On Delete"),
+        desc = localize("Disable Copy On Delete"),
         group = group,
         callback = function(_)
             clipboard = vim.fn.getreg("+")
@@ -76,10 +76,10 @@ function M.setup(opts)
 
     vim.api.nvim_create_autocmd("TextYankPost",
     {
-        desc = localize("Disable Yank On Delete"),
+        desc = localize("Disable Copy On Delete"),
         group = group,
         callback = function(_)
-            if clipboard and vim.v.event.operator == "d" then
+            if clipboard and vim.v.event.operator == "d" and vim.v.event.regname == "" then
                 vim.fn.setreg("+", clipboard)
             end
 
