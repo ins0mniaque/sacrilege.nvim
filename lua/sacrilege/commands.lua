@@ -149,6 +149,7 @@ M.comment = command.new("Toggle Line Comment")
 M.uppercase = command.new("Uppercase"):visual("U")
 M.lowercase = command.new("Lowercase"):visual("u")
 M.switchcase = command.new("Toggle Case"):visual("~")
+M.rot13 = command.new("ROT13"):visual("g?")
 
 M.spellcheck = command.new("Toggle Spell Check", function() vim.o.spell = not vim.o.spell end)
 M.spellerror_previous = command.new("Go to Previous Spelling Error", "<C-\\><C-N><Left>[s")
