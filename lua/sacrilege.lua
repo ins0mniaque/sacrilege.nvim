@@ -10,7 +10,7 @@ local M = { }
 
 local defaults =
 {
-    presets = { "default" }
+    presets = { "default", "dap", "dap-ui", "neotest" }
 }
 
 local options = { }
