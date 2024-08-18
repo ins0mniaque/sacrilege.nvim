@@ -63,6 +63,30 @@ function M.setup(opts)
         end
     })
 
+    local clipboard
+
+    vim.api.nvim_create_autocmd("InsertEnter",
+    {
+        desc = localize("Disable Yank On Delete"),
+        group = group,
+        callback = function(_)
+            clipboard = vim.fn.getreg("+")
+        end
+    })
+
+    vim.api.nvim_create_autocmd("TextYankPost",
+    {
+        desc = localize("Disable Yank On Delete"),
+        group = group,
+        callback = function(_)
+            if clipboard and vim.v.event.operator == "d" then
+                vim.fn.setreg("+", clipboard)
+            end
+
+            clipboard = nil
+        end
+    })
+
     if options.selection then
         vim.api.nvim_create_autocmd("ModeChanged",
         {
