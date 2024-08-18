@@ -70,7 +70,7 @@ function M.setup(opts)
         desc = localize("Disable Copy On Delete"),
         group = group,
         callback = function(_)
-            clipboard = vim.fn.getreg("+")
+            clipboard = options.insertmode and vim.fn.getreg("+")
         end
     })
 
