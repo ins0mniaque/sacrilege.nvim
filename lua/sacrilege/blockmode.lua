@@ -151,8 +151,8 @@ function M.paste(register)
     -- TODO: Start blockmode if setup
 end
 
--- BUG: Typing fast can mess up the blockmode selection
--- BUG: Typing space can mess up the blockmode selection
+-- BUG: Typing fast can mess up the blockmode selection (on_key happens in insert mode)
+-- BUG: Typing space can mess up the blockmode selection (vim.fn.state("m") == "m" in start)
 function M.setup()
     local namespace = vim.api.nvim_create_namespace("sacrilege/blockmode")
     local group     = vim.api.nvim_create_augroup("sacrilege/blockmode", { })
