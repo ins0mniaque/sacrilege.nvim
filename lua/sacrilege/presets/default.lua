@@ -56,6 +56,9 @@ local defaults =
         popup = "<RightMouse>",
 
         command_palette = "<C-P>",
+        file_explorer = "<C-b>",
+        code_outline = "<M-o>",
+        debugger = "<M-d>",
         cmdline = "<C-M-C>",
         terminal = "<C-M-T>",
         diagnostics = "<C-D>",

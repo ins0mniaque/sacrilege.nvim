@@ -1,3 +1,5 @@
+local editor = require("sacrilege.editor")
+
 local M = { }
 
 function M.new(plugin, root)
@@ -10,21 +12,26 @@ function M.new(plugin, root)
             if ok then
                 return module
             else
-                return require("sacrilege.editor").notify("Plugin " .. (plugin or modname) .. " is not installed", vim.log.levels.WARN)
+                return editor.notify("Plugin " .. (plugin or modname) .. " is not installed", vim.log.levels.WARN)
             end
         end,
 
-        try = function(self, modname, func)
-            if not func then
-                func    = modname
+        try = function(self, modname, rhs)
+            if not rhs then
+                rhs     = modname
                 modname = nil
+            end
+
+            if type(rhs) == "string" then
+                local keys = rhs
+                rhs = function() editor.send(keys) end
             end
 
             return function(...)
                 local module = self.load(modname)
 
                 if module then
-                    return func(module, ...)
+                    return rhs(module, ...)
                 end
             end
         end

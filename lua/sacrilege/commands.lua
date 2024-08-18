@@ -15,6 +15,10 @@ local dap     = plugin.new("mfussenegger/nvim-dap", "dap")
 local neotest = plugin.new("nvim-neotest/neotest", "neotest")
 local methods = vim.lsp.protocol.Methods
 
+local function not_implemented()
+    return false
+end
+
 local function select_command(rhs)
     return function(arrow)
         local keys = rhs:gsub("[Aa][rR][rR][oO][wW]>", arrow .. ">")
@@ -27,7 +31,6 @@ local function select_command(rhs)
         end, 0)
     end
 end
-
 
 local function arrow_command(rhs, block_rhs)
     return function(arrow)
@@ -66,6 +69,9 @@ M.inserttab = command.new("Insert Tab"):visual("<Space><BS><Tab>")
 M.popup = command.new("Popup Menu"):select("<C-\\><C-G>gv<Cmd>:popup! PopUp<CR>")
 
 M.command_palette = command.new("Command Palette...", ui.command_palette):cmdline(true)
+M.file_explorer = command.new("Toggle File Explorer", not_implemented):cmdline(true)
+M.code_outline = command.new("Toggle Code Outline", not_implemented):cmdline(true)
+M.debugger = command.new("Toggle Debugger", not_implemented):cmdline(true)
 M.cmdline = command.new("Command Line Mode", "<Esc>:")
 M.terminal = command.new("Terminal", vim.cmd.terminal):cmdline(true)
 M.diagnostics = command.new("Toggle Diagnostics", vim.diagnostic.setloclist):cmdline(true)
