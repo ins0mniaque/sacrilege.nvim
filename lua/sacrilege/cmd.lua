@@ -1,5 +1,5 @@
+local log = require("sacrilege.log")
 local command = require("sacrilege.command")
-local editor = require("sacrilege.editor")
 
 local M = { }
 
@@ -33,8 +33,7 @@ local function parse(table, key)
                 end
             else
                 if cmd or right then
-                    -- TODO: Add to health check issues instead
-                    editor.notify("Missing command \"" .. cmdkey .. "\" of composite command \"" .. key .. "\"", vim.log.levels.WARN)
+                    log.warn("Missing command \"%s\" of composite command \"%s\"", cmdkey, key)
                 end
 
                 cmd   = nil
@@ -94,8 +93,7 @@ local function metatable(prefix)
                     group[id] = subcommand
                 end
             elseif value then
-                -- TODO: Add to health check issues instead
-                editor.notify("Invalid value assigned to sacrilege.cmd: " .. vim.inspect(value), vim.log.levels.ERROR)
+                log.err("Invalid value assigned to sacrilege.cmd: %s", vim.inspect(value))
 
                 value = nil
             end

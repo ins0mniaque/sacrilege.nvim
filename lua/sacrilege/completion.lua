@@ -1,3 +1,4 @@
+local log = require("sacrilege.log")
 local editor = require("sacrilege.editor")
 
 local M = { }
@@ -39,7 +40,7 @@ function M.trigger()
         return trigger(M.what()) ~= false
     end
 
-    editor.notify("Completion trigger is not configured", vim.log.levels.WARN)
+    log.warn("Completion trigger is not configured")
 
     return false
 end

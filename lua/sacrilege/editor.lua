@@ -6,12 +6,6 @@ function M.send(keys, remap)
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(keys, true, true, true), remap and "t" or "n", true)
 end
 
-function M.notify(msg, log_level, opts)
-    local defaults = { title = localize("sacrilege.nvim") }
-
-    vim.notify(localize(msg), log_level or vim.log.levels.INFO, vim.tbl_extend("force", defaults, opts or { }))
-end
-
 function M.mapmode(mode)
     mode = mode or vim.fn.mode()
 

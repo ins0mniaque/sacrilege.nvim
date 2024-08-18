@@ -85,7 +85,7 @@ end
 
 function M.enable(enabled)
     if not options then
-        return editor.notify("sacrilege.insertmode is not configured", vim.log.levels.ERROR)
+        return log.err("sacrilege.insertmode is not configured")
     end
 
     options.insertmode = enabled

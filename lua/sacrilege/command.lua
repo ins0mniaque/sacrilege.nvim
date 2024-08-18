@@ -1,4 +1,5 @@
 local localize = require("sacrilege.localizer").localize
+local log = require("sacrilege.log")
 local editor = require("sacrilege.editor")
 local treesitter = require("sacrilege.treesitter")
 
@@ -305,7 +306,7 @@ function M:default(rhs)
             self.definition.i = nil
             self.definition.v = nil
         else
-            editor.notify("Could not enable Normal/Insert/Visual Mode for \"" .. localize(self.name) .. "\" because it does not have a single definition", vim.log.levels.ERROR)
+            log.err("Could not enable Normal/Insert/Visual Mode for \"%s\" because it does not have a single definition", localize(self.name))
         end
     end
 
@@ -328,7 +329,7 @@ function M:normal(rhs)
         elseif rhs == false then
             self.definition.n = nil
         else
-            editor.notify("Could not enable Normal Mode for \"" .. localize(self.name) .. "\" because it does not have a single definition", vim.log.levels.ERROR)
+            log.err("Could not enable Normal Mode for \"%s\" because it does not have a single definition", localize(self.name))
         end
     end
 
@@ -351,7 +352,7 @@ function M:insert(rhs)
         elseif rhs == false then
             self.definition.i = nil
         else
-            editor.notify("Could not enable Insert Mode for \"" .. localize(self.name) .. "\" because it does not have a single definition", vim.log.levels.ERROR)
+            log.err("Could not enable Insert Mode for \"%s\" because it does not have a single definition", localize(self.name))
         end
     end
 
@@ -386,7 +387,7 @@ function M:visual(rhs)
                 self.definition.v = false
             end
         else
-            editor.notify("Could not enable Visual Mode for \"" .. localize(self.name) .. "\" because it does not have a single definition", vim.log.levels.ERROR)
+            log.err("Could not enable Visual Mode for \"%s\" because it does not have a single definition", localize(self.name))
         end
     end
 
@@ -421,7 +422,7 @@ function M:select(rhs)
                 self.definition.v = nil
             end
         else
-            editor.notify("Could not enable Select Mode for \"" .. localize(self.name) .. "\" because it does not have a single definition", vim.log.levels.ERROR)
+            log.err("Could not enable Select Mode for \"%s\" because it does not have a single definition", localize(self.name))
         end
     end
 
@@ -444,7 +445,7 @@ function M:cmdline(rhs)
         elseif rhs == false then
             self.definition.c = nil
         else
-            editor.notify("Could not enable Command Line Mode for \"" .. localize(self.name) .. "\" because it does not have a single definition", vim.log.levels.ERROR)
+            log.err("Could not enable Command Line Mode for \"%s\" because it does not have a single definition", localize(self.name))
         end
     end
 
@@ -467,7 +468,7 @@ function M:terminal(rhs)
         elseif rhs == false then
             self.definition.t = nil
         else
-            editor.notify("Could not enable Terminal Mode for \"" .. localize(self.name) .. "\" because it does not have a single definition", vim.log.levels.ERROR)
+            log.err("Could not enable Terminal Mode for \"%s\" because it does not have a single definition", localize(self.name))
         end
     end
 
@@ -490,7 +491,7 @@ function M:pending(rhs)
         elseif rhs == false then
             self.definition.o = nil
         else
-            editor.notify("Could not enable Operator-Pending Mode for \"" .. localize(self.name) .. "\" because it does not have a single definition", vim.log.levels.ERROR)
+            log.err("Could not enable Operator-Pending Mode for \"%s\" because it does not have a single definition", localize(self.name))
         end
     end
 
@@ -534,7 +535,7 @@ function M:all(rhs)
             self.definition.t = nil
             self.definition.o = nil
         else
-            editor.notify("Could not enable All Modes for \"" .. localize(self.name) .. "\" because it does not have a single definition", vim.log.levels.ERROR)
+            log.err("Could not enable All Modes for \"%s\" because it does not have a single definition", localize(self.name))
         end
     end
 
@@ -748,7 +749,7 @@ local function parse(name, definition, key, action, context)
                 local capture_rhs = rhs
                 rhs = function()
                     if capture_rhs() == false then
-                        editor.notify("Command '" .. name .. "' is not available", vim.log.levels.WARN)
+                        log.warn("Command \"%s\" is not available", localize(name))
                     end
                 end
             end
@@ -887,8 +888,7 @@ end
 
 function M:menu(parent, position)
     if not self.plug then
-        -- TODO: Add to health check issues instead
-        editor.notify("Menu command '" .. localize(self.name) .. "' was not registered with sacrilege.cmd", vim.log.levels.WARN)
+        log.warn("Menu command \"%s\" was not registered with sacrilege.cmd", localize(self.name))
 
         return { enable = do_nothing, disable = do_nothing, update = do_nothing, delete = do_nothing }
     end

@@ -1,4 +1,5 @@
 local localize = require("sacrilege.localizer").localize
+local log = require("sacrilege.log")
 local editor = require("sacrilege.editor")
 
 local M = { }
@@ -42,7 +43,7 @@ function M.expand(body)
         return expand(body) ~= false
     end
 
-    editor.notify("Snippet expansion is not configured", vim.log.levels.WARN)
+    log.warn("Snippet expansion is not configured")
 
     return false
 end

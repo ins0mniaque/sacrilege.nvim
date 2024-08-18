@@ -1,4 +1,5 @@
 local localizer = require("sacrilege.localizer")
+local log = require("sacrilege.log")
 local command = require("sacrilege.command")
 local cmd = require("sacrilege.cmd")
 local editor = require("sacrilege.editor")
@@ -36,7 +37,7 @@ local metatable =
         if key == "insertmode" then
             insertmode.enable(value)
         elseif key == "blockmode" or key == "options" or key == "keymap" then
-            editor.notify("sacrilege." .. key .. " is read-only", vim.log.levels.ERROR)
+            log.err("sacrilege.%s is read-only", key)
         else
             rawset(table, key, value)
         end
@@ -76,7 +77,7 @@ function M.setup(opts)
     localizer.setup(opts and opts.language)
 
     if vim.fn.has("nvim-0.7.0") ~= 1 then
-        return editor.notify("sacrilege.nvim requires Neovim >= 0.7.0", vim.log.levels.ERROR)
+        return log.err("sacrilege.nvim requires Neovim >= %s", "0.7.0")
     end
 
     options = vim.deepcopy(defaults)
@@ -92,7 +93,7 @@ function M.setup(opts)
             if ok then
                 options = result.apply(options) or options
             else
-                editor.notify("Preset \"" .. preset .. "\" not found", vim.log.levels.WARN)
+                log.warn("Preset \"%s\" not found", preset)
             end
         end
     end
@@ -136,8 +137,7 @@ function M.setup(opts)
                     table.insert(keymap, { mode = mode, lhs = lhs, rhs = rhs, opts = opts })
                 end)
             else
-                -- TODO: Add to health check issues instead
-                editor.notify("Key command not found: " .. table.concat(prefixes, "."), vim.log.levels.WARN)
+                log.warn("Key command not found: %s", table.concat(prefixes, "."))
             end
         end)
     end
@@ -162,8 +162,7 @@ function M.setup(opts)
                 if command.is(cmd) then
                     table.insert(menus, cmd:menu("PopUp", definition.position))
                 else
-                    -- TODO: Add to health check issues instead
-                    editor.notify("Popup command not found: " .. definition[1], vim.log.levels.WARN)
+                    log.warn("Popup command not found: %s", definition[1])
                 end
             else
                 vim.cmd.amenu((definition.position or "") .. " PopUp." .. definition[1] .. " <Nop>")

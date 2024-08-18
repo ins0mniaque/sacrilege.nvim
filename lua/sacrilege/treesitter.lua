@@ -1,4 +1,5 @@
 local localize = require("sacrilege.localizer").localize
+local log = require("sacrilege.log")
 
 local M = { }
 
@@ -128,7 +129,7 @@ function M.rename(new_name, opts)
     local node_at_cursor = ts_utils.get_node_at_cursor(winid)
 
     if not node_at_cursor then
-        return require("sacrilege.editor").notify("Nothing to rename")
+        return log.inform("Nothing to rename")
     end
 
     local function complete_rename(new_text)

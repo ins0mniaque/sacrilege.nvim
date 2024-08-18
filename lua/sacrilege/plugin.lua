@@ -1,3 +1,4 @@
+local log = require("sacrilege.log")
 local editor = require("sacrilege.editor")
 
 local M = { }
@@ -12,7 +13,7 @@ function M.new(plugin, root)
             if ok then
                 return module
             else
-                return editor.notify("Plugin " .. (plugin or modname) .. " is not installed", vim.log.levels.WARN)
+                return log.warn("Plugin %s is not installed", plugin or modname)
             end
         end,
 
