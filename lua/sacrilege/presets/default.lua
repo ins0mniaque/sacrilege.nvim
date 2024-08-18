@@ -102,7 +102,6 @@ local defaults =
         copy = "<C-C>",
         cut = "<C-X>",
         paste = "<C-V>",
-        delete = { "<BS>", "<Del>" },
         deleteword = { "<C-BS>", "<M-BS>" },
 
         find = "<C-F>",
