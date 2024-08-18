@@ -161,9 +161,13 @@ local defaults =
 }
 
 function M.apply(options)
-    -- TODO: Clone commands
     options.commands = options.commands or { }
-    for id, command in pairs(require("sacrilege.commands")) do
+
+    for id, command in pairs(require("sacrilege.commands.native")) do
+        options.commands[id] = command
+    end
+
+    for id, command in pairs(require("sacrilege.commands.ide")) do
         options.commands[id] = command
     end
 

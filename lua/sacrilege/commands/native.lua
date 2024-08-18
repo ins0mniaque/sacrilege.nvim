@@ -7,17 +7,9 @@ local autopair = require("sacrilege.autopair")
 local blockmode = require("sacrilege.blockmode")
 local ui = require("sacrilege.ui")
 local treesitter = require("sacrilege.treesitter")
-local plugin = require("sacrilege.plugin")
-
-local M = { treesitter = { }, lsp = { } }
-
-local dap     = plugin.new("mfussenegger/nvim-dap", "dap")
-local neotest = plugin.new("nvim-neotest/neotest", "neotest")
 local methods = vim.lsp.protocol.Methods
 
-local function not_implemented()
-    return false
-end
+local M = { treesitter = { }, lsp = { } }
 
 local function select_command(rhs)
     return function(arrow)
@@ -68,10 +60,6 @@ M.interrupt = command.new("Interrupt", sacrilege.interrupt):visual(false):cmdlin
 M.inserttab = command.new("Insert Tab"):visual("<Space><BS><Tab>")
 M.popup = command.new("Popup Menu"):select("<C-\\><C-G>gv<Cmd>:popup! PopUp<CR>")
 
-M.command_palette = command.new("Command Palette...", ui.command_palette):cmdline(true)
-M.file_explorer = command.new("Toggle File Explorer", not_implemented):cmdline(true)
-M.code_outline = command.new("Toggle Code Outline", not_implemented):cmdline(true)
-M.debugger = command.new("Toggle Debugger", not_implemented):cmdline(true)
 M.cmdline = command.new("Command Line Mode", "<Esc>:")
 M.terminal = command.new("Terminal", vim.cmd.terminal):cmdline(true)
 M.diagnostics = command.new("Toggle Diagnostics", vim.diagnostic.setloclist):cmdline(true)
@@ -156,19 +144,6 @@ M.spellerror_previous = command.new("Go to Previous Spelling Error", "<C-\\><C-N
 M.spellerror_next =  command.new("Go to Next Spelling Error", "<C-\\><C-N><Right>]s")
 M.spellsuggest = command.new("Suggest Spelling Corrections", "<Cmd>startinsert<CR><Right><C-X>s")
 M.spellrepeat = command.new("Repeat Spelling Correction", "<Cmd>spellrepall<CR>")
-
-M.continue = command.new("Start Debugging / Continue", dap:try(function(dap) dap.continue() end))
-M.step_into = command.new("Step Into", dap:try(function(dap) dap.step_into() end))
-M.step_over = command.new("Step Over", dap:try(function(dap) dap.step_over() end))
-M.step_out = command.new("Step Out", dap:try(function(dap) dap.step_out() end))
-M.breakpoint = command.new("Toggle Breakpoint", dap:try(function(dap) dap.toggle_breakpoint() end))
-M.conditional_breakpoint = command.new("Set Conditional Breakpoint", dap:try(function(dap) ui.input("Breakpoint condition: ", dap.set_breakpoint) end))
-
-M.run_test = command.new("Run Test", neotest:try(function(neotest) neotest.run.run() end))
-M.run_all_tests = command.new("Run All Tests", neotest:try(function(neotest) neotest.run.run(vim.fn.expand("%")) end))
-M.debug_test = command.new("Debug Test", neotest:try(function(neotest) neotest.run.run({ strategy = "dap" }) end))
-M.stop_test = command.new("Stop Test", neotest:try(function(neotest) neotest.run.stop() end))
-M.attach_test = command.new("Attach Test", neotest:try(function(neotest) neotest.run.attach() end))
 
 M.lsp.format = command.new("Format Document", function() vim.lsp.buf.format({ async = true }) end):visual(false)
                       :when({ lsp = methods.textDocument_formatting })
