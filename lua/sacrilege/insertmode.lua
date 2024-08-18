@@ -57,7 +57,7 @@ function M.setup(opts)
         group = group,
         pattern = { "*:v", "*:V", "*:\22" },
         callback = function(_)
-            if options.selectmode then
+            if options.insertmode then
                 vim.defer_fn(editor.stopvisual, 0)
             end
         end
@@ -70,7 +70,7 @@ function M.setup(opts)
             group = group,
             pattern = { "*:s" },
             callback = function(_)
-                if options.selectmode then
+                if options.insertmode then
                     vim.opt.selection = snippet.active() and "inclusive" or "exclusive"
                 end
             end
