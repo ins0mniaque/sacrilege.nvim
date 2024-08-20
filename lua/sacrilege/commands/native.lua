@@ -88,6 +88,14 @@ M.selectall = command.new("Select All"):normal("ggVG"):insert("<C-Home><C-O>VG")
 M.stopselect = command.new("Stop Selection"):visual(function() editor.send("<Esc>") sacrilege.interrupt() end)
 M.movecursor = M.stopselect + M.replayinput
 
+M.treesitter.selectnode = command.new("Select Node", treesitter.selectnode):when({ treesitter = true })
+M.treesitter.selectscope = command.new("Select Scope", treesitter.selectscope):when({ treesitter = true })
+M.treesitter.selectsubnode = command.new("Select Sub Node", treesitter.selectsubnode):when({ treesitter = true })
+
+M.selectnode = M.treesitter.selectnode:copy()
+M.selectscope = M.treesitter.selectscope:copy()
+M.selectsubnode = M.treesitter.selectsubnode:copy()
+
 M.mouseselect = command.new("Set Selection End", "<S-LeftMouse>")
 M.mousestartselect = command.new("Start Selection", "<LeftMouse>")
 M.mousestartblockselect = command.new("Start Block Selection", "<4-LeftMouse>")

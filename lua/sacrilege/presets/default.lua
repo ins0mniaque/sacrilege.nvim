@@ -86,6 +86,10 @@ local defaults =
         selectall = "<C-A>",
         movecursor = { "<Left>", "<Right>", "<C-Arrow>" },
 
+        selectnode = "<M-Right>",
+        selectscope = "<M-Down>",
+        selectsubnode = { "<M-Left>", "<M-Up>" },
+
         mousestartblockselect = "<M-LeftMouse>",
         mousedragselect = "<M-LeftDrag>",
         mousestopselect = "<M-LeftRelease>",

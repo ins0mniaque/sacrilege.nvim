@@ -60,8 +60,54 @@ function M.get_parser(bufnr, lang)
     end
 end
 
+local editor  = require("sacrilege.editor")
 local plugin  = require("sacrilege.plugin")
 local nvim_ts = plugin.new("nvim-treesitter/nvim-treesitter", "nvim-treesitter")
+
+function M.selectnode()
+    local incremental_selection = nvim_ts.load("incremental_selection") if not incremental_selection then return end
+
+    local mode = vim.fn.mode()
+
+    if mode == "i" then
+        editor.send("<C-O>v<Right><Left>")
+        vim.schedule(incremental_selection.node_incremental)
+    elseif mode == "n" then
+        incremental_selection.init_selection()
+    else
+        incremental_selection.node_incremental()
+    end
+end
+
+function M.selectscope()
+    local incremental_selection = nvim_ts.load("incremental_selection") if not incremental_selection then return end
+
+    local mode = vim.fn.mode()
+
+    if mode == "i" then
+        editor.send("<C-O>v<Right><Left>")
+        vim.schedule(incremental_selection.scope_incremental)
+    elseif mode == "n" then
+        incremental_selection.init_selection()
+    else
+        incremental_selection.scope_incremental()
+    end
+end
+
+function M.selectsubnode()
+    local incremental_selection = nvim_ts.load("incremental_selection") if not incremental_selection then return end
+
+    local mode = vim.fn.mode()
+
+    if mode == "i" then
+        editor.send("<C-O>v<Right><Left>")
+        vim.schedule(incremental_selection.node_decremental)
+    elseif mode == "n" then
+        incremental_selection.init_selection()
+    else
+        incremental_selection.node_decremental()
+    end
+end
 
 function M.definition(opts)
     local locals   = nvim_ts.load("locals")   if not locals   then return end
