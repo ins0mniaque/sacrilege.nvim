@@ -92,6 +92,9 @@ M.treesitter.selectnode = command.new("Select Node", treesitter.selectnode):when
 M.treesitter.selectscope = command.new("Select Scope", treesitter.selectscope):when({ treesitter = true })
 M.treesitter.selectsubnode = command.new("Select Sub Node", treesitter.selectsubnode):when({ treesitter = true })
 
+M.selecttag = command.new("Select Tag"):insert("<C-O>vit<C-G>"):visual("it")
+M.selectsentence = command.new("Select Sentence"):insert("<C-O>vis<C-G>"):visual("is")
+M.selectparagraph = command.new("Select Paragraph"):insert("<C-O>vip<C-G>"):visual("ip")
 M.selectnode = M.treesitter.selectnode:copy()
 M.selectscope = M.treesitter.selectscope:copy()
 M.selectsubnode = M.treesitter.selectsubnode:copy()
