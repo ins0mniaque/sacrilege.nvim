@@ -51,7 +51,7 @@ local defaults =
         ["<Down>"] = { "completion_select_next or replayinput", "stopselect and replayinput" },
         ["<Left>"] = { "movecursor", "wildmenu_confirm or replayinput" },
         ["<Right>"] = { "movecursor", "wildmenu_confirm or replayinput" },
-        ["<RightMouse>"] = "popup",
+        ["<RightMouse>"] = { "popup", "plugin_popup or replayinput" },
 
         ["<C-P>"] = "command_palette",
         ["<C-b>"] = "file_explorer",

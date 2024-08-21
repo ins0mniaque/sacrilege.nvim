@@ -893,7 +893,7 @@ function M:menu(parent, position)
         return { enable = do_nothing, disable = do_nothing, update = do_nothing, delete = do_nothing }
     end
 
-    local name  = parent:gsub(" ", "\\ "):gsub("%.", "\\.") .. "." .. localize(self.name):gsub(" ", "\\ "):gsub("%.", "\\.")
+    local name  = parent:gsub(" ", "\\ "):gsub("%.", "\\."):gsub("&", "&&") .. "." .. localize(self.name):gsub(" ", "\\ "):gsub("%.", "\\."):gsub("&", "&&")
     local modes = { }
 
     parse(localize(self.name), self.definition, "<Nop>", unwrap_modes(function(mode, lhs, rhs, opts)

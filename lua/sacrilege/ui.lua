@@ -37,7 +37,7 @@ function M.select(prompt, items, sort)
     vim.ui.select(keys, { prompt = prompt }, callback)
 end
 
-function M.command_palette()
+function M.command_palette(buffer)
     local commands = { }
 
     local selstart = vim.fn.getpos('v')
@@ -69,10 +69,42 @@ function M.command_palette()
     elseif mode ~= "i"                                 then mode = "n"
     end
 
-    parse(vim.api.nvim_get_keymap(mode))
-    parse(vim.api.nvim_buf_get_keymap(0, mode))
+    if not buffer then
+        parse(vim.api.nvim_get_keymap(mode))
+        parse(vim.api.nvim_buf_get_keymap(0, mode))
+    else
+        parse(vim.api.nvim_buf_get_keymap(buffer, mode))
+    end
 
     M.select(localize("Commands"), commands, function(l, r) return l:lower() < r:lower() end)
+end
+
+function M.command_menu(buffer)
+    local function generate(keymaps)
+        for _, keymap in pairs(keymaps) do
+            if keymap.desc then
+                vim.cmd.amenu("Sacrilege.CommandMenu." .. keymap.desc:gsub(" ", "\\ "):gsub("%.", "\\."):gsub("&", "&&") .. " " .. keymap.lhs)
+            end
+        end
+    end
+
+    local mode = vim.fn.mode()
+    if     mode == "s" or mode == "S" or mode == "\19" then mode = "s"
+    elseif mode == "v" or mode == "V" or mode == "\22" then mode = "v"
+    elseif mode ~= "i"                                 then mode = "n"
+    end
+
+    pcall(vim.cmd.aunmenu, "Sacrilege.CommandMenu")
+
+    if not buffer then
+        generate(vim.api.nvim_get_keymap(mode))
+        generate(vim.api.nvim_buf_get_keymap(0, mode))
+    else
+        vim.print(vim.api.nvim_buf_get_keymap(buffer, mode))
+        generate(vim.api.nvim_buf_get_keymap(buffer, mode))
+    end
+
+    return pcall(vim.cmd.popup, "Sacrilege.CommandMenu")
 end
 
 function M.browse(directory)
