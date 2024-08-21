@@ -52,6 +52,7 @@ local defaults =
         ["<Left>"] = { "movecursor", "wildmenu_confirm or replayinput" },
         ["<Right>"] = { "movecursor", "wildmenu_confirm or replayinput" },
         ["<RightMouse>"] = { "popup", "plugin_popup or replayinput" },
+        ["<RightRelease>"] = "nothing",
 
         ["<C-P>"] = "command_palette",
         ["<C-b>"] = "file_explorer",
