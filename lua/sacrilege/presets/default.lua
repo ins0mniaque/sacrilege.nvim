@@ -45,12 +45,12 @@ local defaults =
     keys =
     {
         ["<Esc>"] = "cancel",
-        ["<Tab>"] = { "snippet_jump_next_or_multilineindent_or_inserttab", "completion_selectconfirm_or_cmdline_completion_trigger_or_replayinput" },
-        ["<S-Tab>"] = "snippet_jump_previous_or_unindent",
-        ["<Up>"] = { "completion_select_previous_or_replayinput", "stopselect_and_replayinput" },
-        ["<Down>"] = { "completion_select_next_or_replayinput", "stopselect_and_replayinput" },
-        ["<Left>"] = { "movecursor", "wildmenu_confirm_or_replayinput" },
-        ["<Right>"] = { "movecursor", "wildmenu_confirm_or_replayinput" },
+        ["<Tab>"] = { "snippet_jump_next or multilineindent or inserttab", "completion_selectconfirm or cmdline_completion_trigger or replayinput" },
+        ["<S-Tab>"] = "snippet_jump_previous or unindent",
+        ["<Up>"] = { "completion_select_previous or replayinput", "stopselect and replayinput" },
+        ["<Down>"] = { "completion_select_next or replayinput", "stopselect and replayinput" },
+        ["<Left>"] = { "movecursor", "wildmenu_confirm or replayinput" },
+        ["<Right>"] = { "movecursor", "wildmenu_confirm or replayinput" },
         ["<RightMouse>"] = "popup",
 
         ["<C-P>"] = "command_palette",
@@ -102,12 +102,12 @@ local defaults =
         ["}"] = "autopair",
         ["\""] = "autopair",
         ["'"] = "autopair",
-        ["<BS>"] = "autounpair_or_replayinput",
+        ["<BS>"] = "autounpair or replayinput",
 
         ["<C-Space>"] = "completion_trigger",
-        ["<Space>"] = "completion_confirm_or_replayinput",
-        ["<CR>"] = "completion_confirm_or_replayinput",
-        ["<S-CR>"] = "completion_selectconfirm_or_replayinput",
+        ["<Space>"] = "completion_confirm or replayinput",
+        ["<CR>"] = "completion_confirm or replayinput",
+        ["<S-CR>"] = "completion_selectconfirm or replayinput",
 
         ["<C-Z>"] = "undo",
         ["<C-U>"] = "undo",
@@ -149,8 +149,8 @@ local defaults =
         ["<C-G>D"] = "declaration",
         ["<M-R>"] = "rename",
         ["<F2>"] = "rename",
-        ["<M-A>"] = "code_action_or_diagnostic",
-        ["<F49>"] = "code_action_or_diagnostic",
+        ["<M-A>"] = "code_action or diagnostic",
+        ["<F49>"] = "code_action or diagnostic",
         ["<F13>"] = "hint",
 
         ["<C-T>r"] = "run_test",

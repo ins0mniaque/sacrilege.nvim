@@ -4,7 +4,7 @@ local command = require("sacrilege.command")
 local M = { }
 
 local function split(key, init)
-    local start, finish, match = key:find("_([oa][rn]d?)_", init)
+    local start, finish, match = key:find(" ([oa][rn]d?) ", init)
 
     if     match == "and" then return key:sub(1, start - 1), key:sub(finish + 1), "__band"
     elseif match == "or"  then return key:sub(1, start - 1), key:sub(finish + 1), "__bor"
@@ -58,44 +58,48 @@ local function metatable(prefix)
     return
     {
         __index = function(table, key)
-            local existing = rawget(table, key) or parse(table, key)
+            key = prefix .. key
 
-            if not existing then
-                existing = { }
-                setmetatable(existing, metatable(prefix .. key .. "."))
-                rawset(table, key, existing)
+            local value = rawget(M, key) or parse(M, key)
+
+            if not value then
+                value = { }
+                setmetatable(value, metatable(key .. "."))
             end
 
-            return existing
+            return value
         end,
 
         __newindex = function(table, key, value)
-            local plug = "<Plug>" .. prefix .. key .. "<CR>"
+            key = prefix .. key
 
-            local existing = rawget(table, key)
+            local plug = "<Plug>" .. key .. "<CR>"
+            local existing = rawget(M, key)
 
             if command.is(existing) then
                 existing:unmap(plug)
                 existing.plug = nil
-            elseif type(existing) == "table" then
-                local group = table[key]
-                for id, _ in pairs(existing) do
-                    group[id] = nil
-                end
             end
 
             if command.is(value) then
                 value:map(plug)
                 value.plug = plug
             elseif type(value) == "table" then
-                local group = table[key]
+                local group = M[key]
                 for id, subcommand in pairs(value) do
                     group[id] = subcommand
                 end
             elseif value then
-                log.err("Invalid value assigned to sacrilege.cmd: %s", vim.inspect(value))
+                log.err("Invalid value assigned to sacrilege.cmd.%s: %s", key, vim.inspect(value))
 
                 value = nil
+            elseif prefix ~= "" then
+                local starts_with_key = "^" .. key:gsub("%.", "%%.") .. "%."
+                for id, _ in pairs(M) do
+                    if id:match(starts_with_key) then
+                        M[prefix .. id] = nil
+                    end
+                end
             end
 
             rawset(table, key, value)
