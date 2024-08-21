@@ -159,7 +159,7 @@ local defaults =
         "code_action",
         "hover",
         "format_selection",
-        { "comment", i = false }
+        "comment"
     }
 }
 
