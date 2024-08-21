@@ -6,6 +6,8 @@ function M.apply(options)
 
     local neotest = plugin.new("nvim-neotest/neotest", "neotest")
 
+    options.commands.test_explorer:override(neotest:try(function(neotest) neotest.summary.toggle() end))
+    options.commands.test_output:override(neotest:try(function(neotest) neotest.output_panel.toggle() end))
     options.commands.run_test:override(neotest:try(function(neotest) neotest.run.run() end))
     options.commands.run_all_tests:override(neotest:try(function(neotest) neotest.run.run(vim.fn.expand("%")) end))
     options.commands.debug_test:override(neotest:try(function(neotest) neotest.run.run({ strategy = "dap" }) end))
