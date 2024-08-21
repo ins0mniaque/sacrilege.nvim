@@ -1,0 +1,11 @@
+describe("command", function()
+    describe("function", function()
+        it("should succeed", function()
+            assert.are.same(true, true)
+        end)
+
+        it("should fail", function()
+            assert.are.same(true, false)
+        end)
+    end)
+end)
