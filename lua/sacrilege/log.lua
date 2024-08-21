@@ -8,7 +8,7 @@ local function log(msg, level)
     if redirect then
         redirect(msg, level)
     else
-        vim.notify(msg, level, { title = localize("sacrilege.nvim") })
+        vim.notify(msg, level, { title = localizer.localize("sacrilege.nvim") })
     end
 end
 
