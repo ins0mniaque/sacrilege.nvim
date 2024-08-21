@@ -17,7 +17,7 @@ function M.mapmode(mode)
 end
 
 function M.toggleinsert()
-    if vim.bo.modifiable and not vim.bo.readonly then
+    if vim.bo.modifiable and not vim.bo.readonly or vim.bo.buftype == "terminal" then
         vim.cmd.startinsert()
     else
         vim.cmd.stopinsert()
