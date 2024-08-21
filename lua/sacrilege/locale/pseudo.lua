@@ -78,13 +78,7 @@ end
 
 function M.localize(text)
     for replace, with in pairs(replacements) do
-        local replacement = with
-
-        local length = repeats[replace] or 1
-        while length > 1 do
-            replacement = replacement .. with
-            length      = length - 1
-        end
+        local replacement = with:rep(repeats[replace] or 1)
 
         text = text:gsub(replace, replacement)
     end
@@ -94,13 +88,7 @@ end
 
 function M.format(format, ...)
     for replace, with in pairs(replacements) do
-        local replacement = with
-
-        local length = repeats[replace] or 1
-        while length > 1 do
-            replacement = replacement .. with
-            length      = length - 1
-        end
+        local replacement = with:rep(repeats[replace] or 1)
 
         format = format:gsub(replace, replacement)
         format = format:gsub("(%%%-?%d*%.?%d*)" .. replacement, "%1" .. replace)
