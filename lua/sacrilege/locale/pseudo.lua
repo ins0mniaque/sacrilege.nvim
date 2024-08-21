@@ -92,4 +92,21 @@ function M.localize(text)
     return text
 end
 
+function M.format(format, ...)
+    for replace, with in pairs(replacements) do
+        local replacement = with
+
+        local length = repeats[replace] or 1
+        while length > 1 do
+            replacement = replacement .. with
+            length      = length - 1
+        end
+
+        format = format:gsub(replace, replacement)
+        format = format:gsub("(%%%-?%d*%.?%d*)" .. replacement, "%1" .. replace)
+    end
+
+    return string.format(format, ...)
+end
+
 return M

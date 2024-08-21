@@ -31,6 +31,10 @@ function M.localize(text)
     return locale and locale.localize(text) or text
 end
 
+function M.format(format, ...)
+    return locale and locale.format(format, ...) or string.format(format, ...)
+end
+
 function M.detect()
     local language = vim.o.langmenu
 

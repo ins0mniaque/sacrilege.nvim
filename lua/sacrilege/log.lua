@@ -1,4 +1,4 @@
-local localize = require("sacrilege.localizer").localize
+local localizer = require("sacrilege.localizer")
 
 local M = { }
 
@@ -17,23 +17,23 @@ function M.redirect(callback)
 end
 
 function M.trace(format, ...)
-    log(string.format(localize(format), ...), vim.log.levels.TRACE)
+    log(localizer.format(format, ...), vim.log.levels.TRACE)
 end
 
 function M.debug(format, ...)
-    log(string.format(localize(format), ...), vim.log.levels.DEBUG)
+    log(localizer.format(format, ...), vim.log.levels.DEBUG)
 end
 
 function M.inform(format, ...)
-    log(string.format(localize(format), ...), vim.log.levels.INFO)
+    log(localizer.format(format, ...), vim.log.levels.INFO)
 end
 
 function M.warn(format, ...)
-    log(string.format(localize(format), ...), vim.log.levels.WARN)
+    log(localizer.format(format, ...), vim.log.levels.WARN)
 end
 
 function M.err(format, ...)
-    log(string.format(localize(format), ...), vim.log.levels.ERROR)
+    log(localizer.format(format, ...), vim.log.levels.ERROR)
 end
 
 return M
