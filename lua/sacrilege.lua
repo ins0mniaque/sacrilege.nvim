@@ -130,16 +130,23 @@ function M.setup(opts)
     end
 
     if options.keys then
-        recurse(options.keys, function(table) return not table[1] end, function(prefixes, keys)
-            local cmd = vim.tbl_get(cmd, unpack(prefixes))
-            if command.is(cmd) then
-                cmd:map(keys, function(mode, lhs, rhs, opts)
-                    table.insert(keymap, { mode = mode, lhs = lhs, rhs = rhs, opts = opts })
-                end)
-            else
-                log.warn("Key command not found: %s", table.concat(prefixes, "."))
+        for key, commands in pairs(options.keys) do
+            local keys = key
+            if type(commands) == "string" then
+                commands = { commands }
             end
-        end)
+
+            for _, id in pairs(commands) do
+                local cmd = cmd[id]
+                if command.is(cmd) then
+                    cmd:map(keys, function(mode, lhs, rhs, opts)
+                        table.insert(keymap, { mode = mode, lhs = lhs, rhs = rhs, opts = opts })
+                    end)
+                else
+                    log.warn("Key command not found: %s", id)
+                end
+            end
+        end
     end
 
     if options.popup then
