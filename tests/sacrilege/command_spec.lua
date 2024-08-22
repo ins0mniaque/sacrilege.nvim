@@ -87,4 +87,15 @@ describe("command", function()
             test(command.new("Table Command", { }))
         end)
     end)
+
+    describe("override", function()
+        it("should modify the same definition table", function()
+            local cmd        = command.new("Table Command", { })
+            local definition = cmd.definition
+
+            cmd:override({ })
+
+            assert(definition == cmd.definition)
+        end)
+    end)
 end)
