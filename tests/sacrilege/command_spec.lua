@@ -42,4 +42,49 @@ describe("command", function()
             assert.are.same(false, command.is(nil))
         end)
     end)
+
+    describe("copy", function()
+        local function test(cmd)
+            local copy = cmd:copy()
+
+            assert(cmd.name       == copy.name)
+            assert(cmd.definition ~= copy.definition or type(copy.definition) ~= "table")
+            assert(cmd.definition == (copy.definition and copy.definition.linked))
+        end
+
+        it("should create a linked command from a nil command", function()
+            test(command.new("Nil Command"))
+        end)
+
+        it("should create a linked command from a string command", function()
+            test(command.new("String Command", "<Cmd><CR>"))
+        end)
+
+        it("should create a linked command from a table command", function()
+            test(command.new("Table Command", { }))
+        end)
+    end)
+
+    describe("clone", function()
+        local function test(cmd)
+            local clone = cmd:clone()
+
+            assert(cmd.name       == clone.name)
+            assert(cmd.definition ~= clone.definition or type(clone.definition) ~= "table")
+            assert(nil            == (clone.definition and clone.definition.linked))
+            assert.are.same(cmd.definition, clone.definition)
+        end
+
+        it("should create an unlinked command from a nil command", function()
+            test(command.new("Nil Command"))
+        end)
+
+        it("should create an unlinked command from a string command", function()
+            test(command.new("String Command", "<Cmd><CR>"))
+        end)
+
+        it("should create an unlinked command from a table command", function()
+            test(command.new("Table Command", { }))
+        end)
+    end)
 end)
