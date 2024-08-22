@@ -100,7 +100,6 @@ function M.command_menu(buffer)
         generate(vim.api.nvim_get_keymap(mode))
         generate(vim.api.nvim_buf_get_keymap(0, mode))
     else
-        vim.print(vim.api.nvim_buf_get_keymap(buffer, mode))
         generate(vim.api.nvim_buf_get_keymap(buffer, mode))
     end
 
