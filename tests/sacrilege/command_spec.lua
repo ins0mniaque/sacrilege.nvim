@@ -98,4 +98,34 @@ describe("command", function()
             assert(definition == cmd.definition)
         end)
     end)
+
+    describe("operators", function()
+        describe("named", function()
+            it("should rename the command", function()
+                local cmd = command.new("Test Command")
+
+                cmd:named("Renamed Command")
+
+                assert(cmd.name == "Renamed Command")
+            end)
+        end)
+
+        describe("..", function()
+            it("should rename the command", function()
+                local cmd = command.new("Test Command")
+
+                cmd = "Renamed Command" .. cmd
+
+                assert(cmd.name == "Renamed Command")
+            end)
+
+            it("should rename the command", function()
+                local cmd = command.new("Test Command")
+
+                cmd = cmd .. "Renamed Command"
+
+                assert(cmd.name == "Renamed Command")
+            end)
+        end)
+    end)
 end)

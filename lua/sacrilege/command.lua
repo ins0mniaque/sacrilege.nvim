@@ -171,7 +171,11 @@ function M:named(name)
 end
 
 M.__concat = function(name, self)
-    return self:named(name)
+    if type(self) == "table" then
+        return self:named(name)
+    else
+        return name:named(self)
+    end
 end
 
 local function try_convert_to_default(definition)
