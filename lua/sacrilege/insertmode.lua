@@ -1,4 +1,5 @@
 local localize = require("sacrilege.localizer").localize
+local log = require("sacrilege.log")
 local editor = require("sacrilege.editor")
 local snippet = require("sacrilege.snippet")
 
@@ -28,13 +29,24 @@ function M.setup(opts)
 
     local group = vim.api.nvim_create_augroup("sacrilege/insertmode", { })
 
+    vim.api.nvim_create_autocmd({ "WinEnter", "BufEnter" },
+    {
+        desc = localize("Toggle Insert Mode"),
+        group = group,
+        callback = function(_)
+            if options.insertmode then
+                editor.toggleinsert()
+            end
+        end
+    })
+
     vim.api.nvim_create_autocmd({ "BufEnter", "InsertLeave", "TermLeave" },
     {
         desc = localize("Toggle Insert Mode"),
         group = group,
         callback = function(_)
             if options.insertmode then
-                vim.defer_fn(editor.toggleinsert, 0)
+                vim.schedule(editor.toggleinsert)
             end
         end
     })
@@ -46,7 +58,7 @@ function M.setup(opts)
         pattern = { "*:n" },
         callback = function(_)
             if options.insertmode then
-                vim.defer_fn(editor.toggleinsert, 0)
+                vim.schedule(editor.toggleinsert)
             end
         end
     })
@@ -58,7 +70,7 @@ function M.setup(opts)
         pattern = { "*:v", "*:V", "*:\22" },
         callback = function(_)
             if options.insertmode then
-                vim.defer_fn(editor.stopvisual, 0)
+                vim.schedule(editor.stopvisual)
             end
         end
     })
@@ -102,8 +114,8 @@ function M.setup(opts)
     end
 
     if options.insertmode then
-        vim.defer_fn(editor.stopvisual,   0)
-        vim.defer_fn(editor.toggleinsert, 0)
+        vim.schedule(editor.stopvisual)
+        vim.schedule(editor.toggleinsert)
     end
 end
 
@@ -115,8 +127,8 @@ function M.enable(enabled)
     options.insertmode = enabled
 
     if options.insertmode then
-        vim.defer_fn(editor.stopvisual,   0)
-        vim.defer_fn(editor.toggleinsert, 0)
+        vim.schedule(editor.stopvisual)
+        vim.schedule(editor.toggleinsert)
     end
 end
 
