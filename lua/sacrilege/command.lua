@@ -2,6 +2,7 @@ local localize = require("sacrilege.localizer").localize
 local log = require("sacrilege.log")
 local editor = require("sacrilege.editor")
 local treesitter = require("sacrilege.treesitter")
+local menu = require("sacrilege.menu")
 
 local M = { }
 
@@ -897,7 +898,7 @@ function M:menu(parent, position)
         return { enable = do_nothing, disable = do_nothing, update = do_nothing, delete = do_nothing }
     end
 
-    local name  = parent:gsub(" ", "\\ "):gsub("%.", "\\."):gsub("&", "&&") .. "." .. localize(self.name):gsub(" ", "\\ "):gsub("%.", "\\."):gsub("&", "&&")
+    local name  = menu.escape(parent) .. "." .. menu.escape(localize(self.name))
     local modes = { }
 
     parse(localize(self.name), self.definition, "<Nop>", unwrap_modes(function(mode, lhs, rhs, opts)

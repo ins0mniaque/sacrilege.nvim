@@ -9,9 +9,6 @@ end
 
 M.command_palette = command.new("Command Palette...", ui.command_palette):cmdline(true)
 M.command_palette_local = command.new("Local Command Palette...", function() ui.command_palette(0) end):cmdline(true)
-M.command_menu = command.new("Command Menu...", ui.command_menu):cmdline(true)
-M.command_menu_local = command.new("Local Command Menu...", function() ui.command_menu(0) end):cmdline(true)
-M.plugin_popup = M.command_menu_local:clone():insert(false):visual(false):cmdline(false)
 M.file_explorer = command.new("Toggle File Explorer", not_implemented):cmdline(true)
 M.code_outline = command.new("Toggle Code Outline", not_implemented):cmdline(true)
 
