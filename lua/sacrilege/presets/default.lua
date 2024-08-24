@@ -167,6 +167,7 @@ local defaults =
         { "command_palette", position = ".100" },
         { "split", position = ".100" },
         { "vsplit", position = ".100" },
+        { "autohide", position = ".100" },
         { "close", position = ".100" },
         { "-top-", position = ".100" },
         "-bottom-",
