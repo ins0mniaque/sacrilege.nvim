@@ -43,8 +43,10 @@ local function hover(mouse)
             end
         end
 
-        if contents then
+        if contents and #contents > 0 then
             _, window = vim.lsp.util.open_floating_preview(contents, format, { relative = "mouse" })
+        else
+            close()
         end
     end)
 end
