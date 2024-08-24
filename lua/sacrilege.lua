@@ -57,22 +57,6 @@ local function extend(dst, src, predicate)
     end
 end
 
-local function recurse(t, when, callback)
-    local prefixes = { }
-
-    for key, value in pairs(t) do
-        local prefixes = vim.list_slice(prefixes, 1, #prefixes)
-
-        table.insert(prefixes, key)
-
-        if type(value) == "table" and when(value) then
-            recurse(value, when, callback)
-        else
-            callback(prefixes, value)
-        end
-    end
-end
-
 function M.setup(opts)
     localizer.setup(opts and opts.language)
 
