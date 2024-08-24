@@ -1,9 +1,8 @@
-local localize = require("sacrilege.localizer").localize
 local editor = require("sacrilege.editor")
 
 local M = { }
 
-local mousemove
+local lastmouse
 local window
 
 local function close()
@@ -27,7 +26,7 @@ local function hover(mouse)
     local buffer = vim.api.nvim_get_current_buf()
 
     vim.lsp.buf_request_all(buffer, "textDocument/hover", position_params, function(results)
-        if mouse ~= mousemove or buffer ~= vim.api.nvim_get_current_buf() then
+        if mouse ~= lastmouse or buffer ~= vim.api.nvim_get_current_buf() then
             return
         end
 
@@ -50,32 +49,42 @@ local function hover(mouse)
     end)
 end
 
+local function mousemoved()
+    local mouse = vim.fn.getmousepos()
+
+    lastmouse = mouse
+
+    if mouse.winid == window then
+        return
+    end
+
+    if mouse.line == 0 or mouse.winid ~= vim.api.nvim_get_current_win() or mouse.column > #vim.fn.getline(mouse.line) then
+        close()
+        return
+    end
+
+    local action = mouse.wincol <= vim.fn.getwininfo(mouse.winid)[1].textoff and diagnostic or
+                   editor.supports_lsp_method(0, "textDocument/hover")       and hover or close
+
+    vim.defer_fn(function()
+        if mouse == lastmouse then
+            action(mouse)
+        end
+    end, 500)
+end
+
+local mousemove = vim.api.nvim_replace_termcodes("<MouseMove>", true, true, true)
+
 function M.setup()
+    local namespace = vim.api.nvim_create_namespace("sacrilege/hover")
+
     vim.o.mousemoveevent = true
 
-    vim.keymap.set({ "n", "i", "v" }, "<MouseMove>", function()
-        local mouse = vim.fn.getmousepos()
-
-        mousemove = mouse
-
-        if mouse.winid == window then
-            return
+    vim.on_key(function(_, typed)
+        if typed == mousemove then
+            mousemoved()
         end
-
-        if mouse.line == 0 or mouse.winid ~= vim.api.nvim_get_current_win() or mouse.column > #vim.fn.getline(mouse.line) then
-            close()
-            return
-        end
-
-        local action = mouse.wincol <= vim.fn.getwininfo(mouse.winid)[1].textoff and diagnostic or
-                       editor.supports_lsp_method(0, "textDocument/hover")       and hover or close
-
-        vim.defer_fn(function()
-            if mouse == mousemove then
-                action(mouse)
-            end
-        end, 500)
-    end, { desc = localize("Hover") })
+    end, namespace)
 end
 
 return M
