@@ -18,14 +18,14 @@ local function diagnostic(mouse)
 end
 
 local function hover(mouse)
-    local position_params = vim.lsp.util.make_position_params()
+    local params = vim.lsp.util.make_position_params()
 
-    position_params.position.line      = mouse.line - 1
-    position_params.position.character = mouse.column - 1
+    params.position.line      = mouse.line   - 1
+    params.position.character = mouse.column - 1
 
     local buffer = vim.api.nvim_get_current_buf()
 
-    vim.lsp.buf_request_all(buffer, "textDocument/hover", position_params, function(results)
+    vim.lsp.buf_request_all(buffer, "textDocument/hover", params, function(results)
         if mouse ~= lastmouse or buffer ~= vim.api.nvim_get_current_buf() then
             return
         end
@@ -58,7 +58,9 @@ local function mousemoved()
         return
     end
 
-    if mouse.line == 0 or mouse.winid ~= vim.api.nvim_get_current_win() or mouse.column > #vim.fn.getline(mouse.line) then
+    if mouse.line   == 0 or
+       mouse.winid  ~= vim.api.nvim_get_current_win() or
+       mouse.column  > #vim.fn.getline(mouse.line) then
         close()
         return
     end
