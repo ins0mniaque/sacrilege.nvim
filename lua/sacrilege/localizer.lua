@@ -28,7 +28,7 @@ function M.language()
 end
 
 function M.localize(text)
-    return locale and locale.localize(text) or text
+    return locale and text and locale.localize(text) or text
 end
 
 function M.format(format, ...)

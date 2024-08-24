@@ -50,7 +50,7 @@ local function paste(register)
     end
 end
 
-M.nothing = command.new("", ""):all(true)
+M.nothing = command.new():all(true)
 M.replayinput = command.new("Replay Input", editor.send):requires({ input = true, modeless = true }):all(true)
 
 M.clear_highlights = command.new("Clear Highlights", "<Cmd>nohl<CR>"):cmdline(true)

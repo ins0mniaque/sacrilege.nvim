@@ -205,7 +205,7 @@ local function try_convert_to_default(definition)
         end
     end
 
-    return definition
+    return definition or ""
 end
 
 -- TODO: Convert table form to non-table form when possible
