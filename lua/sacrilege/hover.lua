@@ -3,7 +3,20 @@ local editor = require("sacrilege.editor")
 
 local M = { }
 
-local lastmouse
+local mousemove
+local window
+
+local function close()
+    if window and vim.api.nvim_win_is_valid(window) then
+        vim.api.nvim_win_close(window, false)
+    end
+
+    window = nil
+end
+
+local function diagnostic(mouse)
+    _, window = vim.diagnostic.open_float({ pos = { mouse.line - 1, mouse.column - 1 }, relative = "mouse" })
+end
 
 local function hover(mouse)
     local position_params = vim.lsp.util.make_position_params()
@@ -14,7 +27,7 @@ local function hover(mouse)
     local buffer = vim.api.nvim_get_current_buf()
 
     vim.lsp.buf_request_all(buffer, "textDocument/hover", position_params, function(results)
-        if mouse ~= lastmouse or buffer ~= vim.api.nvim_get_current_buf() then
+        if mouse ~= mousemove or buffer ~= vim.api.nvim_get_current_buf() then
             return
         end
 
@@ -32,7 +45,7 @@ local function hover(mouse)
         end
 
         if contents then
-            vim.lsp.util.open_floating_preview(contents, format, { relative = "mouse" })
+            _, window = vim.lsp.util.open_floating_preview(contents, format, { relative = "mouse" })
         end
     end)
 end
@@ -41,28 +54,26 @@ function M.setup()
     vim.o.mousemoveevent = true
 
     vim.keymap.set({ "n", "i", "v" }, "<MouseMove>", function()
-        if not editor.supports_lsp_method(0, "textDocument/hover") then
-            editor.try_close_popup()
-            return
-        end
-
         local mouse = vim.fn.getmousepos()
 
-        lastmouse = mouse
+        mousemove = mouse
 
-        if mouse.line == 0 or mouse.winid ~= vim.api.nvim_get_current_win() or mouse.column > #vim.fn.getline(mouse.line)  then
-            editor.try_close_popup()
+        if mouse.winid == window then
             return
         end
 
+        if mouse.line == 0 or mouse.winid ~= vim.api.nvim_get_current_win() or mouse.column > #vim.fn.getline(mouse.line) then
+            close()
+            return
+        end
+
+        local action = mouse.wincol <= vim.fn.getwininfo(mouse.winid)[1].textoff and diagnostic or
+                       editor.supports_lsp_method(0, "textDocument/hover")       and hover or close
+
         vim.defer_fn(function()
-            if mouse ~= lastmouse then
-                return
+            if mouse == mousemove then
+                action(mouse)
             end
-
-            editor.try_close_popup()
-
-            hover(mouse)
         end, 500)
     end, { desc = localize("Hover") })
 end
