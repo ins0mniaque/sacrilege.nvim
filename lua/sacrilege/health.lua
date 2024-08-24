@@ -65,6 +65,12 @@ M.check = function()
         warn("autobreakundo not enabled")
     end
 
+    if options.hover then
+        ok("hover enabled")
+    else
+        warn("hover not enabled")
+    end
+
     start("sacrilege: Keymap")
 
     local keymaps =

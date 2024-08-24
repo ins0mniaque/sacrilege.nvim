@@ -55,6 +55,7 @@ local defaults =
         ["<RightMouse>"] = "popup",
         ["<RightRelease>"] = "nothing",
 
+        ["<F1>"] = "command_palette",
         ["<C-P>"] = "command_palette",
         ["<C-b>"] = "file_explorer",
         ["<M-o>"] = "code_outline",
@@ -139,7 +140,7 @@ local defaults =
         ["<F9>"] = "breakpoint",
         ["<F21>"] = "conditional_breakpoint",
 
-        ["<F1>"] = "hover",
+        ["<C-K>"] = "hover",
         ["<F12>"] = "definition",
         ["<C-G>d"] = "definition",
         ["<F24>"] = "references",
