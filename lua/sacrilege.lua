@@ -121,6 +121,10 @@ function M.setup(opts)
         require("sacrilege.blockmode").setup()
     end
 
+    if options.hover then
+        require("sacrilege.hover").setup()
+    end
+
     keymap = { }
 
     if options.commands then

@@ -8,6 +8,7 @@ local defaults =
     blockmode = true,
     autobreakundo = true,
     autocomplete = true,
+    hover = true,
     completion =
     {
         trigger = function(what)
