@@ -1,7 +1,32 @@
+local localize = require("sacrilege.localizer").localize
 local log = require("sacrilege.log")
 local command = require("sacrilege.command")
 
 local M = { }
+
+local function execute(args)
+    local cmd = M[args.args]
+
+    if cmd then
+        if args.bang then
+            pcall(cmd.execute, cmd)
+        else
+            cmd:execute()
+        end
+    else
+        log.err("Command \"%s\" not found", args.args)
+    end
+end
+
+vim.api.nvim_create_user_command("Cmd", execute,
+{
+    nargs = 1,
+    bang = true,
+    desc = localize("Execute Sacrilege Command"),
+    complete = function(_)
+        return vim.tbl_keys(M)
+    end,
+})
 
 local function split(key, init)
     local start, finish, match = key:find(" ([oa][rn]d?) ", init)
@@ -84,6 +109,8 @@ local function metatable(prefix)
             if command.is(value) then
                 value:map(plug)
                 value.plug = plug
+
+                rawset(M, key, value)
             elseif type(value) == "table" then
                 local group = M[key]
                 for id, subcommand in pairs(value) do
@@ -91,18 +118,16 @@ local function metatable(prefix)
                 end
             elseif value then
                 log.err("Invalid value assigned to sacrilege.cmd.%s: %s", key, vim.inspect(value))
-
-                value = nil
             elseif prefix ~= "" then
                 local starts_with_key = "^" .. key:gsub("%.", "%%.") .. "%."
                 for id, _ in pairs(M) do
                     if id:match(starts_with_key) then
-                        M[prefix .. id] = nil
+                        rawset(M, prefix .. id, nil)
                     end
                 end
+            else
+                rawset(M, key, nil)
             end
-
-            rawset(table, key, value)
         end
     }
 end

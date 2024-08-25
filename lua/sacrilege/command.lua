@@ -891,6 +891,22 @@ function M:unmap(keys, callback)
     end
 end
 
+function M:execute()
+    if not self.plug then
+        log.warn("Command \"%s\" was not registered with sacrilege.cmd", localize(self.name))
+        return
+    end
+
+    local mode = editor.mapmode()
+
+    if vim.fn.maparg(self.plug, mode) ~= "" then
+        editor.send(self.plug)
+    else
+        -- TODO: Friendly name for mode
+        log.warn("Command \"%s\" does not have a definition for mode %s", localize(self.name), mode)
+    end
+end
+
 function M:menu(parent, position)
     if not self.plug then
         log.warn("Menu command \"%s\" was not registered with sacrilege.cmd", localize(self.name))
