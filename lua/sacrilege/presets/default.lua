@@ -9,6 +9,11 @@ local defaults =
     autobreakundo = true,
     autocomplete = true,
     hover = true,
+    selection =
+    {
+        mouse = true,
+        virtual = true
+    },
     completion =
     {
         trigger = function(what)
@@ -37,11 +42,6 @@ local defaults =
     {
         expand = vim.snippet and vim.snippet.expand,
         native = vim.snippet
-    },
-    selection =
-    {
-        mouse = true,
-        virtual = true
     },
     keys =
     {
