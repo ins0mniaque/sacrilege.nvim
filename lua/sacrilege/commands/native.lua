@@ -92,7 +92,7 @@ M.selectword = command.new("Select Word"):insert(select_command("<C-O>v<C-Arrow>
 M.blockselect = command.new("Block Select Character"):insert(select_command("<C-O><C-V><Arrow><C-G>")):visual(arrow_command("<C-V><Arrow><C-G>", "<Arrow>")):requires({ arrow = true })
 M.blockselectword = command.new("Block Select Word"):insert(select_command("<C-O><C-V><C-Arrow><C-G>")):visual(arrow_command("<C-V><C-Arrow><C-G>", "<C-Arrow>")):requires({ arrow = true })
 M.selectall = command.new("Select All"):normal("ggVG"):insert("<C-Home><C-O>VG"):visual("gg0oG$")
-M.stopselect = command.new("Stop Selection"):visual(function() editor.send("<Esc>") sacrilege.interrupt() end)
+M.stopselect = command.new("Stop Selection"):visual(function() editor.send("<Esc>") insertmode.interrupt() end)
 M.movecursor = M.stopselect + M.replayinput
 
 M.treesitter.selectnode = command.new("Select Node", treesitter.selectnode):when({ treesitter = true })
