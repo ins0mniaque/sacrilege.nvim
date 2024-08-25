@@ -64,9 +64,11 @@ function M.setup(options)
 
         local function restore_cursor_and_select()
             if cursor then
-                local mouse = vim.fn.getmousepos()
+                local mouse   = vim.fn.getmousepos()
+                local topline = vim.fn.getwininfo(vim.api.nvim_get_current_win())[1].topline
+
                 editor.set_selection({ 0, cursor[1], cursor[2] + 1 }, { 0, mouse.line, mouse.column })
-                vim.fn.winrestview({ topline = wininfo.topline })
+                vim.fn.winrestview({ topline = topline })
                 editor.send("<S-LeftMouse>")
             else
                 editor.send("<S-LeftMouse>")
