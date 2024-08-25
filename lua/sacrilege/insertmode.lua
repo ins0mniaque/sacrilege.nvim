@@ -1,7 +1,6 @@
 local localize = require("sacrilege.localizer").localize
 local log = require("sacrilege.log")
 local editor = require("sacrilege.editor")
-local snippet = require("sacrilege.snippet")
 
 local M = { }
 
@@ -9,23 +8,6 @@ local options
 
 function M.setup(opts)
     options = opts or { }
-
-    if options.selection then
-        vim.opt.keymodel = { }
-        vim.opt.selection = "exclusive"
-        vim.opt.virtualedit = "onemore"
-
-        if options.selection.mouse then
-            vim.opt.mouse = "a"
-            vim.opt.selectmode = { "mouse", "key", "cmd" }
-
-            require("sacrilege.mouse").setup()
-        end
-
-        if options.selection.virtual then
-            vim.opt.virtualedit = "block,onemore"
-        end
-    end
 
     local group = vim.api.nvim_create_augroup("sacrilege/insertmode", { })
 
@@ -74,44 +56,6 @@ function M.setup(opts)
             end
         end
     })
-
-    local clipboard
-
-    vim.api.nvim_create_autocmd("InsertEnter",
-    {
-        desc = localize("Disable Copy On Delete"),
-        group = group,
-        callback = function(_)
-            clipboard = options.insertmode and vim.fn.getreg("+")
-        end
-    })
-
-    vim.api.nvim_create_autocmd("TextYankPost",
-    {
-        desc = localize("Disable Copy On Delete"),
-        group = group,
-        callback = function(_)
-            if clipboard and vim.v.event.operator == "d" and vim.v.event.regname == "" then
-                vim.fn.setreg("+", clipboard)
-            end
-
-            clipboard = nil
-        end
-    })
-
-    if options.selection then
-        vim.api.nvim_create_autocmd("ModeChanged",
-        {
-            desc = localize("Fix Active Snippet Exclusive Selection"),
-            group = group,
-            pattern = { "*:s" },
-            callback = function(_)
-                if options.insertmode then
-                    vim.opt.selection = snippet.active() and "inclusive" or "exclusive"
-                end
-            end
-        })
-    end
 
     if options.insertmode then
         vim.schedule(editor.stopvisual)

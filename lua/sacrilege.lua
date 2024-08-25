@@ -109,6 +109,10 @@ function M.setup(opts)
         require("sacrilege.hover").setup()
     end
 
+    if options.selection then
+        require("sacrilege.selection").setup(options.selection)
+    end
+
     keymap = { }
 
     if options.commands then
