@@ -16,19 +16,7 @@ function M.mapmode(mode)
     end
 end
 
-function M.toggleinsert()
-    if vim.bo.modifiable and not vim.bo.readonly or vim.bo.buftype == "terminal" then
-        vim.cmd.startinsert()
-    else
-        vim.cmd.stopinsert()
-    end
-end
 
-function M.stopvisual()
-    if M.mapmode() == "x" then
-        M.send("<C-\\><C-N>gv")
-    end
-end
 
 function M.supports_lsp_method(bufnr, method)
     local clients = vim.lsp.get_clients()

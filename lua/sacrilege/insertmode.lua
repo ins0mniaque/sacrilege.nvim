@@ -6,6 +6,20 @@ local M = { }
 
 local options
 
+local function toggleinsert()
+    if vim.bo.modifiable and not vim.bo.readonly or vim.bo.buftype == "terminal" then
+        vim.cmd.startinsert()
+    else
+        vim.cmd.stopinsert()
+    end
+end
+
+local function stopvisual()
+    if editor.mapmode() == "x" then
+        editor.send("<C-\\><C-N>gv")
+    end
+end
+
 function M.setup(opts)
     options = opts or { }
 
@@ -18,9 +32,9 @@ function M.setup(opts)
         callback = function(_)
             if options.insertmode then
                 if vim.api.nvim_win_get_config(0).relative ~= "" then
-                    vim.schedule(editor.toggleinsert)
+                    vim.schedule(toggleinsert)
                 else
-                    editor.toggleinsert()
+                    toggleinsert()
                 end
             end
         end
@@ -32,7 +46,7 @@ function M.setup(opts)
         group = group,
         callback = function(_)
             if options.insertmode then
-                vim.schedule(editor.toggleinsert)
+                vim.schedule(toggleinsert)
             end
         end
     })
@@ -44,7 +58,7 @@ function M.setup(opts)
         pattern = { "*:n" },
         callback = function(_)
             if options.insertmode then
-                vim.schedule(editor.toggleinsert)
+                vim.schedule(toggleinsert)
             end
         end
     })
@@ -56,14 +70,14 @@ function M.setup(opts)
         pattern = { "*:v", "*:V", "*:\22" },
         callback = function(_)
             if options.insertmode then
-                vim.schedule(editor.stopvisual)
+                vim.schedule(stopvisual)
             end
         end
     })
 
     if options.insertmode then
-        vim.schedule(editor.stopvisual)
-        vim.schedule(editor.toggleinsert)
+        vim.schedule(stopvisual)
+        vim.schedule(toggleinsert)
     end
 end
 
@@ -75,8 +89,24 @@ function M.enable(enabled)
     options.insertmode = enabled
 
     if options.insertmode then
-        vim.schedule(editor.stopvisual)
-        vim.schedule(editor.toggleinsert)
+        vim.schedule(stopvisual)
+        vim.schedule(toggleinsert)
+    end
+end
+
+function M.escape()
+    if vim.fn.mode() == "c" then
+        editor.send("<C-U><Esc>")
+    elseif options and not options.insertmode then
+        editor.send("<Esc>")
+    end
+end
+
+function M.interrupt()
+    if options and options.insertmode then
+        toggleinsert()
+    else
+        editor.send("<C-c>")
     end
 end
 

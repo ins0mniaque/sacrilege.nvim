@@ -182,20 +182,4 @@ function M.setup(opts)
     end
 end
 
-function M.escape()
-    if vim.fn.mode() == "c" then
-        editor.send("<C-U><Esc>")
-    elseif not options.insertmode then
-        editor.send("<Esc>")
-    end
-end
-
-function M.interrupt()
-    if options.insertmode then
-        editor.toggleinsert()
-    else
-        editor.send("<C-c>")
-    end
-end
-
 return M
