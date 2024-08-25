@@ -31,11 +31,7 @@ function M.setup(opts)
         group = group,
         callback = function(_)
             if options.insertmode then
-                if vim.api.nvim_win_get_config(0).relative ~= "" then
-                    vim.schedule(toggleinsert)
-                else
-                    toggleinsert()
-                end
+                toggleinsert()
             end
         end
     })
