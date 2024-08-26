@@ -162,27 +162,73 @@ local defaults =
         ["<C-T>s"] = "stop_test",
         ["<C-T>a"] = "attach_test"
     },
-    popup =
+    menus =
     {
-        { "command_palette", position = ".100" },
-        { "split", position = ".100" },
-        { "vsplit", position = ".100" },
-        { "autohide", position = ".100" },
-        { "close", position = ".100" },
-        { "-top-", position = ".100" },
-        "cut",
-        "copy",
-        "paste",
-        "delete",
-        "selectall",
-        "inspect",
-        "-bottom-",
-        "definition",
-        "references",
-        "rename",
-        "code_action",
-        "format_selection",
-        "comment"
+        popup =
+        {
+            { "command_palette", position = ".100" },
+            { "split", position = ".100" },
+            { "vsplit", position = ".100" },
+            { "autohide", position = ".100" },
+            { "close", position = ".100" },
+            { "-top-", position = ".100" },
+            "cut",
+            "copy",
+            "paste",
+            "delete",
+            "selectall",
+            "inspect",
+            "-bottom-",
+            "definition",
+            "references",
+            "rename",
+            "code_action",
+            "format_selection",
+            "comment"
+        },
+        statusline =
+        {
+            "file_explorer",
+            "code_outline",
+            "diagnostics",
+            "debugger",
+            "test_explorer",
+            "test_output",
+            "-",
+            "terminal",
+            "messages",
+            "checkhealth"
+        },
+        tabline =
+        {
+            "close",
+        },
+        cmdline =
+        {
+            "file_explorer",
+            "code_outline",
+            "diagnostics",
+            "debugger",
+            "test_explorer",
+            "test_output",
+            "-",
+            "terminal",
+            "messages",
+            "checkhealth"
+        },
+        border =
+        {
+            "file_explorer",
+            "code_outline",
+            "diagnostics",
+            "debugger",
+            "test_explorer",
+            "test_output",
+            "-",
+            "terminal",
+            "messages",
+            "checkhealth"
+        }
     }
 }
 

@@ -170,37 +170,61 @@ function M.setup(opts)
         end
     end
 
-    if options.popup then
+    if options.menus then
         vim.opt.mouse      = "a"
         vim.opt.mousemodel = "popup_setpos"
 
-        pcall(vim.cmd.aunmenu, "PopUp")
-
         local menus = { }
 
-        for _, definition in pairs(options.popup) do
-            if type(definition) == "string" then
-                definition = { definition }
-            end
+        local function parse(name, definition)
+            pcall(vim.cmd.aunmenu, name)
 
-            if not definition[1]:find("^-") then
-                local cmd = vim.tbl_get(cmd, unpack(vim.split(definition[1], "%.")))
-
-                if command.is(cmd) then
-                    table.insert(menus, cmd:menu("PopUp", definition.position))
-                else
-                    log.warn("Popup command not found: %s", definition[1])
+            for _, menu in pairs(definition) do
+                if type(menu) == "string" then
+                    menu = { menu }
                 end
-            else
-                vim.cmd.amenu((definition.position or "") .. " PopUp." .. definition[1] .. " <Nop>")
+
+                if not menu[1]:find("^-") then
+                    local cmd = cmd[menu[1]]
+
+                    if command.is(cmd) then
+                        table.insert(menus, cmd:menu(name, menu.position))
+                    else
+                        log.warn(name .. " command not found: %s", menu[1])
+                    end
+                else
+                    vim.cmd.amenu((menu.position or "") .. " " .. name .. "." .. menu[1] .. " <Nop>")
+                end
             end
         end
+
+        if options.menus.popup then
+            parse("PopUp", options.menus.popup)
+        end
+
+        if options.menus.statusline then
+            parse("StatusLine", options.menus.statusline)
+        end
+
+        if options.menus.tabline then
+            parse("TabLine", options.menus.tabline)
+        end
+
+        if options.menus.cmdline then
+            parse("CmdLine", options.menus.cmdline)
+        end
+
+        if options.menus.border then
+            parse("Border", options.menus.border)
+        end
+
+        -- TODO: Add support for filetype menus
 
         vim.api.nvim_create_autocmd("MenuPopup",
         {
             desc = localizer.localize("Synchronize Popup Menu Mode"),
             group = vim.api.nvim_create_augroup("sacrilege/popup", { }),
-            callback = function(_)
+            callback = function()
                 local mapmode = editor.mapmode()
                 for _, menu in pairs(menus) do
                     menu.update(mapmode)
