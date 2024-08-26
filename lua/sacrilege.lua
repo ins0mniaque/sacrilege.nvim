@@ -177,6 +177,10 @@ function M.setup(opts)
         local menus = { }
 
         local function parse(name, definition)
+            if not definition then
+                return
+            end
+
             pcall(vim.cmd.aunmenu, name)
 
             for _, menu in pairs(definition) do
@@ -198,25 +202,11 @@ function M.setup(opts)
             end
         end
 
-        if options.menus.popup then
-            parse("PopUp", options.menus.popup)
-        end
-
-        if options.menus.statusline then
-            parse("StatusLine", options.menus.statusline)
-        end
-
-        if options.menus.tabline then
-            parse("TabLine", options.menus.tabline)
-        end
-
-        if options.menus.cmdline then
-            parse("CmdLine", options.menus.cmdline)
-        end
-
-        if options.menus.border then
-            parse("Border", options.menus.border)
-        end
+        parse("PopUp",      options.menus.popup)
+        parse("StatusLine", options.menus.statusline)
+        parse("TabLine",    options.menus.tabline)
+        parse("CmdLine",    options.menus.cmdline)
+        parse("Border",     options.menus.border)
 
         -- TODO: Add support for filetype menus
 
