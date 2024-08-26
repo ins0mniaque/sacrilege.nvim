@@ -151,6 +151,8 @@ function M.popup()
         end
     end
 
+    vim.api.nvim_exec_autocmds("MenuPopup", { })
+
     if mapmode == "x" or mapmode == "s" then
         local start, cursor = editor.get_selection()
         if (mouse.line >= start[2] and mouse.line <= cursor[2]) or
