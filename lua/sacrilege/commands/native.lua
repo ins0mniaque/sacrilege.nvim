@@ -42,6 +42,13 @@ local function arrow_command(rhs, block_rhs)
     end
 end
 
+local function clear_echo()
+    if vim.o.cmdheight > 0 then
+        vim.cmd("echon '\\r\\r'")
+        vim.cmd("echon ''")
+    end
+end
+
 local function paste(register)
     return function()
         local mode = vim.fn.mode()
@@ -60,7 +67,7 @@ M.nothing = command.new():all(true)
 M.replayinput = command.new("Replay Input", editor.send):requires({ input = true, modeless = true }):all(true)
 
 M.clear_highlights = command.new("Clear Highlights", "<Cmd>nohl<CR>"):cmdline(true)
-M.clear_echo = command.new("Clear Command Line Message", "<Cmd>echon '\\r\\r'<CR><Cmd>echon ''<CR>"):cmdline(true)
+M.clear_echo = command.new("Clear Command Line Message", clear_echo):cmdline(true)
 M.stop_blockmode = command.new("Stop Block Mode", blockmode.stop):cmdline(true)
 M.close_popup = command.new("Close Popup", editor.try_close_popup):cmdline(true)
 M.escape = command.new("Escape", insertmode.escape):cmdline(true)
