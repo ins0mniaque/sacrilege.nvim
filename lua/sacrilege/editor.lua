@@ -1,5 +1,3 @@
-local localize = require("sacrilege.localizer").localize
-
 local M = { }
 
 function M.send(keys, remap)
@@ -15,8 +13,6 @@ function M.mapmode(mode)
     else                                                                 return nil
     end
 end
-
-
 
 function M.supports_lsp_method(bufnr, method)
     local clients = vim.lsp.get_clients()
