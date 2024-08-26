@@ -14,6 +14,10 @@ local methods = vim.lsp.protocol.Methods
 
 local M = { treesitter = { }, lsp = { } }
 
+local function not_implemented()
+    return false
+end
+
 local function select_command(rhs)
     return function(arrow)
         local keys = rhs:gsub("[Aa][rR][rR][oO][wW]>", arrow .. ">")
@@ -84,8 +88,27 @@ M.quit = command.new("Quit", "<Cmd>confirm quitall<CR>"):all(true)
 
 M.autohide = command.new("Toggle Auto-Hide", autohide.toggle)
 
+M.tabpin = command.new("Pin Tab", not_implemented)
+M.tabrestore = command.new("Restore Tab", not_implemented)
+M.tabclose = command.new("Close Tab", "<Cmd>confirm tabclose<CR>")
+M.tabcloseall = command.new("Close All Tabs", "<Cmd>tabnew<CR><Cmd>confirm tabonly<CR>")
+M.tabcloseothers = command.new("Close Other Tabs", "<Cmd>confirm tabonly<CR>")
+M.tabcloseleft = command.new("Close Tabs to the Left", not_implemented)
+M.tabcloseright = command.new("Close Tabs to the Right", not_implemented)
+M.tabcloseunpinned = command.new("Close Unpinned Tabs", not_implemented)
+
 M.tabprevious = command.new("Previous Tab", "<Cmd>tabprevious<CR>")
 M.tabnext = command.new("Next Tab", "<Cmd>tabnext<CR>")
+M.tablast = command.new("Last Tab", "<Cmd>tablast<CR>")
+M.tab1 = command.new("First Tab", "<Cmd>tabfirst<CR>")
+M.tab2 = command.new("Second Tab", "<Cmd>tabnext 2<CR>")
+M.tab3 = command.new("Third Tab", "<Cmd>tabnext 3<CR>")
+M.tab4 = command.new("Fourth Tab", "<Cmd>tabnext 4<CR>")
+M.tab5 = command.new("Fifth Tab", "<Cmd>tabnext 5<CR>")
+M.tab6 = command.new("Sixth Tab", "<Cmd>tabnext 6<CR>")
+M.tab7 = command.new("Seventh Tab", "<Cmd>tabnext 7<CR>")
+M.tab8 = command.new("Eighth Tab", "<Cmd>tabnext 8<CR>")
+M.tab9 = command.new("Nineth Tab", "<Cmd>tabnext 9<CR>")
 
 M.select = command.new("Select Character"):insert(select_command("<C-O>v<Arrow><C-G>")):visual(arrow_command("<Arrow>", "<C-V>gv<Arrow>v")):requires({ arrow = true })
 M.selectword = command.new("Select Word"):insert(select_command("<C-O>v<C-Arrow><C-G>")):visual(arrow_command("<C-Arrow>", "<C-V>gv<C-Arrow>v")):requires({ arrow = true })

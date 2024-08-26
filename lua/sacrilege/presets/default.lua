@@ -201,7 +201,14 @@ local defaults =
         },
         tabline =
         {
-            "close",
+            "tabpin",
+            "tabrestore",
+            "tabclose",
+            "tabcloseall",
+            "tabcloseothers",
+            "tabcloseleft",
+            "tabcloseright",
+            "tabcloseunpinned"
         },
         cmdline =
         {
