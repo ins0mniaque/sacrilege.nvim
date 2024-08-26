@@ -135,6 +135,7 @@ M.cut = command.new("Cut"):visual("\"+x")
 M.paste = command.new("Paste"):normal("\"+gP"):insert("<C-G>u<C-\\><C-O>\"+gP"):visual(paste("+")):cmdline("<C-R>+"):pending("<C-C>\"+gP<C-\\><C-G>")
 M.delete = command.new("Delete"):visual("\"_d")
 M.deleteword = command.new("Delete Word"):normal("cvb"):insert("<C-\\><C-N>cvb"):visual("\"_d")
+M.inspect = command.new("Inspect", "<C-C><Cmd>Inspect<CR><C-\\><C-G>"):cmdline(true):pending(true):normal("<Cmd>Inspect<CR>"):insert("<C-\\><C-O><Cmd>Inspect<CR>")
 
 M.find = command.new("Find...", ui.find)
 M.find_previous = command.new("Find Previous", "<C-\\><C-N><Left>gN")
