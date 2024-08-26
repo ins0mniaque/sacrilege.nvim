@@ -1,3 +1,4 @@
+local localize = require("sacrilege.localizer").localize
 local editor = require("sacrilege.editor")
 
 local M = { }
@@ -14,7 +15,7 @@ local function close()
 end
 
 local function diagnostic(mouse)
-    _, window = vim.diagnostic.open_float({ pos = { mouse.line - 1, mouse.column - 1 }, relative = "mouse" })
+    _, window = vim.diagnostic.open_float({ pos = { mouse.line - 1, mouse.column - 1 }, relative = "mouse", offset_x = 1 })
 end
 
 local function hover(mouse)
@@ -44,7 +45,7 @@ local function hover(mouse)
         end
 
         if contents and #contents > 0 then
-            _, window = vim.lsp.util.open_floating_preview(contents, format, { relative = "mouse" })
+            _, window = vim.lsp.util.open_floating_preview(contents, format, { relative = "mouse", offset_x = 1 })
         else
             close()
         end
@@ -81,6 +82,7 @@ local mousemove = vim.api.nvim_replace_termcodes("<MouseMove>", true, true, true
 
 function M.setup()
     local namespace = vim.api.nvim_create_namespace("sacrilege/hover")
+    local group     = vim.api.nvim_create_augroup("sacrilege/hover", { })
 
     vim.o.mousemoveevent = true
 
@@ -89,6 +91,17 @@ function M.setup()
             mousemoved()
         end
     end, namespace)
+
+    vim.api.nvim_create_autocmd("WinScrolled",
+    {
+        desc = localize("Close Hover Window"),
+        group = group,
+        callback = function(_)
+            if window and vim.tbl_contains(vim.v.event.windows, window) then
+                close()
+            end
+        end
+    })
 end
 
 return M
