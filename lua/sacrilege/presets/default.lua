@@ -170,12 +170,17 @@ local defaults =
         { "autohide", position = ".100" },
         { "close", position = ".100" },
         { "-top-", position = ".100" },
+        "cut",
+        "copy",
+        "paste",
+        "delete",
+        "selectall",
+        "inspect",
         "-bottom-",
         "definition",
         "references",
         "rename",
         "code_action",
-        "hover",
         "format_selection",
         "comment"
     }

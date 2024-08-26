@@ -169,8 +169,7 @@ function M.setup(opts)
         vim.opt.mouse      = "a"
         vim.opt.mousemodel = "popup_setpos"
 
-        pcall(vim.cmd.aunmenu, "PopUp.-1-")
-        pcall(vim.cmd.aunmenu, "PopUp.How-to\\ disable\\ mouse")
+        pcall(vim.cmd.aunmenu, "PopUp")
 
         local menus = { }
 
