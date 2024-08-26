@@ -15,9 +15,12 @@ function M.setup()
 
     local lastrow, lastcol
     local wasvisible = false
+    local typed = false
 
-    vim.on_key(function(_, _)
-        wasvisible = completion.visible() ~= nil
+    vim.on_key(function(_, typed)
+        if typed ~= "" then
+            wasvisible = completion.visible() ~= nil
+        end
     end, namespace)
 
     vim.api.nvim_create_autocmd("InsertCharPre",
@@ -25,7 +28,8 @@ function M.setup()
         desc = localize("Trigger Autocompletion"),
         group = group,
         callback = function()
-            if vim.fn.state("m") == "m" or completion.visible() then
+            typed = vim.fn.state("m") ~= "m"
+            if not typed or completion.visible() then
                 return
             end
 
@@ -40,27 +44,26 @@ function M.setup()
         end
     })
 
-    vim.api.nvim_create_autocmd({ "CursorMoved", "TextChangedP" },
-    {
-        desc = localize("Trigger Autocompletion"),
-        group = group,
-        callback = function()
-            lastrow, lastcol = unpack(vim.api.nvim_win_get_cursor(0))
-        end
-    })
-
     vim.api.nvim_create_autocmd("CursorMovedI",
     {
         desc = localize("Trigger Autocompletion"),
         group = group,
         callback = function()
+            if not typed then
+                return
+            end
+
             local row, col = unpack(vim.api.nvim_win_get_cursor(0))
 
-            if wasvisible and row == lastrow and col < lastcol then
-                local char = col == 0 and " " or vim.api.nvim_buf_get_text(0, row - 1, col - 1, row - 1, col, { })[1]
+            if wasvisible then
+                if row == lastrow and (col == lastcol + 1 or col == lastcol - 1) then
+                    local char = col == 0 and " " or vim.api.nvim_buf_get_text(0, row - 1, col - 1, row - 1, col, { })[1]
 
-                if on(char) then
-                    completion.trigger()
+                    if on(char) then
+                        completion.trigger()
+                    else
+                        completion.abort()
+                    end
                 else
                     completion.abort()
                 end
