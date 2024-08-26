@@ -96,8 +96,8 @@ function M.setup()
     {
         desc = localize("Close Hover Window"),
         group = group,
-        callback = function(_)
-            if window and vim.tbl_contains(vim.v.event.windows, window) then
+        callback = function(event)
+            if window and tonumber(event.match) ~= window then
                 close()
             end
         end
