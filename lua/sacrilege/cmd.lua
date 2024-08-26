@@ -1,32 +1,7 @@
-local localize = require("sacrilege.localizer").localize
 local log = require("sacrilege.log")
 local command = require("sacrilege.command")
 
 local M = { }
-
-local function execute(args)
-    local cmd = M[args.args]
-
-    if cmd then
-        if args.bang then
-            pcall(cmd.execute, cmd)
-        else
-            cmd:execute()
-        end
-    else
-        log.err("Command \"%s\" not found", args.args)
-    end
-end
-
-vim.api.nvim_create_user_command("Cmd", execute,
-{
-    nargs = 1,
-    bang = true,
-    desc = localize("Execute Sacrilege Command"),
-    complete = function(_)
-        return vim.tbl_keys(M)
-    end,
-})
 
 local function split(key, init)
     local start, finish, match = key:find(" ([oa][rn]d?) ", init)
