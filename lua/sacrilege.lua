@@ -1,7 +1,6 @@
 local localizer = require("sacrilege.localizer")
 local log = require("sacrilege.log")
 local command = require("sacrilege.command")
-local cmd = require("sacrilege.cmd")
 local editor = require("sacrilege.editor")
 local insertmode = require("sacrilege.insertmode")
 local completion = require("sacrilege.completion")
@@ -15,6 +14,7 @@ local defaults =
 }
 
 local options = { }
+local cmd     = { }
 local keymap  = { }
 
 local metatable =
@@ -26,6 +26,8 @@ local metatable =
             return require("sacrilege.blockmode").active()
         elseif key == "options" then
             return vim.tbl_deep_extend("force", { }, options)
+        elseif key == "cmd" then
+            return cmd
         elseif key == "keymap" then
             return vim.tbl_deep_extend("force", { }, keymap)
         end
@@ -36,7 +38,7 @@ local metatable =
     __newindex = function(table, key, value)
         if key == "insertmode" then
             insertmode.enable(value)
-        elseif key == "blockmode" or key == "options" or key == "keymap" then
+        elseif key == "blockmode" or key == "options" or key == "cmd" or key == "keymap" then
             log.err("sacrilege.%s is read-only", key)
         else
             rawset(table, key, value)
@@ -114,8 +116,11 @@ function M.setup(opts)
     end
 
     keymap = { }
+    cmd    = { }
 
     if options.commands then
+        require("sacrilege.commands.metatable").set(cmd)
+
         for id, command in pairs(options.commands) do
             cmd[id] = command
         end

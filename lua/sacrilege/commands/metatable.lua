@@ -52,29 +52,29 @@ local function parse(table, key)
     return cmd
 end
 
-local function metatable(prefix)
+local function metatable(table, prefix)
     prefix = prefix or ""
 
     return
     {
-        __index = function(table, key)
+        __index = function(_, key)
             key = prefix .. key
 
-            local value = rawget(M, key) or parse(M, key)
+            local value = rawget(table, key) or parse(table, key)
 
             if not value then
                 value = { }
-                setmetatable(value, metatable(key .. "."))
+                setmetatable(value, metatable(table, key .. "."))
             end
 
             return value
         end,
 
-        __newindex = function(table, key, value)
+        __newindex = function(_, key, value)
             key = prefix .. key
 
             local plug = "<Plug>" .. key .. "<CR>"
-            local existing = rawget(M, key)
+            local existing = rawget(table, key)
 
             if command.is(existing) then
                 existing:unmap(plug)
@@ -85,28 +85,30 @@ local function metatable(prefix)
                 value:map(plug)
                 value.plug = plug
 
-                rawset(M, key, value)
+                rawset(table, key, value)
             elseif type(value) == "table" then
-                local group = M[key]
+                local group = table[key]
                 for id, subcommand in pairs(value) do
                     group[id] = subcommand
                 end
             elseif value then
-                log.err("Invalid value assigned to sacrilege.cmd.%s: %s", key, vim.inspect(value))
+                log.err("Invalid value assigned to commands table: %s = %s", key, vim.inspect(value))
             elseif prefix ~= "" then
                 local starts_with_key = "^" .. key:gsub("%.", "%%.") .. "%."
-                for id, _ in pairs(M) do
+                for id, _ in pairs(table) do
                     if id:match(starts_with_key) then
-                        rawset(M, prefix .. id, nil)
+                        rawset(table, prefix .. id, nil)
                     end
                 end
             else
-                rawset(M, key, nil)
+                rawset(table, key, nil)
             end
         end
     }
 end
 
-setmetatable(M, metatable())
+function M.set(table)
+    setmetatable(table, metatable(table))
+end
 
 return M

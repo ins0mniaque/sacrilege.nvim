@@ -893,7 +893,7 @@ end
 
 function M:execute()
     if not self.plug then
-        log.warn("Command \"%s\" was not registered with sacrilege.cmd", localize(self.name))
+        log.warn("Command \"%s\" was not added to a commands table", localize(self.name))
         return
     end
 
@@ -909,7 +909,7 @@ end
 
 function M:menu(parent, position)
     if not self.plug then
-        log.warn("Menu command \"%s\" was not registered with sacrilege.cmd", localize(self.name))
+        log.warn("Menu command \"%s\" was not added to a commands table", localize(self.name))
 
         return { enable = do_nothing, disable = do_nothing, update = do_nothing, delete = do_nothing }
     end
