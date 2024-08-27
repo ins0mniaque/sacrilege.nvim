@@ -37,6 +37,11 @@ function M.select(prompt, items, sort)
     vim.ui.select(keys, { prompt = prompt }, callback)
 end
 
+function M.quickfix(title, items, opts)
+    vim.fn.setqflist(items, "r")
+    vim.cmd("botright copen")
+end
+
 function M.command_palette(buffer)
     local commands = { }
 

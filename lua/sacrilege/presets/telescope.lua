@@ -31,6 +31,26 @@ function M.apply(options)
             end
         end
     })
+
+    local pickers = plugin.new("nvim-telescope/telescope.nvim", "telescope.pickers")
+
+    require("sacrilege.ui").quickfix = pickers:try(function(pickers, title, items, opts)
+        opts = opts or { }
+
+        pickers.new(opts,
+        {
+            prompt_title = title,
+            finder = require("telescope.finders").new_table
+            {
+                results = items,
+                entry_maker = require("telescope.make_entry").gen_from_quickfix(opts),
+            },
+            previewer = require("telescope.config").values.qflist_previewer(opts),
+            sorter = require("telescope.config").values.generic_sorter(opts),
+            push_cursor_on_edit = true,
+            push_tagstack_on_edit = true
+        }):find()
+    end)
 end
 
 return M

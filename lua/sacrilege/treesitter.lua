@@ -141,18 +141,22 @@ function M.references(opts)
     local definition, scope = locals.find_definition(node_at_cursor, bufnr)
     local usages = locals.find_usages(definition, scope, bufnr)
 
-    if #usages < 1 then
+    if #usages < 2 then
+        if #usages == 1 then
+            ts_utils.goto_node(usages[1])
+        end
+
         return
     end
 
-    local qf_list = { }
+    local items = { }
 
     for _, node in ipairs(usages) do
         local lnum, col, _ = node:start()
         local type = string.upper(node:type():sub(1, 1))
         local text = vim.treesitter.get_node_text(node, bufnr) or ""
 
-        table.insert(qf_list,
+        table.insert(items,
         {
             bufnr = bufnr,
             lnum  = lnum + 1,
@@ -162,8 +166,7 @@ function M.references(opts)
         })
     end
 
-    vim.fn.setqflist(qf_list, "r")
-    vim.api.nvim_command("copen")
+    require("sacrilege.ui").quickfix(localize("References"), items)
 end
 
 function M.rename(new_name, opts)
