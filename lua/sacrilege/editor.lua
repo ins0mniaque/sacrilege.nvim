@@ -71,6 +71,32 @@ function M.get_selection_range()
     }
 end
 
+function M.get_url()
+    if vim.bo.filetype == 'markdown' then
+        local range = vim.api.nvim_win_get_cursor(0)
+
+        vim.treesitter.get_parser():parse(range)
+
+        -- NOTE: Marking the node as "markdown_inline" is required. "markdown" does not work.
+        local current_node = vim.treesitter.get_node { lang = "markdown_inline" }
+        while current_node do
+            local type = current_node:type()
+            if type == "inline_link" or type == "image" then
+                local child = assert(current_node:named_child(1))
+                return vim.treesitter.get_node_text(child, 0)
+            end
+            current_node = current_node:parent()
+        end
+    end
+
+    local url = vim.fn.expand("<cfile>")
+    if url:match("(https?://[%w-_%.]+%.%w[%w-_%.%%%?%.:/+=&%%[%]#]*)") then
+        return url
+    end
+
+    return nil
+end
+
 function M.try_close_popup()
     for _, win in ipairs(vim.api.nvim_list_wins()) do
         if vim.api.nvim_win_get_config(win).relative ~= "" then

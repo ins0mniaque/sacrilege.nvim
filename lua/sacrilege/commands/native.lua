@@ -49,6 +49,18 @@ local function clear_echo()
     end
 end
 
+local function click()
+    local mouse = vim.fn.getmousepos()
+
+    vim.api.nvim_win_set_cursor(0, { mouse.line, mouse.column })
+end
+
+local function openurl()
+    local url = editor.get_url()
+
+    return url and vim.ui.open(url) and true or false
+end
+
 local function paste(register)
     return function()
         local mode = vim.fn.mode()
@@ -65,6 +77,7 @@ end
 
 M.nothing = command.new():all(true)
 M.replayinput = command.new("Replay Input", editor.send):requires({ input = true, modeless = true }):all(true)
+M.click = command.new("Click", click):requires({ modeless = true }):all(true)
 
 M.clear_highlights = command.new("Clear Highlights", "<Cmd>nohl<CR>"):cmdline(true)
 M.clear_echo = command.new("Clear Command Line Message", clear_echo):cmdline(true)
@@ -75,11 +88,7 @@ M.interrupt = command.new("Interrupt", insertmode.interrupt):visual(false):cmdli
 M.inserttab = command.new("Insert Tab"):visual("<Space><BS><Tab>")
 M.nativepopup = command.new("Popup Menu", "<Cmd>:popup! PopUp<CR>"):select("<C-\\><C-G>gv<Cmd>:popup! PopUp<CR>")
 M.popup = command.new("Popup Menu", menu.popup):all(true)
-M.openlink = command.new("Open Link...")
-                    :normal(function() editor.send("gx", true) end)
-                    :insert(function() editor.send("<C-\\><C-N>") editor.send("gxi", true) editor.send("<C-\\><C-N>gv") end)
-                    :visual(function() editor.send("<C-\\><C-N>") editor.send("gx", true) editor.send("<C-\\><C-N>gv") end)
-                    :select(function() editor.send("<C-\\><C-N>") editor.send("gx", true) editor.send("<C-\\><C-N>gv") end)
+M.openurl = command.new("Open URL...", openurl)
 
 M.cmdline = command.new("Command Line Mode", "<Esc>:")
 M.terminal = command.new("Terminal", vim.cmd.terminal):cmdline(true)

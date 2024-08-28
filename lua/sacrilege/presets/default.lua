@@ -54,6 +54,7 @@ local defaults =
         ["<Right>"] = { "movecursor", "wildmenu_confirm or replayinput" },
         ["<RightMouse>"] = "popup",
         ["<RightRelease>"] = "nothing",
+        ["<C-LeftMouse>"] = "click and openurl or definition",
 
         ["<F1>"] = "command_palette",
         ["<C-P>"] = "command_palette",
@@ -177,7 +178,7 @@ local defaults =
             "paste",
             "delete",
             "selectall",
-            "openlink",
+            "openurl",
             "inspect",
             "-bottom-",
             "definition",
