@@ -10,7 +10,8 @@ local M = { }
 
 local defaults =
 {
-    presets = { "default", "dap", "dap-ui", "neotest" }
+    autodetect = true,
+    presets = { "default" }
 }
 
 local options = { }
@@ -68,12 +69,60 @@ function M.setup(opts)
 
     options = vim.deepcopy(defaults)
 
+    local autodetected
+
+    if opts and not opts.autodetect == false or options.autodetect then
+        if vim.v.vim_did_enter == 0 then
+            vim.api.nvim_create_autocmd("VimEnter",
+            {
+                desc = localizer.localize("Setup Sacrilege"),
+                group = vim.api.nvim_create_augroup("sacrilege/setup", { }),
+                once = true,
+                callback = function()
+                    vim.schedule(function()
+                        M.setup(opts)
+                    end)
+                end
+            })
+
+            return
+        else
+            autodetected = { }
+
+            local separator = package.config:sub(1, 1) == "\\" and "\\" or "/"
+            local directory = debug.getinfo(2, 'S').source:sub(2, -5) .. separator .. "presets"
+
+            for _, file in ipairs(vim.fn.readdir(directory)) do
+                local name       = file:sub(1, -5)
+                local ok, preset = pcall(require, "sacrilege.presets." .. name)
+                if ok and preset.autodetect and preset.autodetect() then
+                    table.insert(autodetected, name)
+                end
+            end
+        end
+    end
+
     local presets = opts and (opts.presets or opts.preset) or options.presets or options.preset
     if type(presets) == "string" then
         presets = { presets }
     end
 
     if type(presets) == "table" then
+        if autodetected then
+            vim.list_extend(presets, autodetected)
+        end
+
+        for _, preset in pairs(presets) do
+            local ok, result = pcall(require, "sacrilege.presets." .. preset)
+            if ok then
+                options = result.apply(options) or options
+            else
+                log.warn("Preset \"%s\" not found", preset)
+            end
+        end
+    end
+
+    if type(autodetected) == "table" then
         for _, preset in pairs(presets) do
             local ok, result = pcall(require, "sacrilege.presets." .. preset)
             if ok then

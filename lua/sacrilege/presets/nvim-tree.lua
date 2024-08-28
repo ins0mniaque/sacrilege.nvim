@@ -9,4 +9,8 @@ function M.apply(options)
     options.commands.file_explorer:override(tree:try("<Cmd>NvimTreeToggle<CR>"))
 end
 
+function M.autodetect()
+    return pcall(require, "nvim-tree") and true or false
+end
+
 return M

@@ -15,4 +15,8 @@ function M.apply(options)
     options.commands.attach_test:override(neotest:try(function(neotest) neotest.run.attach() end))
 end
 
+function M.autodetect()
+    return pcall(require, "neotest") and true or false
+end
+
 return M

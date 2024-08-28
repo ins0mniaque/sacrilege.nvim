@@ -24,4 +24,8 @@ function M.apply(options)
     }
 end
 
+function M.autodetect()
+    return pcall(require, "cmp") and true or false
+end
+
 return M

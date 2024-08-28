@@ -15,4 +15,8 @@ function M.apply(options)
     options.commands.conditional_breakpoint:override(dap:try(function(dap) ui.input("Breakpoint condition: ", dap.set_breakpoint) end))
 end
 
+function M.autodetect()
+    return pcall(require, "dap") and true or false
+end
+
 return M

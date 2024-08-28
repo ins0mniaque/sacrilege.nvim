@@ -9,4 +9,8 @@ function M.apply(options)
     options.commands.debugger:override(dapui:try(function(dapui) dapui.toggle() end))
 end
 
+function M.autodetect()
+    return pcall(require, "dapui") and true or false
+end
+
 return M

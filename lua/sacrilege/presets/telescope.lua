@@ -53,4 +53,8 @@ function M.apply(options)
     end)
 end
 
+function M.autodetect()
+    return pcall(require, "telescope") and true or false
+end
+
 return M

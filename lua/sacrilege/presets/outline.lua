@@ -9,4 +9,8 @@ function M.apply(options)
     options.commands.code_outline:override(outline:try("<Cmd>Outline<CR>"))
 end
 
+function M.autodetect()
+    return pcall(require, "outline") and true or false
+end
+
 return M

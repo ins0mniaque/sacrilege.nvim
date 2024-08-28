@@ -29,4 +29,8 @@ function M.apply(options)
     options.commands.tab9:override(barbar:try("<Cmd>BufferGoto 9<CR>"))
 end
 
+function M.autodetect()
+    return pcall(require, "barbar") and true or false
+end
+
 return M
