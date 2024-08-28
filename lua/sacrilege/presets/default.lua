@@ -240,16 +240,6 @@ local defaults =
 }
 
 function M.apply(options)
-    options.commands = options.commands or { }
-
-    for id, command in pairs(require("sacrilege.commands.native")) do
-        options.commands[id] = command
-    end
-
-    for id, command in pairs(require("sacrilege.commands.ide")) do
-        options.commands[id] = command
-    end
-
     return vim.tbl_deep_extend("force", options, defaults)
 end
 

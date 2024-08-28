@@ -67,11 +67,9 @@ function M.setup(opts)
         return log.err("sacrilege.nvim requires Neovim >= %s", "0.7.0")
     end
 
-    options = vim.deepcopy(defaults)
-
     local autodetected
 
-    if opts and not opts.autodetect == false or options.autodetect then
+    if opts and not opts.autodetect == false or defaults.autodetect then
         if vim.v.vim_did_enter == 0 then
             vim.api.nvim_create_autocmd("VimEnter",
             {
@@ -102,6 +100,13 @@ function M.setup(opts)
         end
     end
 
+    options = vim.deepcopy(defaults)
+
+    options.commands = { }
+    for id, command in pairs(require("sacrilege.commands")) do
+        options.commands[id] = command
+    end
+
     local presets = opts and (opts.presets or opts.preset) or options.presets or options.preset
     if type(presets) == "string" then
         presets = { presets }
@@ -112,17 +117,6 @@ function M.setup(opts)
             vim.list_extend(presets, autodetected)
         end
 
-        for _, preset in pairs(presets) do
-            local ok, result = pcall(require, "sacrilege.presets." .. preset)
-            if ok then
-                options = result.apply(options) or options
-            else
-                log.warn("Preset \"%s\" not found", preset)
-            end
-        end
-    end
-
-    if type(autodetected) == "table" then
         for _, preset in pairs(presets) do
             local ok, result = pcall(require, "sacrilege.presets." .. preset)
             if ok then
