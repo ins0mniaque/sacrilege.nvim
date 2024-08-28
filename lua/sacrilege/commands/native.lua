@@ -137,7 +137,6 @@ M.blockselect = command.new("Block Select Character"):insert(select_command("<C-
 M.blockselectword = command.new("Block Select Word"):insert(select_command("<C-O><C-V><C-Arrow><C-G>")):visual(arrow_command("<C-V><C-Arrow><C-G>", "<C-Arrow>")):requires({ arrow = true })
 M.selectall = command.new("Select All"):normal("ggVG"):insert("<C-Home><C-O>VG"):visual("gg0oG$")
 M.stopselect = command.new("Stop Selection"):visual(function() editor.send("<Esc>") insertmode.interrupt() end)
-M.movecursor = M.stopselect + M.replayinput
 
 M.treesitter.selectnode = command.new("Select Node", treesitter.selectnode):when({ treesitter = true })
 M.treesitter.selectscope = command.new("Select Scope", treesitter.selectscope):when({ treesitter = true })
