@@ -177,6 +177,7 @@ local defaults =
             "paste",
             "delete",
             "selectall",
+            "openlink",
             "inspect",
             "-bottom-",
             "definition",
