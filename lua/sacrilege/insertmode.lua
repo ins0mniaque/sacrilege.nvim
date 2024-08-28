@@ -51,7 +51,7 @@ function M.setup(opts)
     {
         desc = localize("Toggle Insert Mode"),
         group = group,
-        pattern = { "*:n" },
+        pattern = { "*:n", "*:i" },
         callback = function(_)
             if options.insertmode then
                 vim.schedule(toggleinsert)
