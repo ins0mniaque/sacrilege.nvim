@@ -51,7 +51,7 @@ function M.command_palette(buffer)
     local function parse(keymaps)
         for _, keymap in pairs(keymaps) do
             if keymap.desc then
-                commands[string.format("%-48s %s", keymap.desc, keymap.lhs)] = function()
+                commands[string.format("%-48s %s", keymap.desc, keymap.lhs:gsub("%s", "<Space>"))] = function()
                     if keymap.mode == "i" then
                         vim.cmd.startinsert()
                     elseif keymap.mode == "n" then

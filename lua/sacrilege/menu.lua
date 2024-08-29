@@ -101,7 +101,7 @@ function M.create(name, keymaps)
     end
 
     for _, keymap in pairs(keymaps) do
-        vim.cmd(keymap.mode .. "menu " .. name .. "." .. M.escape(keymap.desc) .. " " .. keymap.lhs)
+        vim.cmd(keymap.mode .. "menu " .. name .. "." .. M.escape(keymap.desc) .. " " .. keymap.lhs:gsub("%s", "<Space>"))
     end
 
     return true
