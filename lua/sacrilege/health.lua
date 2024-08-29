@@ -40,7 +40,7 @@ local function check_keymaps(buffer)
         o = "Operator-Pending Mode"
     }
 
-    local ok = true
+    local has_keymap_issue = false
 
     local function format_rhs(rhs)
         if type(rhs) == "function" then
@@ -61,9 +61,12 @@ local function check_keymaps(buffer)
         end
 
         for _, keymap in pairs(keymaps[mode]) do
-            if keymap.lhs == lhs then
+            if vim.api.nvim_replace_termcodes(keymap.lhs, true, true, true) == lhs then
                 if keymap.desc ~= (opts and opts.desc) or ((type(keymap.rhs) == "string" or type(rhs) == "string") and keymap.rhs ~= rhs) then
-                    -- TODO: Add buffer information
+                    if not has_keymap_issue then
+                        start(string.format("sacrilege: Local Keymaps for %s (buffer %d)", vim.bo[buffer].filetype, buffer))
+                    end
+
                     warn(string.format("Key %s in %s for \"%s\" was remapped to \"%s\": %s",
                                        keymap.lhs,
                                        keymap_names[mode],
@@ -71,17 +74,17 @@ local function check_keymaps(buffer)
                                        keymap.desc or "",
                                        format_rhs(keymap.rhs or keymap.callback)))
 
-                    ok = false
+                    has_keymap_issue = true
                 end
             end
         end
     end
 
     for _, mapping in pairs(require("sacrilege").keymap) do
-        check_keymap(mapping.mode, mapping.lhs, mapping.rhs, mapping.opts)
+        check_keymap(mapping.mode, vim.api.nvim_replace_termcodes(mapping.lhs, true, true, true), mapping.rhs, mapping.opts)
     end
 
-    return ok
+    return not has_keymap_issue
 end
 
 M.check = function()
@@ -150,8 +153,6 @@ M.check = function()
         ok("Keys are correctly mapped")
     end
 
-    start("sacrilege: Local Keymaps")
-
     local has_keymap_issue = false
 
     for _, buffer in pairs(vim.api.nvim_list_bufs()) do
@@ -163,6 +164,8 @@ M.check = function()
     end
 
     if not has_keymap_issue then
+        start("sacrilege: Local Keymaps")
+
         ok("Keys are correctly mapped")
     end
 end
