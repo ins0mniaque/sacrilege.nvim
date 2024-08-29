@@ -30,10 +30,10 @@ function M.ft_to_lang(ft)
     end
 end
 
-function M.get_buf_lang(bufnr)
-    bufnr = bufnr or vim.api.nvim_get_current_buf()
+function M.get_buf_lang(buffer)
+    buffer = buffer or vim.api.nvim_get_current_buf()
 
-    return M.ft_to_lang(vim.api.nvim_buf_get_option(bufnr, "ft"))
+    return M.ft_to_lang(vim.bo[buffer].ft)
 end
 
 function M.has_parser(lang)
@@ -51,12 +51,12 @@ function M.has_parser(lang)
     return #parser_files[lang] > 0
 end
 
-function M.get_parser(bufnr, lang)
-    bufnr = bufnr or vim.api.nvim_get_current_buf()
-    lang = lang or M.get_buf_lang(bufnr)
+function M.get_parser(buffer, lang)
+    buffer = buffer or vim.api.nvim_get_current_buf()
+    lang = lang or M.get_buf_lang(buffer)
 
     if M.has_parser(lang) then
-        return vim.treesitter.get_parser(bufnr, lang)
+        return vim.treesitter.get_parser(buffer, lang)
     end
 end
 
@@ -109,37 +109,37 @@ function M.selectsubnode()
     end
 end
 
-function M.definition(opts)
+function M.definition()
     local locals   = nvim_ts.load("locals")   if not locals   then return end
     local ts_utils = nvim_ts.load("ts_utils") if not ts_utils then return end
 
-    local bufnr = opts and opts.bufnr or vim.api.nvim_get_current_buf()
-    local winid = vim.fn.bufwinid(bufnr)
-    local node_at_cursor = ts_utils.get_node_at_cursor(winid)
+    local buffer = vim.api.nvim_get_current_buf()
+    local window = vim.fn.bufwinid(buffer)
+    local node_at_cursor = ts_utils.get_node_at_cursor(window)
 
     if not node_at_cursor then
         return
     end
 
-    local definition = locals.find_definition(node_at_cursor, bufnr)
+    local definition = locals.find_definition(node_at_cursor, buffer)
 
     ts_utils.goto_node(definition)
 end
 
-function M.references(opts)
+function M.references()
     local locals   = nvim_ts.load("locals")   if not locals   then return end
     local ts_utils = nvim_ts.load("ts_utils") if not ts_utils then return end
 
-    local bufnr = opts and opts.bufnr or vim.api.nvim_get_current_buf()
-    local winid = vim.fn.bufwinid(bufnr)
-    local node_at_cursor = ts_utils.get_node_at_cursor(winid)
+    local buffer = vim.api.nvim_get_current_buf()
+    local window = vim.fn.bufwinid(buffer)
+    local node_at_cursor = ts_utils.get_node_at_cursor(window)
 
     if not node_at_cursor then
         return
     end
 
-    local definition, scope = locals.find_definition(node_at_cursor, bufnr)
-    local usages = locals.find_usages(definition, scope, bufnr)
+    local definition, scope = locals.find_definition(node_at_cursor, buffer)
+    local usages = locals.find_usages(definition, scope, buffer)
 
     if #usages < 2 then
         if #usages == 1 then
@@ -154,11 +154,11 @@ function M.references(opts)
     for _, node in ipairs(usages) do
         local lnum, col, _ = node:start()
         local type = string.upper(node:type():sub(1, 1))
-        local text = vim.treesitter.get_node_text(node, bufnr) or ""
+        local text = vim.treesitter.get_node_text(node, buffer) or ""
 
         table.insert(items,
         {
-            bufnr = bufnr,
+            bufnr = buffer,
             lnum  = lnum + 1,
             col   = col  + 1,
             text  = text,
@@ -169,13 +169,13 @@ function M.references(opts)
     require("sacrilege.ui").quickfix(localize("References"), items)
 end
 
-function M.rename(new_name, opts)
+function M.rename(new_name)
     local locals   = nvim_ts.load("locals")   if not locals   then return end
     local ts_utils = nvim_ts.load("ts_utils") if not ts_utils then return end
 
-    local bufnr = opts and opts.bufnr or vim.api.nvim_get_current_buf()
-    local winid = vim.fn.bufwinid(bufnr)
-    local node_at_cursor = ts_utils.get_node_at_cursor(winid)
+    local buffer = vim.api.nvim_get_current_buf()
+    local window = vim.fn.bufwinid(buffer)
+    local node_at_cursor = ts_utils.get_node_at_cursor(window)
 
     if not node_at_cursor then
         return log.inform("Nothing to rename")
@@ -186,13 +186,13 @@ function M.rename(new_name, opts)
             return
         end
 
-        local definition, scope = locals.find_definition(node_at_cursor, bufnr)
+        local definition, scope = locals.find_definition(node_at_cursor, buffer)
         local nodes_to_rename = { }
 
         nodes_to_rename[node_at_cursor:id()] = node_at_cursor
         nodes_to_rename[definition:id()] = definition
 
-        for _, n in ipairs(locals.find_usages(definition, scope, bufnr)) do
+        for _, n in ipairs(locals.find_usages(definition, scope, buffer)) do
             nodes_to_rename[n:id()] = n
         end
 
@@ -204,16 +204,86 @@ function M.rename(new_name, opts)
             table.insert(edits, text_edit)
         end
 
-        vim.lsp.util.apply_text_edits(edits, bufnr, "utf-8")
+        vim.lsp.util.apply_text_edits(edits, buffer, "utf-8")
     end
 
     if not new_name or #new_name < 1 then
-        local text = vim.treesitter.get_node_text(node_at_cursor, bufnr)
+        local text = vim.treesitter.get_node_text(node_at_cursor, buffer)
         local input = { prompt = localize("New name: "), default = text or "" }
 
         vim.ui.input(input, complete_rename)
     else
         complete_rename(new_name)
+    end
+end
+
+local highlights_namespace
+local last_highlighted_nodes
+
+local function setup_highlights()
+    if not highlights_namespace then
+        highlights_namespace   = vim.api.nvim_create_namespace("sacrilege/treesitter/highlights")
+        last_highlighted_nodes = { }
+
+        vim.cmd("highlight default link TSDefinition Search")
+        vim.cmd("highlight default link TSDefinitionUsage Visual")
+    end
+end
+
+function M.highlight(buffer)
+    local locals   = nvim_ts.load("locals")   if not locals   then return end
+    local ts_utils = nvim_ts.load("ts_utils") if not ts_utils then return end
+
+    setup_highlights()
+
+    buffer = buffer or vim.api.nvim_get_current_buf()
+
+    local window = vim.fn.bufwinid(buffer)
+    local node_at_cursor = ts_utils.get_node_at_cursor(window)
+    if node_at_cursor and node_at_cursor == last_highlighted_nodes[buffer] and M.has_highlights(buffer) then
+        return
+    else
+        if not last_highlighted_nodes[buffer] then
+            vim.api.nvim_buf_attach(buffer, false,
+            {
+                on_detach = function()
+                    last_highlighted_nodes[buffer] = nil
+                    return true
+                end,
+                -- NOTE: This is needed to prevent on_detach from being called on buffer reload
+                on_reload = function() end
+            })
+        end
+
+        last_highlighted_nodes[buffer] = node_at_cursor
+    end
+
+    M.clear_highlights(buffer)
+    if not node_at_cursor then
+        return
+    end
+
+    local definition, scope = locals.find_definition(node_at_cursor, buffer)
+    local usages = locals.find_usages(definition, scope, buffer)
+
+    for _, node in ipairs(usages) do
+        if node ~= node_at_cursor then
+            ts_utils.highlight_node(node, buffer, highlights_namespace, "TSDefinitionUsage")
+        end
+    end
+
+    if definition ~= node_at_cursor then
+        ts_utils.highlight_node(definition, buffer, highlights_namespace, "TSDefinition")
+    end
+end
+
+function M.has_highlights(buffer)
+    return highlights_namespace and #vim.api.nvim_buf_get_extmarks(buffer or 0, highlights_namespace, 0, -1, { }) > 0
+end
+
+function M.clear_highlights(buffer)
+    if highlights_namespace then
+        vim.api.nvim_buf_clear_namespace(buffer or 0, highlights_namespace, 0, -1)
     end
 end
 
