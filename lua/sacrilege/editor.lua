@@ -72,7 +72,7 @@ function M.get_selection_range()
 end
 
 function M.get_url()
-    if vim.bo.filetype == 'markdown' then
+    if vim.bo.filetype == "markdown" then
         local range = vim.api.nvim_win_get_cursor(0)
 
         vim.treesitter.get_parser():parse(range)
