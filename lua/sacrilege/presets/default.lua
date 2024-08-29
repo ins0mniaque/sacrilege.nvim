@@ -81,6 +81,16 @@ local defaults =
 
         ["<C-S-Tab>"] = "tabprevious",
         ["<C-Tab>"] = "tabnext",
+        ["<C-1>"] = "tab1",
+        ["<C-2>"] = "tab2",
+        ["<C-3>"] = "tab3",
+        ["<C-4>"] = "tab4",
+        ["<C-5>"] = "tab5",
+        ["<C-6>"] = "tab6",
+        ["<C-7>"] = "tab7",
+        ["<C-8>"] = "tab8",
+        ["<C-9>"] = "tab9",
+        ["<C-0>"] = "tablast",
 
         ["<S-Arrow>"] = "select",
         ["<C-S-Arrow>"] = "selectword",
