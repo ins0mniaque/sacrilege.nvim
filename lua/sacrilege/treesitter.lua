@@ -267,9 +267,7 @@ function M.highlight(buffer)
     local usages = locals.find_usages(definition, scope, buffer)
 
     for _, node in ipairs(usages) do
-        if node ~= node_at_cursor then
-            ts_utils.highlight_node(node, buffer, highlights_namespace, "TSDefinitionUsage")
-        end
+        ts_utils.highlight_node(node, buffer, highlights_namespace, "TSDefinitionUsage")
     end
 
     if definition ~= node_at_cursor then
