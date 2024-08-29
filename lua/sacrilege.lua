@@ -150,6 +150,10 @@ function M.setup(opts)
         require("sacrilege.blockmode").setup()
     end
 
+    if options.highlight then
+        require("sacrilege.highlight").setup()
+    end
+
     if options.hover then
         require("sacrilege.hover").setup()
     end
