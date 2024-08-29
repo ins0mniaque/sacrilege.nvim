@@ -11,6 +11,79 @@ local function count(T)
     return count
 end
 
+local function check_keymaps(buffer)
+    local get_keymap = not buffer and vim.api.nvim_get_keymap or function(mode)
+        return vim.api.nvim_buf_get_keymap(buffer, mode)
+    end
+
+    local keymaps =
+    {
+        n = get_keymap("n"),
+        i = get_keymap("i"),
+        v = get_keymap("v"),
+        s = get_keymap("s"),
+        x = get_keymap("x"),
+        c = get_keymap("c"),
+        t = get_keymap("t"),
+        o = get_keymap("o")
+    }
+
+    local keymap_names =
+    {
+        n = "Normal Mode",
+        i = "Insert Mode",
+        v = "Visual/Select Mode",
+        s = "Select Mode",
+        x = "Visual Mode",
+        c = "Command Line Mode",
+        t = "Terminal Mode",
+        o = "Operator-Pending Mode"
+    }
+
+    local ok = true
+
+    local function format_rhs(rhs)
+        if type(rhs) == "function" then
+            local debug = debug.getinfo(rhs)
+            return debug.name or debug.short_src or tostring(rhs)
+        else
+            return tostring(rhs)
+        end
+    end
+
+    local function check_keymap(mode, lhs, rhs, opts)
+        if type(mode) == "table" then
+            for _, submode in pairs(mode) do
+                check_keymap(submode, lhs, rhs, opts)
+            end
+
+            return
+        end
+
+        for _, keymap in pairs(keymaps[mode]) do
+            if keymap.lhs == lhs then
+                if keymap.desc ~= (opts and opts.desc) or ((type(keymap.rhs) == "string" or type(rhs) == "string") and keymap.rhs ~= rhs) then
+                    -- TODO: Add buffer information
+                    warn(string.format("Key %s in %s for \"%s\" was remapped to \"%s\": %s",
+                                       keymap.lhs,
+                                       keymap_names[mode],
+                                       opts.desc,
+                                       keymap.desc or "",
+                                       format_rhs(keymap.rhs or keymap.callback)))
+
+                    ok = false
+                end
+            end
+        end
+    end
+
+    for _, mapping in pairs(require("sacrilege").keymap) do
+        check_keymap(mapping.mode, mapping.lhs, mapping.rhs, mapping.opts)
+    end
+
+    return ok
+end
+
 M.check = function()
     local sacrilege = require("sacrilege")
     local localizer = require("sacrilege.localizer")
@@ -73,68 +146,20 @@ M.check = function()
 
     start("sacrilege: Keymap")
 
-    local keymaps =
-    {
-        n = vim.api.nvim_get_keymap("n"),
-        i = vim.api.nvim_get_keymap("i"),
-        v = vim.api.nvim_get_keymap("v"),
-        s = vim.api.nvim_get_keymap("s"),
-        x = vim.api.nvim_get_keymap("x"),
-        c = vim.api.nvim_get_keymap("c"),
-        t = vim.api.nvim_get_keymap("t"),
-        o = vim.api.nvim_get_keymap("o")
-    }
+    if check_keymaps() then
+        ok("Keys are correctly mapped")
+    end
 
-    local keymap_names =
-    {
-        n = "Normal Mode",
-        i = "Insert Mode",
-        v = "Visual/Select Mode",
-        s = "Select Mode",
-        x = "Visual Mode",
-        c = "Command Line Mode",
-        t = "Terminal Mode",
-        o = "Operator-Pending Mode"
-    }
+    start("sacrilege: Local Keymaps")
 
     local has_keymap_issue = false
 
-    local function format_rhs(rhs)
-        if type(rhs) == "function" then
-            local debug = debug.getinfo(rhs)
-            return debug.name or debug.short_src or tostring(rhs)
-        else
-            return tostring(rhs)
-        end
-    end
-
-    local function check_keymap(mode, lhs, rhs, opts)
-        if type(mode) == "table" then
-            for _, submode in pairs(mode) do
-                check_keymap(submode, lhs, rhs, opts)
-            end
-
-            return
-        end
-
-        for _, keymap in pairs(keymaps[mode]) do
-            if keymap.lhs == lhs then
-                if keymap.desc ~= (opts and opts.desc) or ((type(keymap.rhs) == "string" or type(rhs) == "string") and keymap.rhs ~= rhs) then
-                    warn(string.format("Key %s in %s for \"%s\" was remapped to \"%s\": %s",
-                                       keymap.lhs,
-                                       keymap_names[mode],
-                                       opts.desc,
-                                       keymap.desc or "",
-                                       format_rhs(keymap.rhs or keymap.callback)))
-
-                    has_keymap_issue = true
-                end
+    for _, buffer in pairs(vim.api.nvim_list_bufs()) do
+        if vim.api.nvim_buf_is_loaded(buffer) then
+            if not check_keymaps(buffer) then
+                has_keymap_issue = true
             end
         end
-    end
-
-    for _, mapping in pairs(sacrilege.keymap) do
-        check_keymap(mapping.mode, mapping.lhs, mapping.rhs, mapping.opts)
     end
 
     if not has_keymap_issue then
