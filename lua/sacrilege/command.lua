@@ -918,26 +918,24 @@ function M:menu(parent, position)
     local modes = { }
 
     parse(localize(self.name), self.definition, "<Nop>", unwrap_modes(function(mode, lhs, rhs, opts)
-        if mode ~= "t" then
-            table.insert(modes, mode)
-        end
+        table.insert(modes, mode)
     end))
 
     local menu =
     {
         create = function()
             for _, mode in pairs(modes) do
-                vim.cmd(mode .. "menu " .. (position or "") .. " " .. name .. " " .. self.plug)
+                vim.cmd(menu.menumode(mode) .. "menu " .. (position or "") .. " " .. name .. " " .. self.plug)
             end
         end,
         enable = function()
             for _, mode in pairs(modes) do
-                vim.cmd(mode .. "menu enable " .. name)
+                vim.cmd(menu.menumode(mode) .. "menu enable " .. name)
             end
         end,
         disable = function()
             for _, mode in pairs(modes) do
-                vim.cmd(mode .. "menu disable " .. name)
+                vim.cmd(menu.menumode(mode) .. "menu disable " .. name)
             end
         end,
         update = function(mode)
@@ -948,14 +946,14 @@ function M:menu(parent, position)
             end
 
             if vim.fn.maparg(self.plug, mode) ~= "" then
-                vim.cmd(mode .. "menu enable " .. name)
+                vim.cmd(menu.menumode(mode) .. "menu enable " .. name)
             else
-                vim.cmd(mode .. "menu disable " .. name)
+                vim.cmd(menu.menumode(mode) .. "menu disable " .. name)
             end
         end,
         delete = function()
             for _, mode in pairs(modes) do
-                vim.cmd(mode .. "unmenu " .. name)
+                vim.cmd(menu.menumode(mode) .. "unmenu " .. name)
             end
         end
     }

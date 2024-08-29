@@ -70,11 +70,15 @@ function M.escape(name)
     return name:gsub(" ", "\\ "):gsub("%.", "\\."):gsub("&", "&&")
 end
 
+function M.menumode(mode)
+    return mode == "t" and "tl" or mode
+end
+
 function M.create(name, keymaps)
     local distinct = { }
 
     keymaps = vim.tbl_filter(function(keymap)
-        if keymap.desc and keymap.mode ~= "t" and not distinct[keymap.desc] then
+        if keymap.desc and not distinct[keymap.desc] then
             distinct[keymap.desc] = true
             return true
         end
@@ -101,7 +105,7 @@ function M.create(name, keymaps)
     end
 
     for _, keymap in pairs(keymaps) do
-        vim.cmd(keymap.mode .. "menu " .. name .. "." .. M.escape(keymap.desc) .. " " .. keymap.lhs:gsub("%s", "<Space>"))
+        vim.cmd(M.menumode(keymap.mode) .. "menu " .. name .. "." .. M.escape(keymap.desc) .. " " .. keymap.lhs:gsub("%s", "<Space>"))
     end
 
     return true
