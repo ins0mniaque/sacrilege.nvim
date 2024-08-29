@@ -36,7 +36,7 @@ function M.setup(opts)
         end
     })
 
-    vim.api.nvim_create_autocmd({ "BufEnter", "InsertLeave", "TermLeave" },
+    vim.api.nvim_create_autocmd({ "WinEnter", "BufEnter", "InsertLeave", "TermLeave" },
     {
         desc = localize("Toggle Insert Mode"),
         group = group,
