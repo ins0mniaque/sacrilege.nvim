@@ -84,6 +84,18 @@ function M.command_palette(buffer)
     M.select(localize("Commands"), commands, function(l, r) return l:lower() < r:lower() end)
 end
 
+function M.themes()
+    local colorschemes = { }
+
+    for _, colorscheme in pairs(vim.fn.getcompletion("", "color")) do
+        colorschemes[colorscheme] = function()
+            pcall(vim.cmd.colorscheme, colorscheme)
+        end
+    end
+
+    M.select(localize("Themes"), colorschemes, function(l, r) return l:lower() < r:lower() end)
+end
+
 function M.browse(directory)
     directory = directory or vim.fn.getcwd()
 
