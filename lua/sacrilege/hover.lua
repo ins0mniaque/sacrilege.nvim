@@ -1,5 +1,6 @@
 local localize = require("sacrilege.localizer").localize
 local editor = require("sacrilege.editor")
+local methods = vim.lsp.protocol.Methods
 
 local M = { }
 
@@ -43,7 +44,7 @@ local function hover(mouse)
 
     local buffer = vim.api.nvim_get_current_buf()
 
-    vim.lsp.buf_request_all(buffer, "textDocument/hover", params, function(results)
+    vim.lsp.buf_request_all(buffer, methods.textDocument_hover, params, function(results)
         if mouse ~= lastmouse or buffer ~= vim.api.nvim_get_current_buf() then
             return
         end
@@ -87,7 +88,7 @@ local function mousemoved()
 
     local action = mouse.wincol <= vim.fn.getwininfo(mouse.winid)[1].textoff and diagnostic or
                    vim.fn.foldclosed(mouse.line) ~= -1                       and fold or
-                   editor.supports_lsp_method(0, "textDocument/hover")       and hover or close
+                   editor.supports_lsp_method(0, methods.textDocument_hover) and hover or close
 
     vim.defer_fn(function()
         if mouse == lastmouse then
