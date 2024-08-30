@@ -123,7 +123,7 @@ local function convert_to_insert_mode(keymaps)
         table.insert(converted, keymap)
 
         if keymap.mode == "n" then
-            table.insert(converted, vim.tbl_deep_extend("force", keymap, { mode = "i", lhs = "<C-\\><C-N>" .. keymap.lhs }))
+            table.insert(converted, vim.tbl_deep_extend("force", keymap, { mode = "i", lhs = "<C-\\><C-N>" .. keymap.lhs .. "<Cmd>startinsert<CR>" }))
         end
     end
 
