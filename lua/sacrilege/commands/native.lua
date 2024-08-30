@@ -1,4 +1,3 @@
-local sacrilege = require("sacrilege")
 local command = require("sacrilege.command")
 local editor = require("sacrilege.editor")
 local completion = require("sacrilege.completion")
