@@ -146,8 +146,8 @@ function M.popup()
     if not vim.fn.menu_info(menu, "").submenus then
         menu = "PopUp"
 
-        if mapmode == "n" and (not vim.bo.modifiable or vim.bo.readonly) and vim.bo.filetype ~= "" then
-            local keymaps = vim.api.nvim_buf_get_keymap(0, "n")
+        if ((mapmode == "n" and (not vim.bo.modifiable or vim.bo.readonly)) or (mapmode == "i" and vim.bo.buftype == "nofile")) and vim.bo.filetype ~= "" then
+            local keymaps = vim.api.nvim_buf_get_keymap(0, mapmode)
 
             if M.create(vim.bo.filetype, keymaps) then
                 menu = M.escape(vim.bo.filetype)
