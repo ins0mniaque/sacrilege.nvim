@@ -78,8 +78,13 @@ function M.create(name, keymaps)
     local distinct = { }
 
     keymaps = vim.tbl_filter(function(keymap)
-        if keymap.desc and not distinct[keymap.desc] then
-            distinct[keymap.desc] = true
+        if not keymap.desc then
+            return false
+        end
+
+        local key = keymap.mode .. "\0" .. keymap.desc
+        if not distinct[key] then
+            distinct[key] = true
             return true
         end
 
@@ -111,6 +116,43 @@ function M.create(name, keymaps)
     return true
 end
 
+local function convert_to_insert_mode(keymaps)
+    local converted = { }
+
+    for _, keymap in pairs(keymaps) do
+        table.insert(converted, keymap)
+
+        if keymap.mode == "n" then
+            table.insert(converted, vim.tbl_deep_extend("force", keymap, { mode = "i", lhs = "<C-\\><C-N>" .. keymap.lhs }))
+        end
+    end
+
+    return converted
+end
+
+local function create_buffer_keymap_menu(name)
+    local mapmode = editor.mapmode()
+
+    if (mapmode == "n" and (not vim.bo.modifiable or vim.bo.readonly)) or
+       (mapmode == "i" and vim.bo.buftype == "nofile") then
+        local keymaps = vim.api.nvim_buf_get_keymap(0, mapmode)
+
+        if M.create(name, keymaps) then
+            return true
+        end
+
+        if mapmode == "i" then
+            keymaps = convert_to_insert_mode(vim.api.nvim_buf_get_keymap(0, "n"))
+
+            if M.create(name, keymaps) then
+                return true
+            end
+        end
+    end
+
+    return false
+end
+
 function M.popup()
     local mouse = vim.fn.getmousepos()
 
@@ -136,7 +178,9 @@ function M.popup()
 
         if mouse.screenrow == 1 then
             menu = "TabLine"
-        elseif vim.o.laststatus == 1 or vim.o.laststatus == 2 and mouse.winrow > vim.api.nvim_win_get_height(mouse.winid) then
+        elseif vim.o.laststatus == 1 or
+               vim.o.laststatus == 2 and
+               mouse.winrow > vim.api.nvim_win_get_height(mouse.winid) then
             menu = "StatusLine"
         end
     elseif vim.bo.filetype ~= "" then
@@ -146,12 +190,8 @@ function M.popup()
     if not vim.fn.menu_info(menu, "").submenus then
         menu = "PopUp"
 
-        if ((mapmode == "n" and (not vim.bo.modifiable or vim.bo.readonly)) or (mapmode == "i" and vim.bo.buftype == "nofile")) and vim.bo.filetype ~= "" then
-            local keymaps = vim.api.nvim_buf_get_keymap(0, mapmode)
-
-            if M.create(vim.bo.filetype, keymaps) then
-                menu = M.escape(vim.bo.filetype)
-            end
+        if vim.bo.filetype ~= "" and create_buffer_keymap_menu(vim.bo.filetype) then
+            menu = M.escape(vim.bo.filetype)
         end
     end
 
