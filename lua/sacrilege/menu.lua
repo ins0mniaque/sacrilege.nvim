@@ -1,3 +1,4 @@
+local localize = require("sacrilege.localizer").localize
 local editor = require("sacrilege.editor")
 
 local M = { }
@@ -74,6 +75,7 @@ function M.menumode(mode)
     return mode == "t" and "tl" or mode
 end
 
+-- TODO: Resize menus on screen height change
 function M.create(name, keymaps)
     local distinct = { }
 
@@ -91,26 +93,48 @@ function M.create(name, keymaps)
         return false
     end, keymaps)
 
-    -- TODO: Add "More..." menu and resize menus on screen height change
-    if #keymaps > vim.o.lines / 2 then
-        table.sort(keymaps, function(l, r) return #l.desc < #r.desc end)
-        keymaps = vim.list_slice(keymaps, 1, vim.o.lines / 2)
-    end
-
     remove_affixes(keymaps)
 
-    table.sort(keymaps, function(l, r) return l.desc:lower() < r.desc:lower() end)
+    table.sort(keymaps, function(l, r)
+        if l.mode ~= r.mode then
+            return l.mode < r.mode
+        end
+
+        return l.desc:lower() < r.desc:lower()
+    end)
 
     name = M.escape(name)
 
-    pcall(vim.cmd.aunmenu, name)
-
     if #keymaps == 0 then
+        pcall(vim.cmd.aunmenu, name)
         return false
     end
 
+    local limit = vim.o.lines / 2 - 1
+    local menu, mode, count
+
     for _, keymap in pairs(keymaps) do
-        vim.cmd(M.menumode(keymap.mode) .. "menu " .. name .. "." .. M.escape(keymap.desc) .. " " .. keymap.lhs:gsub("%s", "<Space>"))
+        local menumode = M.menumode(keymap.mode)
+
+        if keymap.mode ~= mode then
+            menu  = name
+            mode  = keymap.mode
+            count = 0
+
+            pcall(vim.cmd[menumode .. "unmenu"], name)
+        end
+
+        vim.cmd(menumode .. "menu " .. menu .. "." .. M.escape(keymap.desc) .. " " .. keymap.lhs:gsub("%s", "<Space>"))
+        count = count + 1
+
+        if count == limit then
+            vim.cmd(menumode .. "menu " .. menu .. "." .. M.escape(localize("More...")) .. " " .. "<Cmd>popup " .. menu .. "+<CR>")
+
+            menu  = menu .. "+"
+            count = 0
+
+            pcall(vim.cmd[menumode .. "unmenu"], menu)
+        end
     end
 
     return true
