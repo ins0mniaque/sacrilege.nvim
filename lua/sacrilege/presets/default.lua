@@ -61,6 +61,7 @@ local defaults =
         ["<C-P>"] = "command_palette",
         ["<C-b>"] = "file_explorer",
         ["<M-o>"] = "code_outline",
+        ["<C-M-U>"] = "undo_history",
         ["<M-d>"] = "debugger",
         ["<C-M-C>"] = "cmdline",
         ["<C-M-T>"] = "terminal",

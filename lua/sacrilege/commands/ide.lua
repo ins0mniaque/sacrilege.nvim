@@ -12,6 +12,7 @@ M.command_palette_local = command.new("Local Command Palette...", function() ui.
 M.themes = command.new("Themes...", ui.themes):cmdline(true)
 M.file_explorer = command.new("Toggle File Explorer", not_implemented):cmdline(true)
 M.code_outline = command.new("Toggle Code Outline", not_implemented):cmdline(true)
+M.undo_history = command.new("Toggle Undo History", not_implemented):cmdline(true)
 
 M.debugger = command.new("Toggle Debugger", not_implemented):cmdline(true)
 M.continue = command.new("Start Debugging / Continue", not_implemented)
