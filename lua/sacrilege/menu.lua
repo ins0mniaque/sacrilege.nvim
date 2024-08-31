@@ -130,9 +130,7 @@ local function convert_to_insert_mode(keymaps)
     return converted
 end
 
-local function create_buffer_keymap_menu(name)
-    local mapmode = editor.mapmode()
-
+local function create_buffer_keymap_menu(name, mapmode)
     if (mapmode == "n" and (not vim.bo.modifiable or vim.bo.readonly)) or
        (mapmode == "i" and vim.bo.buftype == "nofile") then
         local keymaps = vim.api.nvim_buf_get_keymap(0, mapmode)
@@ -190,7 +188,7 @@ function M.popup()
     if not vim.fn.menu_info(menu, "").submenus then
         menu = "PopUp"
 
-        if vim.bo.filetype ~= "" and create_buffer_keymap_menu(vim.bo.filetype) then
+        if vim.bo.filetype ~= "" and create_buffer_keymap_menu(vim.bo.filetype, mapmode) then
             menu = M.escape(vim.bo.filetype)
         end
     end
