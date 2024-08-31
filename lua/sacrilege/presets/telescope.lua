@@ -10,9 +10,11 @@ function M.apply(options)
 
     local telescope   = plugin.new("nvim-telescope/telescope.nvim",              "telescope.builtin")
     local filebrowser = plugin.new("nvim-telescope/telescope-file-browser.nvim", "telescope")
+    local undo        = plugin.new("debugloop/telescope-undo.nvim",              "telescope")
 
     options.commands.open:override(filebrowser:try(function(telescope) telescope.extensions.file_browser.file_browser() end))
     options.commands.find_in_files:override(telescope:try(function(telescope) telescope.live_grep() end))
+    options.commands.undo_history:override(undo:try(function(telescope) telescope.extensions.undo.undo() end))
 
     options.commands.lsp.definition:override(telescope:try(function(telescope) telescope.lsp_definitions() end)):when({ lsp = methods.textDocument_definition })
     options.commands.lsp.references:override(telescope:try(function(telescope) telescope.lsp_references() end)):when({ lsp = methods.textDocument_references })
