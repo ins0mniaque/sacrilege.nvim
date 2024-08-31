@@ -39,4 +39,24 @@ function M.new(plugin, root)
     }
 end
 
+function M.vim(plugin, check)
+    return
+    {
+        try = function(self, rhs)
+            if type(rhs) == "string" then
+                local keys = rhs
+                rhs = function() editor.send(keys) end
+            end
+
+            return function(...)
+                if check() then
+                    return rhs(...)
+                else
+                    return log.warn("Plugin %s is not loaded", plugin)
+                end
+            end
+        end
+    }
+end
+
 return M
