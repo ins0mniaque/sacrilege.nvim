@@ -14,7 +14,7 @@ M.file_explorer = command.new("Toggle File Explorer", not_implemented):cmdline(t
 M.code_outline = command.new("Toggle Code Outline", not_implemented):cmdline(true)
 M.undo_history = command.new("Toggle Undo History", not_implemented):cmdline(true)
 
-M.compilers = command.new("Compilers...", not_implemented):cmdline(true)
+M.compilers = command.new("Compilers...", ui.compilers):cmdline(true)
 M.build = command.new("Build", "<Cmd>make<CR>")
 M.rebuild = command.new("Rebuild", "<Cmd>make clean<CR><Cmd>make<CR>")
 M.run = command.new("Run", "<Cmd>make run<CR>")

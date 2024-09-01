@@ -84,6 +84,18 @@ function M.command_palette(buffer)
     M.select(localize("Commands"), commands, function(l, r) return l:lower() < r:lower() end)
 end
 
+function M.compilers()
+    local compilers = { }
+
+    for _, compiler in pairs(vim.fn.getcompletion("", "compiler")) do
+        compilers[compiler] = function()
+            pcall(vim.cmd.compiler, compiler)
+        end
+    end
+
+    M.select(localize("Compilers"), compilers, function(l, r) return l:lower() < r:lower() end)
+end
+
 function M.themes()
     local colorschemes = { }
 
