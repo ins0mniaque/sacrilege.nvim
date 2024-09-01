@@ -66,6 +66,7 @@ function M.command_palette(buffer)
                    not cmd.definition:match("^:") and
                    not cmd.definition:match("^lua") and
                    not cmd.definition:match("^call") and
+                   not cmd.definition:match("^exe") and
                    not cmd.definition:match("|") then
                     desc = cmd.definition
                 end
