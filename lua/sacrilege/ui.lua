@@ -54,7 +54,28 @@ function M.command_palette(buffer)
     local selstart = vim.fn.getpos('v')
     local cursor   = vim.fn.getpos('.')
 
-    local function parse(keymaps)
+    local function parse_commands(cmds)
+        -- NOTE: Remove redundant entry from nvim_buf_get_commands
+        cmds[true] = nil
+
+        for _, cmd in pairs(cmds) do
+            if cmd.nargs == "0" or cmd.nargs == "?" or cmd.nargs == "*" then
+                local desc = cmd.name
+
+                if #cmd.definition > 0 and
+                   not cmd.definition:match("^:") and
+                   not cmd.definition:match("^lua") and
+                   not cmd.definition:match("^call") and
+                   not cmd.definition:match("|") then
+                    desc = cmd.definition
+                end
+
+                commands[string.format("%-48s %s", desc, ":" .. cmd.name)] = vim.cmd[cmd.name]
+            end
+        end
+    end
+
+    local function parse_keymaps(keymaps)
         for _, keymap in pairs(keymaps) do
             if keymap.desc then
                 commands[string.format("%-48s %s", keymap.desc, keymap.lhs:gsub("%s", "<Space>"))] = function()
@@ -81,16 +102,18 @@ function M.command_palette(buffer)
     end
 
     if not buffer then
-        parse(vim.api.nvim_get_keymap(mode))
-        parse(vim.api.nvim_buf_get_keymap(0, mode))
+        parse_commands(vim.api.nvim_get_commands({ }))
+        parse_commands(vim.api.nvim_buf_get_commands(0, { }))
+        parse_keymaps(vim.api.nvim_get_keymap(mode))
+        parse_keymaps(vim.api.nvim_buf_get_keymap(0, mode))
     else
-        parse(vim.api.nvim_buf_get_keymap(buffer, mode))
+        parse_commands(vim.api.nvim_buf_get_commands(0, { }))
+        parse_keymaps(vim.api.nvim_buf_get_keymap(buffer, mode))
     end
 
     M.select(localize("Commands"), commands, function(l, r) return l:lower() < r:lower() end)
 end
 
--- TODO: Parse Makefile targets
 function M.tasks()
     local keys =
     {
