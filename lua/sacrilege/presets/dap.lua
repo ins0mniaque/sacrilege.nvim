@@ -7,6 +7,7 @@ function M.apply(options)
 
     local dap = plugin.new("mfussenegger/nvim-dap", "dap")
 
+    options.commands.repl:override(dap:try(function(dap) dap.repl.toggle() end))
     options.commands.continue:override(dap:try(function(dap) dap.continue() end))
     options.commands.step_into:override(dap:try(function(dap) dap.step_into() end))
     options.commands.step_over:override(dap:try(function(dap) dap.step_over() end))

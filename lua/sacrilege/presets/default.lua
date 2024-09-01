@@ -64,6 +64,7 @@ local defaults =
         ["<C-M-U>"] = "undo_history",
         ["<M-C>"] = "compilers",
         ["<M-D>"] = "debugger",
+        ["<C-M-I>"] = "repl",
         ["<C-M-C>"] = "cmdline",
         ["<C-M-T>"] = "terminal",
         ["<C-D>"] = "diagnostics",

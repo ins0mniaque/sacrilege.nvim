@@ -21,6 +21,7 @@ M.run = command.new("Run", "<Cmd>make run<CR>")
 M.clean = command.new("Clean", "<Cmd>make clean<CR>")
 
 M.debugger = command.new("Toggle Debugger", not_implemented):cmdline(true)
+M.repl = command.new("Toggle Interactive Language Shell (REPL)", not_implemented):cmdline(true)
 M.continue = command.new("Start Debugging / Continue", not_implemented)
 M.step_into = command.new("Step Into", not_implemented)
 M.step_over = command.new("Step Over", not_implemented)
