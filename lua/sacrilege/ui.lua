@@ -44,6 +44,10 @@ function M.quickfix(title, items, opts)
     vim.cmd("botright copen")
 end
 
+function M.make(args, background)
+    vim.cmd.make { args = args, bang = not background }
+end
+
 function M.command_palette(buffer)
     local commands = { }
 
@@ -98,10 +102,10 @@ function M.tasks()
 
     local tasks =
     {
-        [keys[1]] = function() vim.cmd.make()        end,
-        [keys[2]] = function() vim.cmd.make("run")   end,
-        [keys[3]] = function() vim.cmd.make("check") end,
-        [keys[4]] = function() vim.cmd.make("clean") end
+        [keys[1]] = function() M.make()        end,
+        [keys[2]] = function() M.make("run")   end,
+        [keys[3]] = function() M.make("check") end,
+        [keys[4]] = function() M.make("clean") end
     }
 
     M.select(localize("Tasks"), tasks, keys)
