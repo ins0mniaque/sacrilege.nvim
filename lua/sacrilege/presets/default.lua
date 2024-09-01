@@ -148,7 +148,7 @@ local defaults =
         ["<M-F>"] = { "format", "format_selection" },
 
         ["<C-B>"] = "build",
-        ["<C-M-B>"] = "clean and build",
+        ["<C-M-B>"] = "rebuild",
         ["<F17>"] = "run",
         ["<F29>"] = "run",
         ["<F5>"] = "continue or run",

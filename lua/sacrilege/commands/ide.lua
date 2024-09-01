@@ -16,6 +16,7 @@ M.undo_history = command.new("Toggle Undo History", not_implemented):cmdline(tru
 
 M.compilers = command.new("Compilers...", not_implemented):cmdline(true)
 M.build = command.new("Build", "<Cmd>make<CR>")
+M.rebuild = command.new("Rebuild", "<Cmd>make clean<CR><Cmd>make<CR>")
 M.run = command.new("Run", "<Cmd>make run<CR>")
 M.clean = command.new("Clean", "<Cmd>make clean<CR>")
 
