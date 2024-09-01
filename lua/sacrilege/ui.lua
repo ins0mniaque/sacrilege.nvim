@@ -30,9 +30,11 @@ function M.select(prompt, items, sort)
         end
     end
 
-    local keys = vim.tbl_keys(items)
+    local keys = type(sort) == "table" and sort or vim.tbl_keys(items)
 
-    table.sort(keys, sort)
+    if type(sort) == "function" then
+        table.sort(keys, sort)
+    end
 
     vim.ui.select(keys, { prompt = prompt }, callback)
 end
@@ -82,6 +84,27 @@ function M.command_palette(buffer)
     end
 
     M.select(localize("Commands"), commands, function(l, r) return l:lower() < r:lower() end)
+end
+
+-- TODO: Parse Makefile targets
+function M.tasks()
+    local keys =
+    {
+        localize("Build"),
+        localize("Run"),
+        localize("Run Tests"),
+        localize("Clean")
+    }
+
+    local tasks =
+    {
+        [keys[1]] = function() vim.cmd.make()        end,
+        [keys[2]] = function() vim.cmd.make("run")   end,
+        [keys[3]] = function() vim.cmd.make("check") end,
+        [keys[4]] = function() vim.cmd.make("clean") end
+    }
+
+    M.select(localize("Tasks"), tasks, keys)
 end
 
 function M.compilers()
