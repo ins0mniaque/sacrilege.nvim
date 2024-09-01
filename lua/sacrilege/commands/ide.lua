@@ -14,6 +14,11 @@ M.file_explorer = command.new("Toggle File Explorer", not_implemented):cmdline(t
 M.code_outline = command.new("Toggle Code Outline", not_implemented):cmdline(true)
 M.undo_history = command.new("Toggle Undo History", not_implemented):cmdline(true)
 
+M.compilers = command.new("Compilers...", not_implemented):cmdline(true)
+M.build = command.new("Build", "<Cmd>make<CR>")
+M.run = command.new("Run", "<Cmd>make run<CR>")
+M.clean = command.new("Clean", "<Cmd>make clean<CR>")
+
 M.debugger = command.new("Toggle Debugger", not_implemented):cmdline(true)
 M.continue = command.new("Start Debugging / Continue", not_implemented)
 M.step_into = command.new("Step Into", not_implemented)
@@ -25,7 +30,7 @@ M.conditional_breakpoint = command.new("Set Conditional Breakpoint", not_impleme
 M.test_explorer = command.new("Test Explorer", not_implemented):cmdline(true)
 M.test_output = command.new("Test Output", not_implemented):cmdline(true)
 M.run_test = command.new("Run Test", not_implemented)
-M.run_all_tests = command.new("Run All Tests", not_implemented)
+M.run_all_tests = command.new("Run All Tests", "<Cmd>make check<CR>")
 M.debug_test = command.new("Debug Test", not_implemented)
 M.stop_test = command.new("Stop Test", not_implemented)
 M.attach_test = command.new("Attach Test", not_implemented)
