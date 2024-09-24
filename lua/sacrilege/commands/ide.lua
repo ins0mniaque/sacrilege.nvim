@@ -40,4 +40,7 @@ M.debug_test = command.new("Debug Test", not_implemented)
 M.stop_test = command.new("Stop Test", not_implemented)
 M.attach_test = command.new("Attach Test", not_implemented)
 
+M.ai_chat = command.new("Toggle AI Chat", not_implemented)
+M.ai_prompt = command.new("AI Prompt...", not_implemented)
+
 return M

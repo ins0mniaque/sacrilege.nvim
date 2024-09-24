@@ -181,7 +181,10 @@ local defaults =
         ["<C-T>R"] = "run_all_tests",
         ["<C-T>d"] = "debug_test",
         ["<C-T>s"] = "stop_test",
-        ["<C-T>a"] = "attach_test"
+        ["<C-T>a"] = "attach_test",
+
+        ["<F18>"] = "ai_chat",
+        ["<F6>"] = "ai_prompt"
     },
     menus =
     {
