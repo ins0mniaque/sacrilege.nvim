@@ -172,29 +172,31 @@ function M.setup(opts)
             cmd[id] = command
         end
 
-        local function execute(args)
-            local cmd = cmd[args.args]
+        if options.command then
+            local function execute(args)
+                local cmd = cmd[args.args]
 
-            if cmd then
-                if args.bang then
-                    pcall(cmd.execute, cmd)
+                if cmd then
+                    if args.bang then
+                        pcall(cmd.execute, cmd)
+                    else
+                        cmd:execute()
+                    end
                 else
-                    cmd:execute()
+                    log.err("Command \"%s\" not found", args.args)
                 end
-            else
-                log.err("Command \"%s\" not found", args.args)
             end
-        end
 
-        vim.api.nvim_create_user_command("Cmd", execute,
-        {
-            nargs = 1,
-            bang = true,
-            desc = localizer.localize("Execute Sacrilege Command"),
-            complete = function(_)
-                return vim.tbl_keys(cmd)
-            end,
-        })
+            vim.api.nvim_create_user_command(options.command, execute,
+            {
+                nargs = 1,
+                bang = true,
+                desc = localizer.localize("Execute Sacrilege Command"),
+                complete = function(_)
+                    return vim.tbl_keys(cmd)
+                end,
+            })
+        end
     end
 
     if options.keys then

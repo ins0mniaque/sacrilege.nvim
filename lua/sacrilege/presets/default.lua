@@ -44,6 +44,7 @@ local defaults =
         expand = vim.snippet and vim.snippet.expand,
         native = vim.snippet
     },
+    command = "Cmd",
     keys =
     {
         ["<Esc>"] = "cancel",
