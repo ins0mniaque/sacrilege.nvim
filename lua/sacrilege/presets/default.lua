@@ -61,6 +61,7 @@ local defaults =
         ["<F1>"] = "command_palette",
         ["<C-P>"] = "command_palette",
         ["<C-E>"] = "file_explorer",
+        ["<M-G>"] = "source_control",
         ["<M-O>"] = "code_outline",
         ["<C-M-U>"] = "undo_history",
         ["<F53>"] = "run_task",

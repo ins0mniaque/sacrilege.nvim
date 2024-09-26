@@ -11,6 +11,7 @@ M.command_palette = command.new("Command Palette...", ui.command_palette):cmdlin
 M.command_palette_local = command.new("Local Command Palette...", function() ui.command_palette(0) end):cmdline(true)
 M.themes = command.new("Themes...", ui.themes):cmdline(true)
 M.file_explorer = command.new("Toggle File Explorer", not_implemented):cmdline(true)
+M.source_control = command.new("Toggle Source Control", not_implemented):cmdline(true)
 M.code_outline = command.new("Toggle Code Outline", not_implemented):cmdline(true)
 M.undo_history = command.new("Toggle Undo History", not_implemented):cmdline(true)
 
