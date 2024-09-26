@@ -58,8 +58,8 @@ local defaults =
         ["<RightRelease>"] = "nothing",
         ["<C-LeftMouse>"] = "click and openurl or definition",
 
-        ["<F1>"] = "command_palette",
-        ["<C-P>"] = "command_palette",
+        ["<F1>"] = "commands",
+        ["<C-P>"] = "commands",
         ["<C-E>"] = "file_explorer",
         ["<M-G>"] = "source_control",
         ["<M-O>"] = "code_outline",
@@ -192,7 +192,7 @@ local defaults =
     {
         popup =
         {
-            { "command_palette", position = ".100" },
+            { "commands", position = ".100" },
             { "split", position = ".100" },
             { "vsplit", position = ".100" },
             { "autohide", position = ".100" },

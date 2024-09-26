@@ -7,8 +7,8 @@ local function not_implemented()
     return false
 end
 
-M.command_palette = command.new("Command Palette...", ui.command_palette):cmdline(true)
-M.command_palette_local = command.new("Local Command Palette...", function() ui.command_palette(0) end):cmdline(true)
+M.commands = command.new("Commands...", ui.commands):cmdline(true)
+M.commands_local = command.new("Local Commands...", function() ui.commands(0) end):cmdline(true)
 M.themes = command.new("Themes...", ui.themes):cmdline(true)
 M.file_explorer = command.new("Toggle File Explorer", not_implemented):cmdline(true)
 M.source_control = command.new("Toggle Source Control", not_implemented):cmdline(true)

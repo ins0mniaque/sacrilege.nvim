@@ -48,14 +48,15 @@ function M.make(args, background)
     vim.cmd.make { args = args, bang = not background }
 end
 
-function M.command_palette(buffer)
+function M.commands(buffer, opts)
     local commands = { }
+    local title    = opts and opts.title or "Commands"
 
     local selstart = vim.fn.getpos('v')
     local cursor   = vim.fn.getpos('.')
 
     local function parse_commands(cmds)
-        -- NOTE: Remove redundant entry from nvim_buf_get_commands
+        -- NOTE: Remove non-command entry from nvim_buf_get_commands
         cmds[true] = nil
 
         for _, cmd in pairs(cmds) do
@@ -112,7 +113,7 @@ function M.command_palette(buffer)
         parse_keymaps(vim.api.nvim_buf_get_keymap(buffer, mode))
     end
 
-    M.select(localize("Commands"), commands, function(l, r) return l:lower() < r:lower() end)
+    M.select(localize(title), commands, function(l, r) return l:lower() < r:lower() end)
 end
 
 function M.tasks()
